@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  CalendarCheck,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
@@ -24,6 +25,7 @@ import { useRouter } from "next/navigation";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: ArrowUpDown, label: "Financeiro", href: "/financial" },
+  { icon: CalendarCheck, label: "Previsão de Caixa", href: "/cash-forecast" },
   { icon: Tags, label: "Categorias", href: "/categories" },
   { icon: FileText, label: "Relatórios", href: "/reports" },
   { icon: Trash2, label: "Lixeira", href: "/trash" },

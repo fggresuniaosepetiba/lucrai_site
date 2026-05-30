@@ -61,6 +61,22 @@ export interface DeletedTransaction {
   restoreUntil: string;
 }
 
+export type ForecastStatus = "predicted" | "received" | "paid" | "cancelled";
+
+export interface CashForecast {
+  id: string;
+  type: TransactionType;
+  description: string;
+  amount: number;
+  category: string;
+  expectedDate: string;
+  status: ForecastStatus;
+  notes?: string;
+  company: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface MonthlySummary {
   month: string;
   year: number;
