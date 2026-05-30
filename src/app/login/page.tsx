@@ -122,7 +122,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Trinary Solutions &copy; {new Date().toLocaleDateString("pt-BR", { year: "numeric" })}
+            LUCRAÍ &copy; {new Date().toLocaleDateString("pt-BR", { year: "numeric" })}
           </p>
         </div>
       </div>

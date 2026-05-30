@@ -203,7 +203,7 @@ export default function SettingsPage() {
                 id="companyName"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Trinary Solutions"
+                placeholder="Minha Empresa"
               />
             </div>
           </CardContent>
