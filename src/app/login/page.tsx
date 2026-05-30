@@ -72,7 +72,7 @@ export default function LoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="trinarysolutions.adm"
+                placeholder="usuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="bg-background/50"
