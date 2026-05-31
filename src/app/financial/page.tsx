@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, ArrowUpDown, Download, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/toast";
 
 export default function FinancialPage() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function FinancialPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const initialized = useRef(false);
   const company = user?.company ?? "";
   const userName = user?.name ?? "Sistema";
 
@@ -36,15 +38,24 @@ export default function FinancialPage() {
       router.replace("/login");
       return;
     }
-    loadData();
+    if (!initialized.current) {
+      initialized.current = true;
+      runStartup();
+    } else {
+      loadData();
+    }
   }, [isAuthenticated, router, company]);
+
+  const runStartup = async () => {
+    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
+    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
+    try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
+    try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
+    loadData();
+  };
 
   const loadData = async () => {
     try {
-      await migrateDisplayIds();
-      await fixCompanyName();
-      await useAuthStore.getState().refreshUser();
-      await seedDefaultCategories(company);
       const [txs, cats] = await Promise.all([
         TransactionRepository.getAll(company),
         CategoryRepository.getAll(company),
@@ -58,24 +69,30 @@ export default function FinancialPage() {
     }
   };
 
-  const handleCreate = async (data: any) => {
-    await TransactionRepository.create(data, company, userName);
-    setShowForm(false);
-    loadData();
+  const handleCreate = async (data: Parameters<typeof TransactionRepository.create>[0]) => {
+    try {
+      await TransactionRepository.create(data, company, userName);
+      toast("Lançamento criado", "Registrado com sucesso", "success");
+      setShowForm(false);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      toast("Erro", "Não foi possível criar o lançamento", "destructive");
+    }
   };
 
-  const handleUpdate = async (id: string, data: any) => {
+  const handleUpdate = async (id: string, data: Partial<Transaction>) => {
     await TransactionRepository.update(id, data, userName);
     setEditingTransaction(null);
     setShowForm(false);
-    loadData();
+    await loadData();
   };
 
   const handleDelete = async (id: string, reason: string) => {
     const tx = transactions.find((t) => t.id === id);
     if (!tx) return;
     await TrashRepository.moveToTrash(tx, reason, userName);
-    loadData();
+    await loadData();
   };
 
   const handleEdit = (tx: Transaction) => {

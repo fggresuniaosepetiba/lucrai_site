@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
@@ -30,21 +30,31 @@ export default function DashboardPage() {
   const [forecastIncomes, setForecastIncomes] = useState(0);
   const [forecastExpenses, setForecastExpenses] = useState(0);
   const company = user?.company ?? "";
+  const initialized = useRef(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login");
       return;
     }
-    loadData();
+    if (!initialized.current) {
+      initialized.current = true;
+      runStartup();
+    } else {
+      loadData();
+    }
   }, [isAuthenticated, router, company]);
+
+  const runStartup = async () => {
+    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
+    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
+    try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
+    try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
+    loadData();
+  };
 
   const loadData = async () => {
     try {
-      await migrateDisplayIds();
-      await fixCompanyName();
-      await useAuthStore.getState().refreshUser();
-      await seedDefaultCategories(company);
       const [txs, cats, forecastTotals] = await Promise.all([
         TransactionRepository.getAll(company),
         CategoryRepository.getAll(company),

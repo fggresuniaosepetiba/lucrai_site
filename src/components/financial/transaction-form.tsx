@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -20,13 +21,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CategoryRepository } from "@/database/repositories/categories";
+import { useAuthStore } from "@/store/auth-store";
 import type { Transaction, Category } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate } from "@/lib/utils";
 
 interface TransactionFormProps {
   transaction?: Transaction | null;
   categories: Category[];
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: {
+    type: "income" | "expense";
+    value: number;
+    categoryId: string;
+    categoryName: string;
+    description: string;
+    date: string;
+    observation?: string;
+  }) => Promise<void>;
   onClose: () => void;
 }
 
@@ -36,7 +47,9 @@ export function TransactionForm({
   onSubmit,
   onClose,
 }: TransactionFormProps) {
-
+  const { user } = useAuthStore();
+  const company = user?.company ?? "";
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [type, setType] = useState<"income" | "expense">(
     transaction?.type || "expense"
   );
@@ -52,7 +65,19 @@ export function TransactionForm({
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const filteredCategories = initialCategories.filter((c) => c.type === type);
+  useEffect(() => {
+    setCategories(initialCategories);
+  }, [initialCategories]);
+
+  useEffect(() => {
+    if (company) {
+      CategoryRepository.getAll(company).then((cats) => {
+        if (cats.length > 0) setCategories(cats);
+      });
+    }
+  }, [company]);
+
+  const filteredCategories = categories.filter((c) => c.type === type);
 
   const amountValue = valueDisplay ? parseCurrencyInput(valueDisplay) : 0;
 
@@ -84,7 +109,7 @@ export function TransactionForm({
     if (!validate()) return;
     setSubmitting(true);
 
-    const selectedCat = initialCategories.find((c) => c.id === categoryId);
+    const selectedCat = categories.find((c) => c.id === categoryId);
 
     try {
       await onSubmit({
@@ -210,7 +235,7 @@ export function TransactionForm({
             {filteredCategories.length > 0 ? (
               <Select
                 key={`${type}-${transaction?.id || "new"}`}
-                defaultValue={transaction?.categoryId || ""}
+                value={categoryId}
                 onValueChange={(v) => {
                   setCategoryId(v);
                   setErrors((prev) => ({ ...prev, category: "" }));
@@ -228,7 +253,17 @@ export function TransactionForm({
                 </SelectContent>
               </Select>
             ) : (
-              <p className="text-sm text-muted-foreground">Nenhuma categoria disponível para este tipo.</p>
+              <div className="rounded-lg border border-border/50 bg-muted/30 p-4 text-center space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma categoria cadastrada para {type === "income" ? "Entrada" : "Saída"}.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Crie uma nova categoria na página{" "}
+                  <Link href="/categories" className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors">
+                    Categorias
+                  </Link>.
+                </p>
+              </div>
             )}
             {errors.category && <p className="text-xs text-red-400">{errors.category}</p>}
           </div>

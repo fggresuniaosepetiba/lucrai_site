@@ -6,10 +6,9 @@ import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { TransactionRepository } from "@/database/repositories/transactions";
-import { CategoryRepository } from "@/database/repositories/categories";
 import { AuditRepository } from "@/database/repositories/audit";
 import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
-import type { CashForecast, ForecastStatus, TransactionType, Category } from "@/types";
+import type { CashForecast, ForecastStatus, TransactionType } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,7 +62,6 @@ function CashForecastContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
   const [items, setItems] = useState<CashForecast[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("filter") || "all");
@@ -108,14 +106,12 @@ function CashForecastContent() {
       await migrateDisplayIds();
       await fixCompanyName();
       await useAuthStore.getState().refreshUser();
-      const [forecasts, balanceData, cats] = await Promise.all([
+      const [forecasts, balanceData] = await Promise.all([
         CashForecastRepository.getAll(company),
         TransactionRepository.getAllBalance(company),
-        CategoryRepository.getAll(company),
       ]);
       setItems(forecasts);
       setCurrentBalance(balanceData.balance);
-      setCategories(cats);
     } catch (err) {
       console.error(err);
     } finally {
@@ -186,22 +182,18 @@ function CashForecastContent() {
     setFormType(item.type);
     setFormDescription(item.description);
     setFormAmountDisplay(formatCurrencyInput(String(Math.round(item.amount * 100))));
-    const cat = categories.find((c) => c.name === item.category);
-    setFormCategory(cat?.id || "");
+    setFormCategory(item.category);
     setFormDate(item.expectedDate);
     setFormNotes(item.notes || "");
     setShowForm(true);
   };
 
   const handleSubmit = async () => {
-    if (!formDescription.trim() || !formAmountDisplay || !formDate || !formCategory) return;
+    if (!formDescription.trim() || !formAmountDisplay || !formDate) return;
     const dateCheck = validateForecastDate(formDate);
     if (!dateCheck.valid) { toast("Data inválida", dateCheck.message, "destructive"); return; }
     const amount = formAmountValue;
     if (isNaN(amount) || amount <= 0) { toast("Valor inválido", "", "destructive"); return; }
-
-    const selectedCat = categories.find((c) => c.id === formCategory);
-    const categoryName = selectedCat?.name || "Sem categoria";
 
     try {
       if (editingItem) {
@@ -209,14 +201,14 @@ function CashForecastContent() {
           type: formType,
           description: formDescription.trim(),
           amount,
-          category: categoryName,
+          category: formCategory.trim(),
           expectedDate: formDate,
           notes: formNotes.trim(),
         }, userName);
         toast("Previsão atualizada", "", "success");
       } else {
         await CashForecastRepository.create(
-          { type: formType, description: formDescription.trim(), amount, category: categoryName, expectedDate: formDate, notes: formNotes.trim(), status: "predicted" },
+          { type: formType, description: formDescription.trim(), amount, category: formCategory.trim(), expectedDate: formDate, notes: formNotes.trim(), status: "predicted" },
           company,
           userName
         );
@@ -665,25 +657,8 @@ function CashForecastContent() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cat" className="flex items-center gap-1">
-                  Categoria <span className="text-red-400">*</span>
-                </Label>
-                <Select
-                  key={`${formType}-${editingItem?.id || "new"}`}
-                  defaultValue={editingItem ? (categories.find((c) => c.name === editingItem.category)?.id || "") : ""}
-                  onValueChange={setFormCategory}
-                >
-                  <SelectTrigger id="cat">
-                    <SelectValue placeholder="Selecionar categoria" />
-                  </SelectTrigger>
-                  <SelectContent position="popper" className="max-h-60">
-                    {categories.filter((c) => c.type === formType).map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="cat">Categoria</Label>
+                <Input id="cat" value={formCategory} onChange={(e) => setFormCategory(e.target.value)} placeholder="Ex: Vendas, Aluguel" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="notes">Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
