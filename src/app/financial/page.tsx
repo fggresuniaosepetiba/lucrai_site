@@ -64,6 +64,21 @@ export default function FinancialPage() {
     loadData();
   };
 
+  const handleCreateCategory = async (data: { name: string; type: "income" | "expense" }) => {
+    const color = data.type === "income" ? "#22c55e" : "#ef4444";
+    const created = await CategoryRepository.create(
+      {
+        name: data.name.trim(),
+        type: data.type,
+        color,
+        icon: "tag",
+      },
+      company
+    );
+    setCategories((prev) => [...prev, created]);
+    return created;
+  };
+
   const handleUpdate = async (id: string, data: any) => {
     await TransactionRepository.update(id, data, userName);
     setEditingTransaction(null);
@@ -199,6 +214,7 @@ export default function FinancialPage() {
           <TransactionForm
             transaction={editingTransaction}
             categories={categories}
+            onCreateCategory={handleCreateCategory}
             onSubmit={editingTransaction ? (data) => handleUpdate(editingTransaction.id, data) : handleCreate}
             onClose={() => { setShowForm(false); setEditingTransaction(null); }}
           />
