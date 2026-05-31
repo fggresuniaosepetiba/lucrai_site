@@ -22,20 +22,17 @@ import {
 } from "@/components/ui/select";
 import type { Transaction, Category } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate } from "@/lib/utils";
-import { toast } from "@/components/ui/toast";
 
 interface TransactionFormProps {
   transaction?: Transaction | null;
   categories: Category[];
-  onCreateCategory: (data: { name: string; type: "income" | "expense" }) => Promise<Category>;
   onSubmit: (data: any) => Promise<void>;
   onClose: () => void;
 }
 
 export function TransactionForm({
   transaction,
-  categories,
-  onCreateCategory,
+  categories: initialCategories,
   onSubmit,
   onClose,
 }: TransactionFormProps) {
@@ -52,13 +49,10 @@ export function TransactionForm({
     transaction?.date || new Date().toISOString().slice(0, 10)
   );
   const [observation, setObservation] = useState(transaction?.observation || "");
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [showCreateCategory, setShowCreateCategory] = useState(false);
-  const [creatingCategory, setCreatingCategory] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const filteredCategories = categories.filter((c) => c.type === type);
+  const filteredCategories = initialCategories.filter((c) => c.type === type);
 
   const amountValue = valueDisplay ? parseCurrencyInput(valueDisplay) : 0;
 
@@ -90,7 +84,7 @@ export function TransactionForm({
     if (!validate()) return;
     setSubmitting(true);
 
-    const selectedCat = categories.find((c) => c.id === categoryId);
+    const selectedCat = initialCategories.find((c) => c.id === categoryId);
 
     try {
       await onSubmit({
@@ -113,25 +107,6 @@ export function TransactionForm({
   const handleTypeChange = (newType: "income" | "expense") => {
     setType(newType);
     setCategoryId("");
-  };
-
-  const handleCreateCategory = async () => {
-    const name = newCategoryName.trim();
-    if (!name) return;
-
-    setCreatingCategory(true);
-    try {
-      const created = await onCreateCategory({ name, type });
-      setCategoryId(created.id);
-      setNewCategoryName("");
-      setShowCreateCategory(false);
-      setErrors((prev) => ({ ...prev, category: "" }));
-      toast("Categoria criada", "Categoria adicionada e selecionada", "success");
-    } catch (err: any) {
-      toast("Erro", err?.message || "Nao foi possivel criar categoria", "destructive");
-    } finally {
-      setCreatingCategory(false);
-    }
   };
 
   return (
@@ -228,49 +203,14 @@ export function TransactionForm({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <Label htmlFor="category" className="flex items-center gap-1">
-                Categoria
-                <span className="text-red-400">*</span>
-              </Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => setShowCreateCategory((prev) => !prev)}
-              >
-                {showCreateCategory ? "Cancelar" : "+ Nova categoria"}
-              </Button>
-            </div>
-
-            {showCreateCategory && (
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder={`Nova categoria de ${type === "income" ? "entrada" : "saida"}`}
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreateCategory();
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleCreateCategory}
-                  disabled={creatingCategory || !newCategoryName.trim()}
-                >
-                  {creatingCategory ? "Criando..." : "Criar"}
-                </Button>
-              </div>
-            )}
-
+            <Label htmlFor="category" className="flex items-center gap-1">
+              Categoria
+              <span className="text-red-400">*</span>
+            </Label>
             {filteredCategories.length > 0 ? (
               <Select
-                value={categoryId}
+                key={`${type}-${transaction?.id || "new"}`}
+                defaultValue={transaction?.categoryId || ""}
                 onValueChange={(v) => {
                   setCategoryId(v);
                   setErrors((prev) => ({ ...prev, category: "" }));
