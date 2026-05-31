@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3 } from "lucide-react";
 import type { Transaction } from "@/types";
 
 interface FinancialHealthProps {
@@ -10,6 +10,27 @@ interface FinancialHealthProps {
 }
 
 export function FinancialHealth({ transactions }: FinancialHealthProps) {
+  if (transactions.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Saúde Financeira</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <BarChart3 className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <p className="text-lg font-semibold text-muted-foreground">Aguardando dados</p>
+            <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+              Cadastre suas primeiras movimentações financeiras para que o LUCRAÍ possa analisar a saúde da sua empresa.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();

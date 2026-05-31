@@ -23,7 +23,7 @@ const defaultUsers = [
     email: "graonatural.adm",
     password: "GraoNatural@@",
     role: "admin" as const,
-    company: "Grão Natura",
+    company: "Grão Natural",
   },
 ];
 

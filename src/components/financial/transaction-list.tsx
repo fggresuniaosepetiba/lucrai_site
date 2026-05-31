@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Pencil, Trash2 } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Pencil, Trash2, Hash } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "./delete-dialog";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 import type { Transaction, Category } from "@/types";
 
 interface TransactionListProps {
@@ -22,6 +23,13 @@ export function TransactionList({
   onDelete,
 }: TransactionListProps) {
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
+
+  const handleDeleteConfirm = async (reason: string) => {
+    if (!deleteTarget) return;
+    await onDelete(deleteTarget.id, reason);
+    toast("Lançamento enviado para a lixeira com sucesso.");
+    setDeleteTarget(null);
+  };
 
   if (transactions.length === 0) {
     return (
@@ -47,6 +55,7 @@ export function TransactionList({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/50">
+                  <th className="text-left font-medium text-muted-foreground p-4">ID</th>
                   <th className="text-left font-medium text-muted-foreground p-4">Tipo</th>
                   <th className="text-left font-medium text-muted-foreground p-4">Descrição</th>
                   <th className="text-left font-medium text-muted-foreground p-4">Categoria</th>
@@ -61,6 +70,12 @@ export function TransactionList({
                     key={t.id}
                     className="border-b border-border/25 hover:bg-muted/30 transition-colors"
                   >
+                    <td className="p-4">
+                      <div className="flex items-center gap-1.5">
+                        <Hash className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs font-mono text-muted-foreground">{t.displayId}</span>
+                      </div>
+                    </td>
                     <td className="p-4">
                       {t.type === "income" ? (
                         <Badge variant="success" className="gap-1">
@@ -120,10 +135,7 @@ export function TransactionList({
           transaction={deleteTarget}
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
-          onConfirm={async (reason) => {
-            await onDelete(deleteTarget.id, reason);
-            setDeleteTarget(null);
-          }}
+          onConfirm={handleDeleteConfirm}
         />
       )}
     </>

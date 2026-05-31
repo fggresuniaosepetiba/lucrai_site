@@ -10,10 +10,11 @@ import { TransactionRepository } from "@/database/repositories/transactions";
 import { CategoryRepository } from "@/database/repositories/categories";
 import { TrashRepository } from "@/database/repositories/trash";
 import { seedDefaultCategories } from "@/database/seed";
+import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
 import type { Transaction, Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, ArrowUpDown, Download } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Download, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FinancialPage() {
@@ -28,6 +29,7 @@ export default function FinancialPage() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const company = user?.company ?? "";
+  const userName = user?.name ?? "Sistema";
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -39,6 +41,9 @@ export default function FinancialPage() {
 
   const loadData = async () => {
     try {
+      await migrateDisplayIds();
+      await fixCompanyName();
+      await useAuthStore.getState().refreshUser();
       await seedDefaultCategories(company);
       const [txs, cats] = await Promise.all([
         TransactionRepository.getAll(company),
@@ -54,13 +59,13 @@ export default function FinancialPage() {
   };
 
   const handleCreate = async (data: any) => {
-    await TransactionRepository.create(data, company);
+    await TransactionRepository.create(data, company, userName);
     setShowForm(false);
     loadData();
   };
 
   const handleUpdate = async (id: string, data: any) => {
-    await TransactionRepository.update(id, data);
+    await TransactionRepository.update(id, data, userName);
     setEditingTransaction(null);
     setShowForm(false);
     loadData();
@@ -69,7 +74,7 @@ export default function FinancialPage() {
   const handleDelete = async (id: string, reason: string) => {
     const tx = transactions.find((t) => t.id === id);
     if (!tx) return;
-    await TrashRepository.moveToTrash(tx, reason);
+    await TrashRepository.moveToTrash(tx, reason, userName);
     loadData();
   };
 
@@ -85,7 +90,8 @@ export default function FinancialPage() {
         const q = search.toLowerCase();
         return (
           t.description.toLowerCase().includes(q) ||
-          t.categoryName.toLowerCase().includes(q)
+          t.categoryName.toLowerCase().includes(q) ||
+          t.displayId.toLowerCase().includes(q)
         );
       }
       return true;
@@ -97,8 +103,9 @@ export default function FinancialPage() {
     });
 
   const handleExportCSV = () => {
-    const headers = ["Tipo", "Valor", "Categoria", "Descrição", "Data", "Observação"];
+    const headers = ["ID", "Tipo", "Valor", "Categoria", "Descrição", "Data", "Observação"];
     const rows = filtered.map((t) => [
+      t.displayId,
       t.type === "income" ? "Entrada" : "Saída",
       t.value.toFixed(2),
       t.categoryName,
@@ -174,6 +181,11 @@ export default function FinancialPage() {
               Novo Lançamento
             </Button>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Hash className="h-3 w-3" />
+          <span>{filtered.length} lançamento{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}</span>
         </div>
 
         <TransactionList

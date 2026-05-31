@@ -2,7 +2,7 @@
 
 import { TrendingUp, TrendingDown, DollarSign, Percent } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCompactCurrency } from "@/lib/utils";
 import { cn } from "@/lib/cn";
 import type { Transaction } from "@/types";
 
@@ -48,12 +48,17 @@ export function StatsCards({ transactions, activeFilter, onFilterChange }: Stats
     ? ((totalIncomes - totalExpenses) / totalIncomes) * 100
     : 0;
 
+  const incomeCompact = formatCompactCurrency(totalIncomes);
+  const expenseCompact = formatCompactCurrency(totalExpenses);
+  const balanceCompact = formatCompactCurrency(totalBalance);
+
   const cards = [
     {
       key: "income" as DashboardFilter,
       title: "Entradas (mês)",
       value: totalIncomes,
-      display: formatCurrency(totalIncomes),
+      display: incomeCompact.display,
+      fullValue: incomeCompact.full,
       icon: TrendingUp,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10",
@@ -63,7 +68,8 @@ export function StatsCards({ transactions, activeFilter, onFilterChange }: Stats
       key: "expense" as DashboardFilter,
       title: "Saídas (mês)",
       value: totalExpenses,
-      display: formatCurrency(totalExpenses),
+      display: expenseCompact.display,
+      fullValue: expenseCompact.full,
       icon: TrendingDown,
       color: "text-red-400",
       bg: "bg-red-500/10",
@@ -73,7 +79,8 @@ export function StatsCards({ transactions, activeFilter, onFilterChange }: Stats
       key: "balance" as DashboardFilter,
       title: "Saldo Atual",
       value: totalBalance,
-      display: formatCurrency(totalBalance),
+      display: balanceCompact.display,
+      fullValue: balanceCompact.full,
       icon: DollarSign,
       color: totalBalance >= 0 ? "text-emerald-400" : "text-red-400",
       bg: "bg-blue-500/10",
@@ -103,21 +110,19 @@ export function StatsCards({ transactions, activeFilter, onFilterChange }: Stats
           >
             <Card
               className={cn(
-                "group transition-all duration-300 cursor-pointer hover:shadow-md",
+                "group transition-all duration-300 cursor-pointer hover:shadow-md h-full",
                 isActive ? card.activeBg : "hover:border-primary/30"
               )}
             >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">{card.title}</p>
-                    <p className="text-2xl font-bold tracking-tight">
-                      {card.display}
-                    </p>
-                  </div>
-                  <div className={cn("rounded-xl p-3 transition-transform", card.bg, isActive && "scale-110")}>
-                    <card.icon className={cn("h-5 w-5", card.color)} />
-                  </div>
+              <CardContent className="p-6 h-full relative overflow-hidden">
+                <div className={cn("absolute top-5 right-5 rounded-xl p-3 transition-transform", card.bg, isActive && "scale-110")}>
+                  <card.icon className={cn("h-5 w-5", card.color)} />
+                </div>
+                <div className="h-full flex flex-col justify-center pr-16">
+                  <p className="text-sm text-muted-foreground mb-1.5">{card.title}</p>
+                  <p className="text-2xl font-bold tracking-tight break-words" title={card.fullValue || card.display}>
+                    {card.display}
+                  </p>
                 </div>
               </CardContent>
             </Card>

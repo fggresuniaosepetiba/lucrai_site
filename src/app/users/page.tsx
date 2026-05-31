@@ -9,16 +9,18 @@ import type { AppUser } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
-import { Plus, Pencil, Trash2, Users as UsersIcon, Shield, ShieldCheck, Eye, User, Building2, KeyRound } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, ShieldCheck, Eye, User, Building2, KeyRound, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -52,7 +54,7 @@ const roleColors: Record<string, string> = {
 
 export default function UsersPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user: currentUser } = useAuthStore();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -62,6 +64,10 @@ export default function UsersPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<AppUser["role"]>("viewer");
   const [company, setCompany] = useState("");
+
+  const [deletingUser, setDeletingUser] = useState<AppUser | null>(null);
+  const [deleteStep, setDeleteStep] = useState<"confirm" | "reason">("confirm");
+  const [deleteReason, setDeleteReason] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -108,14 +114,6 @@ export default function UsersPage() {
     } catch { toast("Erro", "", "destructive"); }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await UserRepository.delete(id);
-      toast("Usuário removido", "", "success");
-      loadUsers();
-    } catch { toast("Erro", "", "destructive"); }
-  };
-
   const openEdit = (u: AppUser) => {
     setEditingUser(u);
     setName(u.name);
@@ -123,6 +121,23 @@ export default function UsersPage() {
     setRole(u.role);
     setCompany(u.company);
     setPassword("");
+  };
+
+  const handleDeleteClick = (u: AppUser) => {
+    setDeletingUser(u);
+    setDeleteStep("confirm");
+    setDeleteReason("");
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingUser || !deleteReason.trim()) return;
+    try {
+      await UserRepository.softDelete(deletingUser.id, deleteReason.trim(), currentUser?.email ?? "unknown");
+      toast("Usuário excluído com sucesso.", "", "success");
+      setDeletingUser(null);
+      setDeleteReason("");
+      loadUsers();
+    } catch { toast("Erro ao excluir usuário", "", "destructive"); }
   };
 
   if (loading) {
@@ -150,8 +165,9 @@ export default function UsersPage() {
         <div className="grid gap-4">
           {users.map((u) => {
             const RoleIcon = roleIcons[u.role];
+            const isActive = u.active !== false;
             return (
-              <Card key={u.id} className="group hover:shadow-md transition-all">
+              <Card key={u.id} className={`group hover:shadow-md transition-all ${!isActive ? "opacity-60" : ""}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -170,13 +186,18 @@ export default function UsersPage() {
                         <Building2 className="h-3 w-3" />
                         {u.company}
                       </Badge>
+                      {!isActive && (
+                        <Badge variant="destructive" className="gap-1.5">
+                          Inativo
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(u)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      {u.role !== "owner" && (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => handleDelete(u.id)}>
+                      {u.role !== "owner" && isActive && (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => handleDeleteClick(u)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       )}
@@ -187,6 +208,64 @@ export default function UsersPage() {
             );
           })}
         </div>
+
+        <Dialog open={Boolean(deletingUser)} onOpenChange={(o) => { if (!o) { setDeletingUser(null); setDeleteReason(""); } }}>
+          {deleteStep === "confirm" && (
+            <DialogContent className="sm:max-w-[420px]">
+              <DialogHeader>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-400" />
+                  <DialogTitle>Confirmar Exclusão de Usuário</DialogTitle>
+                </div>
+                <DialogDescription>
+                  Você está prestes a excluir o usuário:
+                  <strong className="block mt-2 text-foreground">{deletingUser?.name}</strong>
+                  <br />
+                  Esta ação poderá impactar históricos, registros e permissões vinculadas a este usuário.
+                  <br />
+                  Deseja realmente continuar?
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setDeletingUser(null); setDeleteReason(""); }}>Cancelar</Button>
+                <Button variant="destructive" onClick={() => setDeleteStep("reason")}>Continuar Exclusão</Button>
+              </DialogFooter>
+            </DialogContent>
+          )}
+          {deleteStep === "reason" && (
+            <DialogContent className="sm:max-w-[420px]">
+              <DialogHeader>
+                <DialogTitle>Motivo da Exclusão</DialogTitle>
+                <DialogDescription>
+                  Informe o motivo para excluir o usuário <strong>{deletingUser?.name}</strong>.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2">
+                <Label htmlFor="deleteReason">Motivo da exclusão</Label>
+                <Textarea
+                  id="deleteReason"
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Descreva o motivo da exclusão..."
+                  rows={3}
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setDeletingUser(null); setDeleteReason(""); }}>Cancelar</Button>
+                <Button
+                  variant="destructive"
+                  disabled={!deleteReason.trim()}
+                  onClick={handleConfirmDelete}
+                >
+                  Confirmar Exclusão
+                </Button>
+              </DialogFooter>
+              {!deleteReason.trim() && (
+                <p className="text-xs text-muted-foreground px-1">O motivo da exclusão é obrigatório.</p>
+              )}
+            </DialogContent>
+          )}
+        </Dialog>
 
         <Dialog open={showForm} onOpenChange={setShowForm}>
           <DialogContent className="sm:max-w-[400px]">
@@ -217,7 +296,7 @@ export default function UsersPage() {
               </div>
               <div className="space-y-2">
                 <Label>Empresa</Label>
-                <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Ex: Trinary, Lucraí, Grão Natura" />
+                <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Ex: Trinary, Lucraí, Grão Natural" />
               </div>
               <div className="space-y-2">
                 <Label>Perfil</Label>

@@ -3,6 +3,7 @@
 import { db } from "../dexie";
 import type { Transaction, DeletedTransaction } from "@/types";
 import { generateId } from "@/lib/utils";
+import { AuditRepository } from "./audit";
 
 export const TrashRepository = {
   async getAll(company: string): Promise<DeletedTransaction[]> {
@@ -25,7 +26,8 @@ export const TrashRepository = {
 
   async moveToTrash(
     transaction: Transaction,
-    reason: string
+    reason: string,
+    userName?: string
   ): Promise<DeletedTransaction> {
     const now = new Date();
     const restoreUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -33,6 +35,7 @@ export const TrashRepository = {
     const deleted: DeletedTransaction = {
       id: generateId(),
       originalId: transaction.id,
+      displayId: transaction.displayId,
       type: transaction.type,
       value: transaction.value,
       categoryId: transaction.categoryId,
@@ -50,15 +53,28 @@ export const TrashRepository = {
 
     await db.transactions.delete(transaction.id);
     await db.deletedTransactions.add(deleted);
+
+    await AuditRepository.log({
+      entityId: transaction.id,
+      entityType: "transaction",
+      displayId: transaction.displayId,
+      action: "moved_to_trash",
+      description: `Lançamento ${transaction.displayId} - ${transaction.description} movido para lixeira`,
+      user: userName || "Sistema",
+      company: transaction.company,
+      details: reason,
+    });
+
     return deleted;
   },
 
-  async restore(id: string): Promise<Transaction | null> {
+  async restore(id: string, userName?: string): Promise<Transaction | null> {
     const deleted = await db.deletedTransactions.get(id);
     if (!deleted) return null;
 
     const restored: Transaction = {
       id: deleted.originalId,
+      displayId: deleted.displayId,
       type: deleted.type,
       value: deleted.value,
       categoryId: deleted.categoryId,
@@ -73,11 +89,35 @@ export const TrashRepository = {
 
     await db.transactions.add(restored);
     await db.deletedTransactions.delete(id);
+
+    await AuditRepository.log({
+      entityId: deleted.originalId,
+      entityType: "transaction",
+      displayId: deleted.displayId,
+      action: "restored",
+      description: `Lançamento ${deleted.displayId} - ${deleted.description} restaurado da lixeira`,
+      user: userName || "Sistema",
+      company: deleted.company,
+    });
+
     return restored;
   },
 
-  async permanentlyDelete(id: string): Promise<void> {
+  async permanentlyDelete(id: string, userName?: string): Promise<void> {
+    const deleted = await db.deletedTransactions.get(id);
     await db.deletedTransactions.delete(id);
+
+    if (deleted) {
+      await AuditRepository.log({
+        entityId: deleted.originalId,
+        entityType: "transaction",
+        displayId: deleted.displayId,
+        action: "deleted",
+        description: `Lançamento ${deleted.displayId} - ${deleted.description} excluído permanentemente`,
+        user: userName || "Sistema",
+        company: deleted.company,
+      });
+    }
   },
 
   async cleanup(): Promise<number> {

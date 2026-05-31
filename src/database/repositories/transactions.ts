@@ -2,7 +2,8 @@
 
 import { db } from "../dexie";
 import type { Transaction, TransactionType } from "@/types";
-import { generateId } from "@/lib/utils";
+import { generateId, getNextDisplayId, validateTransactionDate } from "@/lib/utils";
+import { AuditRepository } from "./audit";
 
 export const TransactionRepository = {
   async getAll(company: string): Promise<Transaction[]> {
@@ -40,24 +41,57 @@ export const TransactionRepository = {
       .toArray();
   },
 
-  async create(data: Omit<Transaction, "id" | "createdAt" | "updatedAt" | "company">, company: string): Promise<Transaction> {
+  async create(data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company">, company: string, userName?: string): Promise<Transaction> {
+    const dateCheck = validateTransactionDate(data.date);
+    if (!dateCheck.valid) throw new Error(dateCheck.message);
     const now = new Date().toISOString();
+    const all = await db.transactions.where("company").equals(company).toArray();
+    const displayId = await getNextDisplayId(all);
     const transaction: Transaction = {
       ...data,
       company,
       id: generateId(),
+      displayId,
       createdAt: now,
       updatedAt: now,
     };
     await db.transactions.add(transaction);
+
+    await AuditRepository.log({
+      entityId: transaction.id,
+      entityType: "transaction",
+      displayId: transaction.displayId,
+      action: "created",
+      description: `Lançamento ${transaction.displayId} - ${transaction.description} criado`,
+      user: userName || "Sistema",
+      company,
+    });
+
     return transaction;
   },
 
-  async update(id: string, data: Partial<Transaction>): Promise<void> {
+  async update(id: string, data: Partial<Transaction>, userName?: string): Promise<void> {
+    const existing = await db.transactions.get(id);
+    if (data.date) {
+      const dateCheck = validateTransactionDate(data.date);
+      if (!dateCheck.valid) throw new Error(dateCheck.message);
+    }
     await db.transactions.update(id, {
       ...data,
       updatedAt: new Date().toISOString(),
     });
+
+    if (existing) {
+      await AuditRepository.log({
+        entityId: id,
+        entityType: "transaction",
+        displayId: existing.displayId,
+        action: "edited",
+        description: `Lançamento ${existing.displayId} - ${existing.description} editado`,
+        user: userName || "Sistema",
+        company: existing.company,
+      });
+    }
   },
 
   async delete(id: string): Promise<void> {
@@ -88,5 +122,19 @@ export const TransactionRepository = {
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.value, 0);
     return { incomes, expenses, balance: incomes - expenses, total: all.length };
+  },
+
+  async getAllBalance(company: string) {
+    const all = await db.transactions
+      .where("company")
+      .equals(company)
+      .toArray();
+    const incomes = all
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.value, 0);
+    const expenses = all
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.value, 0);
+    return { incomes, expenses, balance: incomes - expenses };
   },
 };

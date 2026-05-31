@@ -2,6 +2,7 @@ export type TransactionType = "income" | "expense";
 
 export interface Transaction {
   id: string;
+  displayId: string;
   type: TransactionType;
   value: number;
   categoryId: string;
@@ -33,6 +34,7 @@ export interface AppUser {
   company: string;
   avatar?: string;
   createdAt: string;
+  active?: boolean;
 }
 
 export interface AppSettings {
@@ -46,6 +48,7 @@ export interface AppSettings {
 export interface DeletedTransaction {
   id: string;
   originalId: string;
+  displayId: string;
   type: TransactionType;
   value: number;
   categoryId: string;
@@ -65,6 +68,7 @@ export type ForecastStatus = "predicted" | "received" | "paid" | "cancelled";
 
 export interface CashForecast {
   id: string;
+  displayId: string;
   type: TransactionType;
   description: string;
   amount: number;
@@ -75,6 +79,9 @@ export interface CashForecast {
   company: string;
   createdAt: string;
   updatedAt: string;
+  cancelledReason?: string;
+  cancelledAt?: string;
+  cancelledBy?: string;
 }
 
 export interface MonthlySummary {
@@ -83,4 +90,27 @@ export interface MonthlySummary {
   incomes: number;
   expenses: number;
   balance: number;
+}
+
+export type AuditAction =
+  | "created"
+  | "edited"
+  | "cancelled"
+  | "paid"
+  | "received"
+  | "restored"
+  | "deleted"
+  | "moved_to_trash";
+
+export interface AuditLog {
+  id: string;
+  entityId: string;
+  entityType: "transaction" | "forecast" | "user";
+  displayId: string;
+  action: AuditAction;
+  description: string;
+  user: string;
+  company: string;
+  timestamp: string;
+  details?: string;
 }

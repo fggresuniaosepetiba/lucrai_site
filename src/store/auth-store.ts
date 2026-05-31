@@ -15,6 +15,7 @@ interface AuthState {
   user: AuthUser | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
@@ -27,7 +28,7 @@ export const useAuthStore = create<AuthState>((set) => {
     login: async (username: string, password: string) => {
       const { UserRepository } = await import("@/database/repositories/users");
       const user = await UserRepository.findByEmail(username);
-      if (user && user.password === password) {
+      if (user && user.active !== false && user.password === password) {
         const session = {
           isAuthenticated: true,
           user: {
@@ -46,6 +47,25 @@ export const useAuthStore = create<AuthState>((set) => {
     logout: () => {
       localStorage.removeItem("lucrai-auth");
       set({ isAuthenticated: false, user: null });
+    },
+    refreshUser: async () => {
+      const state = useAuthStore.getState();
+      if (!state.isAuthenticated || !state.user) return;
+      const { UserRepository } = await import("@/database/repositories/users");
+      const fresh = await UserRepository.findByEmail(state.user.email);
+      if (fresh && fresh.active !== false) {
+        const session = {
+          isAuthenticated: true,
+          user: {
+            email: fresh.email,
+            name: fresh.name,
+            company: fresh.company,
+            role: fresh.role,
+          },
+        };
+        localStorage.setItem("lucrai-auth", JSON.stringify(session));
+        set(session);
+      }
     },
   };
 });

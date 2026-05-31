@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Palette, Tag } from "lucide-react";
+import { Plus, Pencil, Trash2, Palette, Tag, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,9 @@ export default function CategoriesPage() {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#0ea5e9");
   const [type, setType] = useState<TransactionType>("expense");
+  const [duplicates, setDuplicates] = useState<{ name: string; type: TransactionType; ids: string[]; keepId: string; count: number }[]>([]);
+  const [showDuplicatesDialog, setShowDuplicatesDialog] = useState(false);
+  const [removingDuplicates, setRemovingDuplicates] = useState(false);
   const company = user?.company ?? "";
 
   useEffect(() => {
@@ -63,6 +66,27 @@ export default function CategoriesPage() {
   const loadCategories = async () => {
     const cats = await CategoryRepository.getAll(company);
     setCategories(cats);
+  };
+
+  const handleCheckDuplicates = async () => {
+    const dups = await CategoryRepository.findDuplicates(company);
+    setDuplicates(dups);
+    setShowDuplicatesDialog(true);
+  };
+
+  const handleRemoveDuplicates = async () => {
+    setRemovingDuplicates(true);
+    try {
+      const removed = await CategoryRepository.removeDuplicates(company);
+      toast("Duplicatas removidas", `${removed} categoria(s) duplicada(s) removida(s) com sucesso`, "success");
+      setShowDuplicatesDialog(false);
+      setDuplicates([]);
+      await loadCategories();
+    } catch (err: any) {
+      toast("Erro", err?.message || "Não foi possível remover duplicatas", "destructive");
+    } finally {
+      setRemovingDuplicates(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,13 +128,16 @@ export default function CategoriesPage() {
     setShowForm(true);
   };
 
-  const openCreate = (t: TransactionType) => {
+  const openCreate = () => {
     setEditingCategory(null);
     setName("");
     setColor("#0ea5e9");
-    setType(t);
+    setType("expense");
     setShowForm(true);
   };
+
+  const incomeCats = categories.filter((c) => c.type === "income");
+  const expenseCats = categories.filter((c) => c.type === "expense");
 
   if (loading) {
     return (
@@ -128,76 +155,161 @@ export default function CategoriesPage() {
     <Shell>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Categorias</h2>
+            <p className="text-sm text-muted-foreground">Gerencie suas categorias de entrada e saída</p>
+          </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => openCreate("income")} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Entrada
+            <Button onClick={handleCheckDuplicates} variant="outline" size="sm" className="gap-2 text-xs">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Remover Duplicadas
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => openCreate("expense")} className="gap-2">
+            <Button onClick={openCreate} className="gap-2">
               <Plus className="h-4 w-4" />
-              Saída
+              Criar Nova Categoria
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.length === 0 && (
-            <Card className="col-span-full">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="rounded-full bg-muted p-4 mb-4">
-                  <Tag className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <p className="text-lg font-medium">Nenhuma categoria</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Crie categorias para organizar seus lançamentos
+        {categories.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="rounded-full bg-muted p-4 mb-4">
+                <Tag className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-lg font-medium">Nenhuma categoria</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Crie categorias para organizar seus lançamentos
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {incomeCats.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3">Entradas</h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {incomeCats.map((cat) => (
+                <Card key={cat.id} className="group hover:shadow-md transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: `${cat.color}20` }}
+                        >
+                          <Palette className="h-5 w-5" style={{ color: cat.color }} />
+                        </div>
+                        <div>
+                          <p className="font-medium">{cat.name}</p>
+                          <Badge variant="success" className="text-[10px] px-1.5 py-0">
+                            Entrada
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => handleDelete(cat.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {expenseCats.length > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-3">Saídas</h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {expenseCats.map((cat) => (
+                <Card key={cat.id} className="group hover:shadow-md transition-all">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: `${cat.color}20` }}
+                        >
+                          <Palette className="h-5 w-5" style={{ color: cat.color }} />
+                        </div>
+                        <div>
+                          <p className="font-medium">{cat.name}</p>
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                            Saída
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => handleDelete(cat.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <Dialog open={showDuplicatesDialog} onOpenChange={(open) => { if (!open) { setShowDuplicatesDialog(false); } }}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
+                Remover Categorias Duplicadas
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              {duplicates.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  Nenhuma categoria duplicada encontrada
                 </p>
-              </CardContent>
-            </Card>
-          )}
-          {categories.map((cat) => (
-            <Card key={cat.id} className="group hover:shadow-md transition-all">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-10 w-10 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${cat.color}20` }}
-                    >
-                      <Palette className="h-5 w-5" style={{ color: cat.color }} />
-                    </div>
-                    <div>
-                      <p className="font-medium">{cat.name}</p>
-                      <Badge
-                        variant={cat.type === "income" ? "success" : "destructive"}
-                        className="text-[10px] px-1.5 py-0"
-                      >
-                        {cat.type === "income" ? "Entrada" : "Saída"}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => openEdit(cat)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-red-400"
-                      onClick={() => handleDelete(cat.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    As seguintes categorias aparecem mais de uma vez. Será mantida apenas a mais antiga e as
+                    transações serão reassociadas automaticamente.
+                  </p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {duplicates.map((dup) => (
+                      <div key={`${dup.name}-${dup.type}`} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div>
+                          <p className="text-sm font-medium">{dup.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {dup.type === "income" ? "Entrada" : "Saída"} &middot; {dup.count} ocorrências
+                          </p>
+                        </div>
+                        <Badge variant={dup.type === "income" ? "success" : "destructive"} className="text-[10px]">
+                          manter 1 de {dup.count}
+                        </Badge>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDuplicatesDialog(false)}>
+                Cancelar
+              </Button>
+              {duplicates.length > 0 && (
+                <Button variant="destructive" onClick={handleRemoveDuplicates} disabled={removingDuplicates}>
+                  {removingDuplicates ? "Removendo..." : `Remover ${duplicates.reduce((a, d) => a + d.count - 1, 0)} duplicata(s)`}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setEditingCategory(null); } }}>
           <DialogContent className="sm:max-w-[400px]">

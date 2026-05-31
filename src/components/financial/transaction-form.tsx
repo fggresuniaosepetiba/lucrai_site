@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -20,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Transaction, Category } from "@/types";
+import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate } from "@/lib/utils";
 
 interface TransactionFormProps {
   transaction?: Transaction | null;
@@ -30,14 +32,17 @@ interface TransactionFormProps {
 
 export function TransactionForm({
   transaction,
-  categories,
+  categories: initialCategories,
   onSubmit,
   onClose,
 }: TransactionFormProps) {
+
   const [type, setType] = useState<"income" | "expense">(
     transaction?.type || "expense"
   );
-  const [value, setValue] = useState(transaction?.value?.toString() || "");
+  const [valueDisplay, setValueDisplay] = useState(
+    transaction ? formatCurrencyInput(String(Math.round(transaction.value * 100))) : ""
+  );
   const [categoryId, setCategoryId] = useState(transaction?.categoryId || "");
   const [description, setDescription] = useState(transaction?.description || "");
   const [date, setDate] = useState(
@@ -45,38 +50,49 @@ export function TransactionForm({
   );
   const [observation, setObservation] = useState(transaction?.observation || "");
   const [submitting, setSubmitting] = useState(false);
-  const [customCategory, setCustomCategory] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const filteredCategories = categories.filter((c) => c.type === type);
-  const [selectedCategoryName, setSelectedCategoryName] = useState(
-    transaction?.categoryName || ""
-  );
+  const filteredCategories = initialCategories.filter((c) => c.type === type);
 
-  useEffect(() => {
-    if (categoryId) {
-      const cat = categories.find((c) => c.id === categoryId);
-      setSelectedCategoryName(cat?.name || "");
+  const amountValue = valueDisplay ? parseCurrencyInput(valueDisplay) : 0;
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (!description.trim()) errs.description = "Campo obrigatório";
+    if (!valueDisplay) errs.value = "Campo obrigatório";
+    if (!date) { errs.date = "Campo obrigatório"; } else {
+      const dateCheck = validateTransactionDate(date);
+      if (!dateCheck.valid) errs.date = dateCheck.message;
     }
-  }, [categoryId, categories]);
+    if (!categoryId) errs.category = "Campo obrigatório";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const digits = raw.replace(/\D/g, "");
+    if (digits === "") {
+      setValueDisplay("");
+      return;
+    }
+    setValueDisplay(formatCurrencyInput(digits));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setSubmitting(true);
 
-    const finalCategoryName =
-      categoryId === "custom"
-        ? customCategory
-        : selectedCategoryName || "Sem categoria";
-
-    const finalCategoryId = categoryId === "custom" ? "custom" : categoryId;
+    const selectedCat = initialCategories.find((c) => c.id === categoryId);
 
     try {
       await onSubmit({
         type,
-        value: parseFloat(value.replace(",", ".")),
-        categoryId: finalCategoryId,
-        categoryName: finalCategoryName,
-        description,
+        value: amountValue,
+        categoryId: categoryId,
+        categoryName: selectedCat?.name || "Sem categoria",
+        description: description.trim(),
         date,
         observation: observation || undefined,
       });
@@ -91,15 +107,14 @@ export function TransactionForm({
   const handleTypeChange = (newType: "income" | "expense") => {
     setType(newType);
     setCategoryId("");
-    setSelectedCategoryName("");
   };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {transaction ? "Editar Lançamento" : "Novo Lançamento"}
+            {transaction ? `Editar Lançamento ${transaction.displayId}` : "Novo Lançamento"}
           </DialogTitle>
           <DialogDescription>
             Preencha os dados do lançamento financeiro
@@ -130,84 +145,96 @@ export function TransactionForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="value">Valor (R$)</Label>
+              <Label htmlFor="value" className="flex items-center gap-1">
+                Valor (R$)
+                <span className="text-red-400">*</span>
+              </Label>
               <Input
                 id="value"
                 type="text"
-                placeholder="0,00"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                required
+                inputMode="numeric"
+                placeholder="R$ 0,00"
+                value={valueDisplay ? `R$ ${valueDisplay}` : ""}
+                onChange={handleValueChange}
+                className={errors.value ? "border-red-400" : ""}
               />
+              {errors.value && <p className="text-xs text-red-400">{errors.value}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="date" className="flex items-center gap-1">
+                Data
+                <span className="text-red-400">*</span>
+              </Label>
               <Input
                 id="date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                required
+                className={errors.date ? "border-red-400" : ""}
               />
+              {errors.date && <p className="text-xs text-red-400">{errors.date}</p>}
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="valor-extenso">Valor por Extenso</Label>
+            <Textarea
+              id="valor-extenso"
+              value={amountValue > 0 ? valorPorExtenso(amountValue) : ""}
+              disabled
+              readOnly
+              rows={3}
+              className="bg-muted/50 text-muted-foreground cursor-default resize-none leading-relaxed"
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição</Label>
+            <Label htmlFor="description" className="flex items-center gap-1">
+              Descrição
+              <span className="text-red-400">*</span>
+            </Label>
             <Input
               id="description"
               placeholder="Ex: Venda de serviço"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              required
+              className={errors.description ? "border-red-400" : ""}
             />
+            {errors.description && <p className="text-xs text-red-400">{errors.description}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Categoria</Label>
+            <Label htmlFor="category" className="flex items-center gap-1">
+              Categoria
+              <span className="text-red-400">*</span>
+            </Label>
             {filteredCategories.length > 0 ? (
               <Select
-                value={categoryId}
+                key={`${type}-${transaction?.id || "new"}`}
+                defaultValue={transaction?.categoryId || ""}
                 onValueChange={(v) => {
                   setCategoryId(v);
-                  setCustomCategory("");
+                  setErrors((prev) => ({ ...prev, category: "" }));
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={errors.category ? "border-red-400" : ""}>
                   <SelectValue placeholder="Selecionar categoria" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="max-h-60">
                   {filteredCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
                     </SelectItem>
                   ))}
-                  <SelectItem value="custom">+ Nova categoria</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
-              <Select value="custom" onValueChange={() => {}}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhuma categoria cadastrada" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">+ Criar categoria</SelectItem>
-                </SelectContent>
-              </Select>
+              <p className="text-sm text-muted-foreground">Nenhuma categoria disponível para este tipo.</p>
             )}
-            {(categoryId === "custom" || filteredCategories.length === 0) && (
-              <Input
-                placeholder="Nome da nova categoria"
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                className="mt-2"
-                required={filteredCategories.length === 0}
-              />
-            )}
+            {errors.category && <p className="text-xs text-red-400">{errors.category}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="observation">Observação (opcional)</Label>
+            <Label htmlFor="observation">Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
             <Input
               id="observation"
               placeholder="Informações adicionais"

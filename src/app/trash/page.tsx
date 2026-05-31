@@ -6,13 +6,13 @@ import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { TrashRepository } from "@/database/repositories/trash";
 import type { DeletedTransaction } from "@/types";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Trash2, RotateCcw, AlertTriangle, Clock } from "lucide-react";
+import { Trash2, RotateCcw, AlertTriangle, Clock, Hash, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ export default function TrashPage() {
   const [restoreTarget, setRestoreTarget] = useState<DeletedTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeletedTransaction | null>(null);
   const company = user?.company ?? "";
+  const userName = user?.name ?? "Sistema";
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -54,7 +55,7 @@ export default function TrashPage() {
   const handleRestore = async () => {
     if (!restoreTarget) return;
     try {
-      const restored = await TrashRepository.restore(restoreTarget.id);
+      const restored = await TrashRepository.restore(restoreTarget.id, userName);
       if (restored) {
         toast("Lançamento restaurado", "Voltou para o financeiro", "success");
         setRestoreTarget(null);
@@ -68,7 +69,7 @@ export default function TrashPage() {
   const handlePermanentDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await TrashRepository.permanentlyDelete(deleteTarget.id);
+      await TrashRepository.permanentlyDelete(deleteTarget.id, userName);
       toast("Excluído permanentemente", "", "success");
       setDeleteTarget(null);
       load();
@@ -87,7 +88,7 @@ export default function TrashPage() {
       <Shell>
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+            <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
         </div>
       </Shell>
@@ -98,14 +99,23 @@ export default function TrashPage() {
     <Shell>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Trash2 className="h-6 w-6 text-muted-foreground" />
+          <div className="rounded-xl bg-red-500/10 p-3">
+            <Trash2 className="h-6 w-6 text-red-400" />
+          </div>
           <div>
             <h2 className="text-lg font-semibold">Lixeira</h2>
             <p className="text-sm text-muted-foreground">
-              Itens excluídos ficam disponíveis por 30 dias
+              Itens excluídos ficam disponíveis por 30 dias antes da remoção automática
             </p>
           </div>
         </div>
+
+        {items.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Trash2 className="h-3 w-3" />
+            <span>{items.length} item{items.length !== 1 ? "ns" : ""} na lixeira</span>
+          </div>
+        )}
 
         {items.length === 0 ? (
           <Card>
@@ -124,32 +134,45 @@ export default function TrashPage() {
             {items.map((item) => {
               const days = getDaysRemaining(item.restoreUntil);
               return (
-                <Card key={item.id} className="group hover:shadow-md transition-all">
-                  <CardContent className="p-4">
+                <Card key={item.id} className="group hover:shadow-md transition-all border-border/50">
+                  <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant={item.type === "income" ? "success" : "destructive"} className="gap-1">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Hash className="h-3 w-3" />
+                            <span className="font-mono">{item.displayId}</span>
+                          </div>
+                          <Badge variant={item.type === "income" ? "success" : "destructive"} className="gap-1 text-[10px]">
+                            {item.type === "income" ? (
+                              <ArrowUpRight className="h-3 w-3" />
+                            ) : (
+                              <ArrowDownRight className="h-3 w-3" />
+                            )}
                             {item.type === "income" ? "Entrada" : "Saída"}
                           </Badge>
-                          <span className="font-medium">{item.description}</span>
-                          <span className={`text-sm font-semibold ${
+                        </div>
+
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="font-medium text-base">{item.description}</span>
+                          <span className={`text-base font-semibold ${
                             item.type === "income" ? "text-emerald-400" : "text-red-400"
                           }`}>
                             {item.type === "income" ? "+" : "-"}{formatCurrency(item.value)}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                          <span>{item.categoryName}</span>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="rounded-md bg-muted px-2 py-0.5">{item.categoryName}</span>
                           <span>{formatDate(item.date)}</span>
                         </div>
 
-                        <div className="flex items-start gap-2 rounded-lg bg-muted/30 p-2">
-                          <AlertTriangle className="h-3.5 w-3.5 text-amber-400 mt-0.5 shrink-0" />
-                          <p className="text-xs text-muted-foreground">
-                            <span className="text-foreground font-medium">Motivo:</span> {item.reason}
-                          </p>
+                        <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 border border-amber-500/20 p-3">
+                          <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-xs text-amber-300 font-medium">Motivo da exclusão:</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{item.reason}</p>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-1.5 text-xs">
@@ -160,7 +183,7 @@ export default function TrashPage() {
                         </div>
                       </div>
 
-                      <div className="flex gap-1 shrink-0">
+                      <div className="flex gap-2 shrink-0 mt-1">
                         <Button
                           variant="outline"
                           size="sm"
@@ -174,7 +197,7 @@ export default function TrashPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setDeleteTarget(item)}
-                          className="gap-1.5 text-xs text-muted-foreground hover:text-red-400"
+                          className="gap-1.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
                         >
                           Excluir
                         </Button>
@@ -191,24 +214,51 @@ export default function TrashPage() {
       <Dialog open={!!restoreTarget} onOpenChange={(open) => { if (!open) setRestoreTarget(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <RotateCcw className="h-5 w-5" />
-              Restaurar Lançamento
-            </DialogTitle>
-            <DialogDescription className="pt-2">
-              <p>ESSE LANÇAMENTO FOI REMOVIDO PARA A LIXEIRA PELO MOTIVO:</p>
-              <p className="mt-2 p-3 rounded-lg bg-muted text-sm font-medium text-foreground">
-                {restoreTarget?.reason}
-              </p>
-              <p className="mt-4 text-foreground font-semibold">DESEJA RESTAURAR MESMO ASSIM?</p>
-            </DialogDescription>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
+                <RotateCcw className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div>
+                <DialogTitle>Restaurar Lançamento</DialogTitle>
+                <DialogDescription>
+                  O lançamento {restoreTarget?.displayId} será restaurado para o financeiro.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                  restoreTarget?.type === "income" ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                }`}>
+                  {restoreTarget?.type === "income" ? "Entrada" : "Saída"}
+                </span>
+                <span className="text-sm font-medium">{restoreTarget?.description}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>{restoreTarget?.categoryName}</span>
+                <span>{restoreTarget ? formatDate(restoreTarget.date) : ""}</span>
+                <span className={`font-semibold ${
+                  restoreTarget?.type === "income" ? "text-emerald-400" : "text-red-400"
+                }`}>
+                  {restoreTarget?.type === "income" ? "+" : "-"}{restoreTarget ? formatCurrency(restoreTarget.value) : ""}
+                </span>
+              </div>
+              <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 p-2 mt-2">
+                <AlertTriangle className="h-3 w-3 text-amber-400 mt-0.5" />
+                <p className="text-xs text-muted-foreground">Motivo: {restoreTarget?.reason}</p>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-center">Deseja restaurar este lançamento?</p>
+          </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setRestoreTarget(null)}>
-              NÃO
+              Cancelar
             </Button>
-            <Button onClick={handleRestore}>
-              SIM
+            <Button onClick={handleRestore} className="gap-2">
+              <RotateCcw className="h-4 w-4" />
+              Restaurar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -217,27 +267,49 @@ export default function TrashPage() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              Excluir Permanentemente
-            </DialogTitle>
-            <DialogDescription className="pt-2">
-              <p>
-                ESTE LANÇAMENTO FOI REMOVIDO EM{" "}
-                <span className="font-bold text-foreground">
-                  {deleteTarget ? 30 - getDaysRemaining(deleteTarget.restoreUntil) : ""}
-                </span>{" "}
-                DIA{deleteTarget && 30 - getDaysRemaining(deleteTarget.restoreUntil) !== 1 ? "S" : ""}
-                , DESEJA EXCLUIR PERMANENTEMENTE ANTES DO PERÍODO DE 30 DIAS?
-              </p>
-            </DialogDescription>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+                <Trash2 className="h-5 w-5 text-red-400" />
+              </div>
+              <div>
+                <DialogTitle>Excluir Permanentemente</DialogTitle>
+                <DialogDescription>
+                  Esta ação não pode ser desfeita. O lançamento será removido permanentemente.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                  deleteTarget?.type === "income" ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                }`}>
+                  {deleteTarget?.type === "income" ? "Entrada" : "Saída"}
+                </span>
+                <span className="text-sm font-medium">{deleteTarget?.description}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>{deleteTarget?.categoryName}</span>
+                <span>{deleteTarget ? formatDate(deleteTarget.date) : ""}</span>
+                <span className={`font-semibold ${
+                  deleteTarget?.type === "income" ? "text-emerald-400" : "text-red-400"
+                }`}>
+                  {deleteTarget?.type === "income" ? "+" : "-"}{deleteTarget ? formatCurrency(deleteTarget.value) : ""}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-center text-red-400">
+              Deseja excluir permanentemente este lançamento?
+            </p>
+          </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
-              NÃO
+              Cancelar
             </Button>
-            <Button variant="destructive" onClick={handlePermanentDelete}>
-              SIM
+            <Button variant="destructive" onClick={handlePermanentDelete} className="gap-2">
+              <Trash2 className="h-4 w-4" />
+              Excluir Permanentemente
             </Button>
           </DialogFooter>
         </DialogContent>

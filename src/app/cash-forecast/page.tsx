@@ -6,7 +6,10 @@ import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { TransactionRepository } from "@/database/repositories/transactions";
-import type { CashForecast, ForecastStatus, TransactionType } from "@/types";
+import { CategoryRepository } from "@/database/repositories/categories";
+import { AuditRepository } from "@/database/repositories/audit";
+import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
+import type { CashForecast, ForecastStatus, TransactionType, Category } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +18,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateForecastDate } from "@/lib/utils";
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
   AlertTriangle, Search, Pencil, EyeOff, CheckCircle2, XCircle,
-  ArrowUpDown, Wallet, Target, BarChart3,
+  ArrowUpDown, Wallet, Target, BarChart3, Hash, History, Clock,
 } from "lucide-react";
 import {
   Dialog,
@@ -59,21 +63,32 @@ function CashForecastContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
   const [items, setItems] = useState<CashForecast[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("filter") || "all");
   const [currentBalance, setCurrentBalance] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<CashForecast | null>(null);
+  const [activeTab, setActiveTab] = useState("active");
   const company = user?.company ?? "";
+  const userName = user?.name ?? "Sistema";
 
   const [formType, setFormType] = useState<TransactionType>("income");
   const [formDescription, setFormDescription] = useState("");
-  const [formAmount, setFormAmount] = useState("");
+  const [formAmountDisplay, setFormAmountDisplay] = useState("");
   const [formCategory, setFormCategory] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formNotes, setFormNotes] = useState("");
-  const [formStatus, setFormStatus] = useState<ForecastStatus>("predicted");
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    type: "received" | "paid" | "cancelled" | "delete";
+    item: CashForecast | null;
+  }>({ open: false, type: "received", item: null });
+
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelError, setCancelError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -90,12 +105,17 @@ function CashForecastContent() {
 
   const loadData = async () => {
     try {
-      const [forecasts, summary] = await Promise.all([
+      await migrateDisplayIds();
+      await fixCompanyName();
+      await useAuthStore.getState().refreshUser();
+      const [forecasts, balanceData, cats] = await Promise.all([
         CashForecastRepository.getAll(company),
-        TransactionRepository.getYearlySummary(new Date().getFullYear(), company),
+        TransactionRepository.getAllBalance(company),
+        CategoryRepository.getAll(company),
       ]);
       setItems(forecasts);
-      setCurrentBalance(summary.balance);
+      setCurrentBalance(balanceData.balance);
+      setCategories(cats);
     } catch (err) {
       console.error(err);
     } finally {
@@ -103,31 +123,36 @@ function CashForecastContent() {
     }
   };
 
+  const activeItems = useMemo(() => items.filter((i) => i.status === "predicted"), [items]);
+  const historyItems = useMemo(() => items.filter((i) => i.status !== "predicted"), [items]);
+
   const totals = useMemo(() => {
-    const predicted = items.filter((i) => i.status === "predicted");
+    const predicted = activeItems.filter((i) => i.status === "predicted");
     const incomes = predicted.filter((i) => i.type === "income").reduce((s, i) => s + i.amount, 0);
     const expenses = predicted.filter((i) => i.type === "expense").reduce((s, i) => s + i.amount, 0);
     return { predictedIncomes: incomes, predictedExpenses: expenses };
-  }, [items]);
+  }, [activeItems]);
 
   const projectedBalance = currentBalance + totals.predictedIncomes - totals.predictedExpenses;
   const hasCashAlert = totals.predictedExpenses > currentBalance;
 
+  const sourceItems = activeTab === "active" ? activeItems : historyItems;
+
   const filtered = useMemo(() => {
-    return items.filter((i) => {
+    return sourceItems.filter((i) => {
       if (filterStatus !== "all" && i.status !== filterStatus && filterStatus !== "income" && filterStatus !== "expense") return false;
       if (filterStatus === "income" && i.type !== "income") return false;
       if (filterStatus === "expense" && i.type !== "expense") return false;
       if (search) {
         const q = search.toLowerCase();
-        return i.description.toLowerCase().includes(q) || i.category.toLowerCase().includes(q);
+        return i.description.toLowerCase().includes(q) || i.category.toLowerCase().includes(q) || i.displayId.toLowerCase().includes(q);
       }
       return true;
     });
-  }, [items, filterStatus, search]);
+  }, [sourceItems, filterStatus, search]);
 
   const chartData = useMemo(() => {
-    const sorted = [...items]
+    const sorted = [...activeItems]
       .filter((i) => i.status !== "cancelled")
       .sort((a, b) => new Date(a.expectedDate).getTime() - new Date(b.expectedDate).getTime());
     let running = currentBalance;
@@ -141,17 +166,18 @@ function CashForecastContent() {
       points.push({ date: formatDate(item.expectedDate), balance: running });
     }
     return points;
-  }, [items, currentBalance]);
+  }, [activeItems, currentBalance]);
+
+  const formAmountValue = formAmountDisplay ? parseCurrencyInput(formAmountDisplay) : 0;
 
   const openCreate = () => {
     setEditingItem(null);
     setFormType("income");
     setFormDescription("");
-    setFormAmount("");
+    setFormAmountDisplay("");
     setFormCategory("");
     setFormDate("");
     setFormNotes("");
-    setFormStatus("predicted");
     setShowForm(true);
   };
 
@@ -159,18 +185,23 @@ function CashForecastContent() {
     setEditingItem(item);
     setFormType(item.type);
     setFormDescription(item.description);
-    setFormAmount(String(item.amount));
-    setFormCategory(item.category);
+    setFormAmountDisplay(formatCurrencyInput(String(Math.round(item.amount * 100))));
+    const cat = categories.find((c) => c.name === item.category);
+    setFormCategory(cat?.id || "");
     setFormDate(item.expectedDate);
     setFormNotes(item.notes || "");
-    setFormStatus(item.status);
     setShowForm(true);
   };
 
   const handleSubmit = async () => {
-    if (!formDescription.trim() || !formAmount || !formDate) return;
-    const amount = parseFloat(formAmount);
+    if (!formDescription.trim() || !formAmountDisplay || !formDate || !formCategory) return;
+    const dateCheck = validateForecastDate(formDate);
+    if (!dateCheck.valid) { toast("Data inválida", dateCheck.message, "destructive"); return; }
+    const amount = formAmountValue;
     if (isNaN(amount) || amount <= 0) { toast("Valor inválido", "", "destructive"); return; }
+
+    const selectedCat = categories.find((c) => c.id === formCategory);
+    const categoryName = selectedCat?.name || "Sem categoria";
 
     try {
       if (editingItem) {
@@ -178,16 +209,16 @@ function CashForecastContent() {
           type: formType,
           description: formDescription.trim(),
           amount,
-          category: formCategory.trim(),
+          category: categoryName,
           expectedDate: formDate,
           notes: formNotes.trim(),
-          status: formStatus,
-        });
+        }, userName);
         toast("Previsão atualizada", "", "success");
       } else {
         await CashForecastRepository.create(
-          { type: formType, description: formDescription.trim(), amount, category: formCategory.trim(), expectedDate: formDate, notes: formNotes.trim(), status: "predicted" },
-          company
+          { type: formType, description: formDescription.trim(), amount, category: categoryName, expectedDate: formDate, notes: formNotes.trim(), status: "predicted" },
+          company,
+          userName
         );
         toast("Previsão criada", "Lançamento previsto registrado", "success");
       }
@@ -196,14 +227,44 @@ function CashForecastContent() {
     } catch { toast("Erro", "Não foi possível salvar", "destructive"); }
   };
 
-  const handleStatusChange = async (id: string, status: ForecastStatus) => {
+  const handleFormAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const digits = raw.replace(/\D/g, "");
+    if (digits === "") {
+      setFormAmountDisplay("");
+      return;
+    }
+    setFormAmountDisplay(formatCurrencyInput(digits));
+  };
+
+  const openConfirmDialog = (item: CashForecast, type: "received" | "paid" | "cancelled") => {
+    setConfirmDialog({ open: true, type, item });
+    setCancelReason("");
+    setCancelError("");
+  };
+
+  const handleConfirmAction = async () => {
+    const { type, item } = confirmDialog;
+    if (!item) return;
+
     try {
-      if (status === "received") await CashForecastRepository.markAsReceived(id, company);
-      else if (status === "paid") await CashForecastRepository.markAsPaid(id, company);
-      else if (status === "cancelled") await CashForecastRepository.markAsCancelled(id);
-      toast("Status atualizado", "", "success");
+      if (type === "cancelled") {
+        if (!cancelReason.trim()) {
+          setCancelError("O motivo do cancelamento é obrigatório.");
+          return;
+        }
+        await CashForecastRepository.markAsCancelled(item.id, cancelReason.trim(), userName);
+        toast("Previsão cancelada", "", "success");
+      } else if (type === "received") {
+        await CashForecastRepository.markAsReceived(item.id, company, userName);
+        toast("Previsão marcada como recebida", "", "success");
+      } else if (type === "paid") {
+        await CashForecastRepository.markAsPaid(item.id, company, userName);
+        toast("Previsão marcada como paga", "", "success");
+      }
+      setConfirmDialog({ open: false, type: "received", item: null });
       loadData();
-    } catch { toast("Erro", "", "destructive"); }
+    } catch { toast("Erro", "Não foi possível atualizar", "destructive"); }
   };
 
   if (loading) {
@@ -239,7 +300,7 @@ function CashForecastContent() {
                   <Wallet className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Caixa Atual</p>
+                  <p className="text-xs text-muted-foreground">Caixa Atual (Realizado)</p>
                   <p className="text-lg font-bold">{formatCurrency(currentBalance)}</p>
                 </div>
               </div>
@@ -292,7 +353,7 @@ function CashForecastContent() {
           <div className="flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
             <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0" />
             <p className="text-sm text-amber-300">
-              Seu caixa atual não cobre todos os compromissos futuros.
+              Seu caixa atual ({formatCurrency(currentBalance)}) não cobre todos os pagamentos previstos ({formatCurrency(totals.predictedExpenses)}).
             </p>
           </div>
         )}
@@ -330,118 +391,224 @@ function CashForecastContent() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 items-center gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Pesquisar previsões..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-            </div>
-            <div className="flex gap-1 rounded-lg border p-1 flex-wrap">
-              {[
-                { value: "all", label: "Todos" },
-                { value: "income", label: "Recebimentos" },
-                { value: "expense", label: "Pagamentos" },
-                { value: "predicted", label: "Previstos" },
-                { value: "received", label: "Recebidos" },
-                { value: "paid", label: "Pagos" },
-                { value: "cancelled", label: "Cancelados" },
-              ].map((f) => (
-                <button key={f.value} onClick={() => setFilterStatus(f.value)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                    filterStatus === f.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >{f.label}</button>
-              ))}
+        {/* Tabs: Ativos / Histórico */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <TabsList>
+              <TabsTrigger value="active" className="gap-2">
+                <Clock className="h-4 w-4" />
+                Previsões Ativas
+              </TabsTrigger>
+              <TabsTrigger value="history" className="gap-2">
+                <History className="h-4 w-4" />
+                Histórico
+              </TabsTrigger>
+            </TabsList>
+            {activeTab === "active" && (
+              <Button onClick={openCreate} className="gap-2">
+                <Plus className="h-4 w-4" /> Novo Lançamento Previsto
+              </Button>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-4">
+            <div className="flex flex-1 items-center gap-3">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Pesquisar previsões..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              </div>
+              <div className="flex gap-1 rounded-lg border p-1 flex-wrap">
+                {[
+                  { value: "all", label: "Todos" },
+                  { value: "income", label: "Recebimentos" },
+                  { value: "expense", label: "Pagamentos" },
+                  ...(activeTab === "active" ? [
+                    { value: "predicted", label: "Previstos" },
+                  ] : [
+                    { value: "received", label: "Recebidos" },
+                    { value: "paid", label: "Pagos" },
+                    { value: "cancelled", label: "Cancelados" },
+                  ]),
+                ].map((f) => (
+                  <button key={f.value} onClick={() => setFilterStatus(f.value)}
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                      filterStatus === f.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >{f.label}</button>
+                ))}
+              </div>
             </div>
           </div>
-          <Button onClick={openCreate} className="gap-2">
-            <Plus className="h-4 w-4" /> Novo Lançamento Previsto
-          </Button>
-        </div>
 
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th className="text-left font-medium text-muted-foreground p-4">Tipo</th>
-                    <th className="text-left font-medium text-muted-foreground p-4">Descrição</th>
-                    <th className="text-left font-medium text-muted-foreground p-4">Categoria</th>
-                    <th className="text-right font-medium text-muted-foreground p-4">Valor</th>
-                    <th className="text-left font-medium text-muted-foreground p-4">Data Prevista</th>
-                    <th className="text-center font-medium text-muted-foreground p-4">Status</th>
-                    <th className="text-right font-medium text-muted-foreground p-4">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                        Nenhuma previsão encontrada
-                      </td>
-                    </tr>
-                  ) : (
-                    filtered.map((item) => (
-                      <tr key={item.id} className="border-b border-border/25 hover:bg-muted/30 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            {item.type === "income" ? (
-                              <TrendingUp className="h-4 w-4 text-emerald-400" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4 text-red-400" />
-                            )}
-                            <span className="text-xs">{item.type === "income" ? "Entrada" : "Saída"}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 font-medium">{item.description}</td>
-                        <td className="p-4 text-muted-foreground">{item.category || "—"}</td>
-                        <td className={`p-4 text-right font-medium tabular-nums ${
-                          item.type === "income" ? "text-emerald-400" : "text-red-400"
-                        }`}>{item.type === "income" ? "+" : "-"}{formatCurrency(item.amount)}</td>
-                        <td className="p-4 text-muted-foreground">{formatDate(item.expectedDate)}</td>
-                        <td className="p-4 text-center">
-                          <Badge variant={statusVariants[item.status]} className="text-[10px]">
-                            {statusLabels[item.status]}
-                          </Badge>
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            {item.status === "predicted" && (
-                              <>
-                                <button onClick={() => handleStatusChange(item.id, "received")}
-                                  className="rounded-lg p-1.5 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-                                  title="Marcar como Recebido"
-                                ><CheckCircle2 className="h-3.5 w-3.5" /></button>
-                                <button onClick={() => handleStatusChange(item.id, "paid")}
-                                  className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10 transition-colors"
-                                  title="Marcar como Pago"
-                                ><DollarSign className="h-3.5 w-3.5" /></button>
-                                <button onClick={() => handleStatusChange(item.id, "cancelled")}
-                                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
-                                  title="Cancelar"
-                                ><XCircle className="h-3.5 w-3.5" /></button>
-                              </>
-                            )}
-                            <button onClick={() => openEdit(item)}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
-                              title="Editar"
-                            ><Pencil className="h-3.5 w-3.5" /></button>
-                          </div>
-                        </td>
+          <TabsContent value="active" className="mt-0">
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/50">
+                        <th className="text-left font-medium text-muted-foreground p-4">ID</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Tipo</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Descrição</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Categoria</th>
+                        <th className="text-right font-medium text-muted-foreground p-4">Valor</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Data Prevista</th>
+                        <th className="text-center font-medium text-muted-foreground p-4">Status</th>
+                        <th className="text-right font-medium text-muted-foreground p-4">Ações</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                    </thead>
+                    <tbody>
+                      {filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                            Nenhuma previsão encontrada
+                          </td>
+                        </tr>
+                      ) : (
+                        filtered.map((item) => (
+                          <tr key={item.id} className="border-b border-border/25 hover:bg-muted/30 transition-colors">
+                            <td className="p-4">
+                              <div className="flex items-center gap-1.5">
+                                <Hash className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-xs font-mono text-muted-foreground">{item.displayId}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                {item.type === "income" ? (
+                                  <TrendingUp className="h-4 w-4 text-emerald-400" />
+                                ) : (
+                                  <TrendingDown className="h-4 w-4 text-red-400" />
+                                )}
+                                <span className="text-xs">{item.type === "income" ? "Entrada" : "Saída"}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 font-medium">{item.description}</td>
+                            <td className="p-4 text-muted-foreground">{item.category || "—"}</td>
+                            <td className={`p-4 text-right font-medium tabular-nums ${
+                              item.type === "income" ? "text-emerald-400" : "text-red-400"
+                            }`}>{item.type === "income" ? "+" : "-"}{formatCurrency(item.amount)}</td>
+                            <td className="p-4 text-muted-foreground">{formatDate(item.expectedDate)}</td>
+                            <td className="p-4 text-center">
+                              <Badge variant={statusVariants[item.status]} className="text-[10px]">
+                                {statusLabels[item.status]}
+                              </Badge>
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {item.status === "predicted" && (
+                                  <>
+                                    {item.type === "income" && (
+                                      <button onClick={() => openConfirmDialog(item, "received")}
+                                        className="rounded-lg p-1.5 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                                        title="Marcar como Recebido"
+                                      ><CheckCircle2 className="h-3.5 w-3.5" /></button>
+                                    )}
+                                    {item.type === "expense" && (
+                                      <button onClick={() => openConfirmDialog(item, "paid")}
+                                        className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10 transition-colors"
+                                        title="Marcar como Pago"
+                                      ><DollarSign className="h-3.5 w-3.5" /></button>
+                                    )}
+                                    <button onClick={() => openConfirmDialog(item, "cancelled")}
+                                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
+                                      title="Cancelar"
+                                    ><XCircle className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => openEdit(item)}
+                                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
+                                      title="Editar"
+                                    ><Pencil className="h-3.5 w-3.5" /></button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
+          <TabsContent value="history" className="mt-0">
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/50">
+                        <th className="text-left font-medium text-muted-foreground p-4">ID</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Tipo</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Descrição</th>
+                        <th className="text-right font-medium text-muted-foreground p-4">Valor</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Data Prevista</th>
+                        <th className="text-center font-medium text-muted-foreground p-4">Status</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Data da Ação</th>
+                        <th className="text-left font-medium text-muted-foreground p-4">Detalhes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                            Nenhum registro no histórico
+                          </td>
+                        </tr>
+                      ) : (
+                        filtered.map((item) => (
+                          <tr key={item.id} className="border-b border-border/25 hover:bg-muted/30 transition-colors">
+                            <td className="p-4">
+                              <div className="flex items-center gap-1.5">
+                                <Hash className="h-3 w-3 text-muted-foreground" />
+                                <span className="text-xs font-mono text-muted-foreground">{item.displayId}</span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                {item.type === "income" ? (
+                                  <TrendingUp className="h-4 w-4 text-emerald-400" />
+                                ) : (
+                                  <TrendingDown className="h-4 w-4 text-red-400" />
+                                )}
+                                <span className="text-xs">{item.type === "income" ? "Entrada" : "Saída"}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 font-medium">{item.description}</td>
+                            <td className={`p-4 text-right font-medium tabular-nums ${
+                              item.type === "income" ? "text-emerald-400" : "text-red-400"
+                            }`}>{item.type === "income" ? "+" : "-"}{formatCurrency(item.amount)}</td>
+                            <td className="p-4 text-muted-foreground">{formatDate(item.expectedDate)}</td>
+                            <td className="p-4 text-center">
+                              <Badge variant={statusVariants[item.status]} className="text-[10px]">
+                                {statusLabels[item.status]}
+                              </Badge>
+                            </td>
+                            <td className="p-4 text-muted-foreground text-xs">
+                              {item.status === "cancelled" && item.cancelledAt
+                                ? formatDate(item.cancelledAt)
+                                : formatDate(item.updatedAt)}
+                            </td>
+                            <td className="p-4 text-muted-foreground text-xs max-w-[200px] truncate" title={item.cancelledReason || ""}>
+                              {item.status === "cancelled" ? (item.cancelledReason || "—") : "—"}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Create/Edit Dialog */}
         <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setEditingItem(null); } }}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingItem ? "Editar Previsão" : "Novo Lançamento Previsto"}</DialogTitle>
+              <DialogTitle>{editingItem ? `Editar Previsão ${editingItem.displayId}` : "Novo Lançamento Previsto"}</DialogTitle>
               <DialogDescription>
                 Registre valores futuros que ainda não entraram ou saíram do caixa.
               </DialogDescription>
@@ -459,46 +626,158 @@ function CashForecastContent() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="desc">Descrição</Label>
+                <Label htmlFor="desc" className="flex items-center gap-1">
+                  Descrição <span className="text-red-400">*</span>
+                </Label>
                 <Input id="desc" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Ex: Pagamento cliente X" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Valor</Label>
-                  <Input id="amount" type="number" step="0.01" min="0" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} placeholder="0,00" />
+                  <Label htmlFor="amount" className="flex items-center gap-1">
+                    Valor <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="amount"
+                    type="text"
+                    inputMode="numeric"
+                    value={formAmountDisplay ? `R$ ${formAmountDisplay}` : ""}
+                    onChange={handleFormAmountChange}
+                    placeholder="R$ 0,00"
+                    className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cat">Categoria</Label>
-                  <Input id="cat" value={formCategory} onChange={(e) => setFormCategory(e.target.value)} placeholder="Ex: Vendas, Aluguel" />
+                  <Label htmlFor="date" className="flex items-center gap-1">
+                    Data Prevista <span className="text-red-400">*</span>
+                  </Label>
+                  <Input id="date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Data Prevista</Label>
-                <Input id="date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+                <Label htmlFor="forecast-extenso">Valor por Extenso</Label>
+                <Textarea
+                  id="forecast-extenso"
+                  value={formAmountValue > 0 ? valorPorExtenso(formAmountValue) : ""}
+                  disabled
+                  readOnly
+                  rows={3}
+                  className="bg-muted/50 text-muted-foreground cursor-default resize-none leading-relaxed"
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">Observação</Label>
+                <Label htmlFor="cat" className="flex items-center gap-1">
+                  Categoria <span className="text-red-400">*</span>
+                </Label>
+                <Select
+                  key={`${formType}-${editingItem?.id || "new"}`}
+                  defaultValue={editingItem ? (categories.find((c) => c.name === editingItem.category)?.id || "") : ""}
+                  onValueChange={setFormCategory}
+                >
+                  <SelectTrigger id="cat">
+                    <SelectValue placeholder="Selecionar categoria" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="max-h-60">
+                    {categories.filter((c) => c.type === formType).map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                 <Textarea id="notes" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Informações adicionais..." rows={2} />
               </div>
-              {editingItem && (
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={formStatus} onValueChange={(v) => setFormStatus(v as ForecastStatus)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="predicted">Previsto</SelectItem>
-                      <SelectItem value="received">Recebido</SelectItem>
-                      <SelectItem value="paid">Pago</SelectItem>
-                      <SelectItem value="cancelled">Cancelado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setShowForm(false); setEditingItem(null); }}>Cancelar</Button>
-              <Button onClick={handleSubmit} disabled={!formDescription.trim() || !formAmount || !formDate}>
+              <Button onClick={handleSubmit} disabled={!formDescription.trim() || !formAmountDisplay || !formDate}>
                 {editingItem ? "Atualizar" : "Criar"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Confirmation Dialog for Received/Paid/Cancelled */}
+        <Dialog open={confirmDialog.open} onOpenChange={(open) => { if (!open) setConfirmDialog({ open: false, type: "received", item: null }); }}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                  confirmDialog.type === "cancelled" ? "bg-amber-500/15" : "bg-blue-500/15"
+                }`}>
+                  {confirmDialog.type === "cancelled" ? (
+                    <AlertTriangle className="h-5 w-5 text-amber-400" />
+                  ) : confirmDialog.type === "received" ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  ) : (
+                    <DollarSign className="h-5 w-5 text-red-400" />
+                  )}
+                </div>
+                <div>
+                  <DialogTitle>
+                    {confirmDialog.type === "received" ? "Confirmar Recebimento" :
+                     confirmDialog.type === "paid" ? "Confirmar Pagamento" : "Cancelar Previsão"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {confirmDialog.type === "cancelled"
+                      ? "Esta ação removerá o lançamento das previsões ativas e o moverá para o Histórico."
+                      : "Esta ação impactará relatórios, indicadores financeiros e saldo realizado."}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {confirmDialog.item && (
+                <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-muted-foreground">{confirmDialog.item.displayId}</span>
+                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                      confirmDialog.item.type === "income" ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                    }`}>
+                      {confirmDialog.item.type === "income" ? "Entrada" : "Saída"}
+                    </span>
+                    <span className="text-sm font-medium">{confirmDialog.item.description}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>{formatCurrency(confirmDialog.item.amount)}</span>
+                    <span>{formatDate(confirmDialog.item.expectedDate)}</span>
+                  </div>
+                </div>
+              )}
+
+              {confirmDialog.type === "cancelled" && (
+                <div className="space-y-2">
+                  <Label htmlFor="cancel-reason" className="flex items-center gap-1">
+                    Motivo do Cancelamento <span className="text-red-400">*</span>
+                  </Label>
+                  <Textarea
+                    id="cancel-reason"
+                    placeholder="Descreva o motivo do cancelamento..."
+                    value={cancelReason}
+                    onChange={(e) => { setCancelReason(e.target.value); setCancelError(""); }}
+                    rows={3}
+                  />
+                  {cancelError && <p className="text-xs text-red-400">{cancelError}</p>}
+                </div>
+              )}
+
+              {confirmDialog.type !== "cancelled" && (
+                <p className="text-sm font-semibold">
+                  ATENÇÃO: Você está marcando o lançamento {confirmDialog.item?.displayId} como {confirmDialog.type === "received" ? "RECEBIDO" : "PAGO"}. Deseja continuar?
+                </p>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setConfirmDialog({ open: false, type: "received", item: null })}>
+                Cancelar
+              </Button>
+              <Button variant={confirmDialog.type === "cancelled" ? "destructive" : "default"} onClick={handleConfirmAction}>
+                {confirmDialog.type === "received" ? "Confirmar Recebimento" :
+                 confirmDialog.type === "paid" ? "Confirmar Pagamento" : "Confirmar Cancelamento"}
               </Button>
             </DialogFooter>
           </DialogContent>
