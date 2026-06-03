@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Palette, Tag, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, Palette, Tag, AlertTriangle, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +42,7 @@ export default function CategoriesPage() {
   const [duplicates, setDuplicates] = useState<{ name: string; type: TransactionType; ids: string[]; keepId: string; count: number }[]>([]);
   const [showDuplicatesDialog, setShowDuplicatesDialog] = useState(false);
   const [removingDuplicates, setRemovingDuplicates] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Category | null>(null);
   const company = user?.company ?? "";
 
   useEffect(() => {
@@ -110,10 +111,12 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
     try {
-      await CategoryRepository.delete(id);
+      await CategoryRepository.delete(deleteConfirm.id);
       toast("Categoria excluída", "", "success");
+      setDeleteConfirm(null);
       await loadCategories();
     } catch {
       toast("Erro", "Não foi possível excluir", "destructive");
@@ -211,7 +214,7 @@ export default function CategoriesPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => handleDelete(cat.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => setDeleteConfirm(cat)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -249,7 +252,7 @@ export default function CategoriesPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cat)}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => handleDelete(cat.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => setDeleteConfirm(cat)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -307,6 +310,33 @@ export default function CategoriesPage() {
                   {removingDuplicates ? "Removendo..." : `Remover ${duplicates.reduce((a, d) => a + d.count - 1, 0)} duplicata(s)`}
                 </Button>
               )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-400" />
+                Excluir Categoria
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground">
+                Tem certeza que deseja excluir a categoria <strong>{deleteConfirm?.name}</strong>?
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Transações vinculadas a esta categoria perderão a referência.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm}>
+                Excluir
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
