@@ -11,12 +11,13 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { FinancialHealth } from "@/components/dashboard/financial-health";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
+import { PricingRepository } from "@/database/repositories/pricing";
 import { seedDefaultCategories } from "@/database/seed";
 import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
-import type { Transaction } from "@/types";
+import type { Transaction, PricingProduct } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Target } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, Calculator, Percent, AlertTriangle } from "lucide-react";
 import { formatCurrency, parseLocalDate } from "@/lib/utils";
 import { cn } from "@/lib/cn";
 
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<DashboardFilter>("all");
   const [forecastIncomes, setForecastIncomes] = useState(0);
   const [forecastExpenses, setForecastExpenses] = useState(0);
+  const [pricingProducts, setPricingProducts] = useState<PricingProduct[]>([]);
   const [year, setYear] = useState(new Date().getFullYear());
   const company = user?.company ?? "";
   const initialized = useRef(false);
@@ -55,13 +57,15 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     try {
-      const [txs, forecastTotals] = await Promise.all([
+      const [txs, forecastTotals, pricing] = await Promise.all([
         TransactionRepository.getAll(company),
         CashForecastRepository.getTotals(company),
+        PricingRepository.getAll(company),
       ]);
       setTransactions(txs);
       setForecastIncomes(forecastTotals.predictedIncomes);
       setForecastExpenses(forecastTotals.predictedExpenses);
+      setPricingProducts(pricing);
     } catch (err) {
       console.error("Error loading dashboard data:", err);
     } finally {
@@ -80,6 +84,12 @@ export default function DashboardPage() {
   }, [transactions]);
 
   const projectedBalance = currentBalance + forecastIncomes - forecastExpenses;
+
+  const pricingCount = pricingProducts.length;
+  const avgMargin = pricingCount > 0
+    ? pricingProducts.reduce((s, p) => s + p.netMargin, 0) / pricingCount
+    : 0;
+  const atRiskCount = pricingProducts.filter((p) => p.netMargin < 10).length;
 
   const filteredTransactions = useMemo(() => {
     let tx = transactions;
@@ -207,6 +217,67 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {/* Precificação */}
+        {pricingCount > 0 && (
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              Precificação
+            </h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <button onClick={() => router.push("/pricing")} className="text-left">
+                <Card className="hover:shadow-md transition-all cursor-pointer group border-blue-500/20">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-blue-500/10 p-3 group-hover:bg-blue-500/20 transition-colors">
+                        <Calculator className="h-5 w-5 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Produtos Precificados</p>
+                        <p className="text-xl font-bold text-blue-400">{pricingCount}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+
+              <button onClick={() => router.push("/pricing")} className="text-left">
+                <Card className="hover:shadow-md transition-all cursor-pointer group border-emerald-500/20">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-emerald-500/10 p-3 group-hover:bg-emerald-500/20 transition-colors">
+                        <Percent className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Margem Média</p>
+                        <p className="text-xl font-bold text-emerald-400">{avgMargin.toFixed(1)}%</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+
+              <button onClick={() => router.push("/pricing")} className="text-left">
+                <Card className={`hover:shadow-md transition-all cursor-pointer group ${atRiskCount > 0 ? "border-red-500/20" : "border-border/50"}`}>
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`rounded-xl p-3 group-hover:opacity-80 transition-opacity ${atRiskCount > 0 ? "bg-red-500/10" : "bg-muted"}`}>
+                        <AlertTriangle className={`h-5 w-5 ${atRiskCount > 0 ? "text-red-400" : "text-muted-foreground"}`} />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Produtos em Risco</p>
+                        <p className={`text-xl font-bold ${atRiskCount > 0 ? "text-red-400" : "text-muted-foreground"}`}>
+                          {atRiskCount}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Linha Principal: Entradas x Saídas + Saúde da Empresa */}
         <div className="grid gap-6 lg:grid-cols-2">

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Trash2,
   CalendarCheck,
+  Calculator,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
@@ -28,6 +29,7 @@ const menuItems = [
   { icon: CalendarCheck, label: "Previsão de Caixa", href: "/cash-forecast" },
   { icon: Tags, label: "Categorias", href: "/categories" },
   { icon: FileText, label: "Relatórios", href: "/reports" },
+  { icon: Calculator, label: "Calculadora de Precificação", href: "/pricing" },
   { icon: Trash2, label: "Lixeira", href: "/trash" },
   { icon: Users, label: "Usuários", href: "/users" },
   { icon: Settings, label: "Configurações", href: "/settings" },

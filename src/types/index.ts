@@ -101,6 +101,33 @@ export interface MonthlySummary {
   balance: number;
 }
 
+export interface PricingProduct {
+  id: string;
+  name: string;
+  category: string;
+  sku?: string;
+  description?: string;
+  rawMaterial: number;
+  packaging: number;
+  labor: number;
+  freight: number;
+  otherCosts: number;
+  taxes: number;
+  cardFee: number;
+  marketplaceFee: number;
+  commission: number;
+  otherFees: number;
+  desiredMargin: number;
+  minPrice: number;
+  healthyPrice: number;
+  premiumPrice: number;
+  netMargin: number;
+  createdAt: string;
+  updatedAt: string;
+  company: string;
+  createdBy: string;
+}
+
 export type AuditAction =
   | "created"
   | "edited"
