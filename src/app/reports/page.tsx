@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseLocalDate } from "@/lib/utils";
 import { TrendingUp, TrendingDown, DollarSign, Download, Target, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -73,13 +73,13 @@ export default function ReportsPage() {
   }
 
   const yearTransactions = transactions.filter((t) => {
-    const d = new Date(t.date);
+    const d = parseLocalDate(t.date);
     return d.getFullYear() === year;
   });
 
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
     const monthTxs = yearTransactions.filter((t) => {
-      const d = new Date(t.date);
+      const d = parseLocalDate(t.date);
       return d.getMonth() === i;
     });
     const incomes = monthTxs.filter((t) => t.type === "income").reduce((s, t) => s + t.value, 0);
@@ -88,7 +88,7 @@ export default function ReportsPage() {
     const count = monthTxs.length;
 
     const monthForecasts = forecasts.filter((f) => {
-      const d = new Date(f.expectedDate);
+      const d = parseLocalDate(f.expectedDate);
       return d.getMonth() === i && d.getFullYear() === year;
     });
     const forecastIncomes = monthForecasts.filter((f) => f.type === "income").reduce((s, f) => s + f.amount, 0);

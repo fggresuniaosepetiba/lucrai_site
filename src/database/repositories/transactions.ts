@@ -2,7 +2,7 @@
 
 import { db } from "../dexie";
 import type { Transaction, TransactionType } from "@/types";
-import { generateId, getNextDisplayId, validateTransactionDate } from "@/lib/utils";
+import { generateId, getNextDisplayId, validateTransactionDate, parseLocalDate } from "@/lib/utils";
 import { AuditRepository } from "./audit";
 
 export const TransactionRepository = {
@@ -113,7 +113,7 @@ export const TransactionRepository = {
     const all = await db.transactions
       .where("company")
       .equals(company)
-      .filter((t) => new Date(t.date).getFullYear() === year)
+      .filter((t) => parseLocalDate(t.date).getFullYear() === year)
       .toArray();
     const incomes = all
       .filter((t) => t.type === "income")

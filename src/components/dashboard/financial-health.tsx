@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseLocalDate } from "@/lib/utils";
 import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3 } from "lucide-react";
 import type { Transaction } from "@/types";
 
@@ -36,7 +36,7 @@ export function FinancialHealth({ transactions }: FinancialHealthProps) {
   const currentYear = now.getFullYear();
 
   const monthTransactions = transactions.filter((t) => {
-    const d = new Date(t.date);
+    const d = parseLocalDate(t.date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 

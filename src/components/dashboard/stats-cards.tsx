@@ -2,7 +2,7 @@
 
 import { TrendingUp, TrendingDown, DollarSign, Percent } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCompactCurrency } from "@/lib/utils";
+import { formatCompactCurrency, parseLocalDate } from "@/lib/utils";
 import { cn } from "@/lib/cn";
 import type { Transaction } from "@/types";
 
@@ -20,7 +20,7 @@ export function StatsCards({ transactions, activeFilter, onFilterChange }: Stats
   const currentYear = now.getFullYear();
 
   const monthTransactions = transactions.filter((t) => {
-    const d = new Date(t.date);
+    const d = parseLocalDate(t.date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 

@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseLocalDate } from "@/lib/utils";
 import type { Transaction } from "@/types";
 
 interface ChartRevenueProps {
@@ -31,7 +31,7 @@ export function ChartRevenue({ transactions }: ChartRevenueProps) {
 
   const monthlyData = months.map((name, index) => {
     const monthTxs = transactions.filter((t) => {
-      const d = new Date(t.date);
+      const d = parseLocalDate(t.date);
       return d.getMonth() === index && d.getFullYear() === currentYear;
     });
 
