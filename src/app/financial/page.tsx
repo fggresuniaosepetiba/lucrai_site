@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, ArrowUpDown, Download, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
+import { parseLocalDate } from "@/lib/utils";
 
 export default function FinancialPage() {
   const router = useRouter();
@@ -128,8 +129,8 @@ export default function FinancialPage() {
       return true;
     })
     .sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
+      const dateA = parseLocalDate(a.date).getTime();
+      const dateB = parseLocalDate(b.date).getTime();
       return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
 

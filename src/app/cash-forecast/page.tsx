@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateForecastDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateForecastDate, parseLocalDate } from "@/lib/utils";
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
   AlertTriangle, Search, Pencil, CheckCircle2, XCircle, Trash2,
@@ -152,7 +152,7 @@ function CashForecastContent() {
   const chartData = useMemo(() => {
     const sorted = [...activeItems]
       .filter((i) => i.status !== "cancelled")
-      .sort((a, b) => new Date(a.expectedDate).getTime() - new Date(b.expectedDate).getTime());
+      .sort((a, b) => parseLocalDate(a.expectedDate).getTime() - parseLocalDate(b.expectedDate).getTime());
     let running = currentBalance;
     const points: { date: string; balance: number }[] = [
       { date: "Hoje", balance: running },

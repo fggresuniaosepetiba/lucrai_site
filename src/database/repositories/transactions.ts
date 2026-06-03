@@ -12,7 +12,7 @@ export const TransactionRepository = {
       .equals(company)
       .toArray();
     return all.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => parseLocalDate(b.date).getTime() - parseLocalDate(a.date).getTime()
     );
   },
 
@@ -27,7 +27,7 @@ export const TransactionRepository = {
       .filter((t) => t.company === company)
       .toArray();
     return all.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) => parseLocalDate(b.date).getTime() - parseLocalDate(a.date).getTime()
     );
   },
 

@@ -12,16 +12,16 @@ interface StatsCardsProps {
   transactions: Transaction[];
   activeFilter: DashboardFilter;
   onFilterChange: (filter: DashboardFilter) => void;
+  year: number;
 }
 
-export function StatsCards({ transactions, activeFilter, onFilterChange }: StatsCardsProps) {
+export function StatsCards({ transactions, activeFilter, onFilterChange, year }: StatsCardsProps) {
   const now = new Date();
   const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
 
   const monthTransactions = transactions.filter((t) => {
     const d = parseLocalDate(t.date);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    return d.getMonth() === currentMonth && d.getFullYear() === year;
   });
 
   const totalIncomes = monthTransactions

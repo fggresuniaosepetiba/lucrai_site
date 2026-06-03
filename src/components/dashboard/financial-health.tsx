@@ -7,9 +7,10 @@ import type { Transaction } from "@/types";
 
 interface FinancialHealthProps {
   transactions: Transaction[];
+  year: number;
 }
 
-export function FinancialHealth({ transactions }: FinancialHealthProps) {
+export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
   if (transactions.length === 0) {
     return (
       <Card>
@@ -33,11 +34,10 @@ export function FinancialHealth({ transactions }: FinancialHealthProps) {
 
   const now = new Date();
   const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
 
   const monthTransactions = transactions.filter((t) => {
     const d = parseLocalDate(t.date);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    return d.getMonth() === currentMonth && d.getFullYear() === year;
   });
 
   const monthIncomes = monthTransactions

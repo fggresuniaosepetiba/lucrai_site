@@ -17,9 +17,10 @@ import type { Transaction } from "@/types";
 
 interface ChartRevenueProps {
   transactions: Transaction[];
+  year: number;
 }
 
-export function ChartRevenue({ transactions }: ChartRevenueProps) {
+export function ChartRevenue({ transactions, year }: ChartRevenueProps) {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
 
   const months = [
@@ -27,12 +28,10 @@ export function ChartRevenue({ transactions }: ChartRevenueProps) {
     "Jul", "Ago", "Set", "Out", "Nov", "Dez",
   ];
 
-  const currentYear = new Date().getFullYear();
-
   const monthlyData = months.map((name, index) => {
     const monthTxs = transactions.filter((t) => {
       const d = parseLocalDate(t.date);
-      return d.getMonth() === index && d.getFullYear() === currentYear;
+      return d.getMonth() === index && d.getFullYear() === year;
     });
 
     const incomes = monthTxs

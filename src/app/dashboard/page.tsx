@@ -17,7 +17,8 @@ import type { Transaction } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Target } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseLocalDate } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<DashboardFilter>("all");
   const [forecastIncomes, setForecastIncomes] = useState(0);
   const [forecastExpenses, setForecastExpenses] = useState(0);
+  const [year, setYear] = useState(new Date().getFullYear());
   const company = user?.company ?? "";
   const initialized = useRef(false);
 
@@ -80,11 +82,12 @@ export default function DashboardPage() {
   const projectedBalance = currentBalance + forecastIncomes - forecastExpenses;
 
   const filteredTransactions = useMemo(() => {
-    if (filter === "all" || filter === "balance") return transactions;
-    if (filter === "income") return transactions.filter((t) => t.type === "income");
-    if (filter === "expense") return transactions.filter((t) => t.type === "expense");
-    return transactions;
-  }, [transactions, filter]);
+    let tx = transactions;
+    if (filter === "income") tx = tx.filter((t) => t.type === "income");
+    else if (filter === "expense") tx = tx.filter((t) => t.type === "expense");
+    tx = tx.filter((t) => parseLocalDate(t.date).getFullYear() === year);
+    return tx;
+  }, [transactions, filter, year]);
 
   const handleFilterChange = (newFilter: DashboardFilter) => {
     setFilter((prev) => (prev === newFilter ? "all" : newFilter));
@@ -120,6 +123,24 @@ export default function DashboardPage() {
   return (
     <Shell>
       <div className="space-y-6">
+        {/* Filtro de Ano */}
+        <div className="flex items-center justify-end gap-1">
+          {[year - 1, year, year + 1].map((y) => (
+            <button
+              key={y}
+              onClick={() => setYear(y)}
+              className={cn(
+                "px-4 py-1.5 text-sm rounded-lg transition-colors",
+                y === year
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+
         {/* Realizados - Stats Cards */}
         <div>
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Realizado</h3>
@@ -127,6 +148,7 @@ export default function DashboardPage() {
             transactions={transactions}
             activeFilter={filter}
             onFilterChange={handleFilterChange}
+            year={year}
           />
         </div>
 
@@ -188,8 +210,8 @@ export default function DashboardPage() {
 
         {/* Linha Principal: Entradas x Saídas + Saúde da Empresa */}
         <div className="grid gap-6 lg:grid-cols-2">
-          <ChartRevenue transactions={filteredTransactions} />
-          <FinancialHealth transactions={transactions} />
+          <ChartRevenue transactions={filteredTransactions} year={year} />
+          <FinancialHealth transactions={transactions} year={year} />
         </div>
 
         {/* Linha Secundária: Gastos por Categoria + Últimos Lançamentos */}

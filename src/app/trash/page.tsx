@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, parseLocalDate } from "@/lib/utils";
 import { Trash2, RotateCcw, AlertTriangle, Clock, Hash, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import {
   Dialog,
@@ -80,7 +80,7 @@ export default function TrashPage() {
   };
 
   const getDaysRemaining = (restoreUntil: string): number => {
-    const diff = new Date(restoreUntil).getTime() - Date.now();
+    const diff = parseLocalDate(restoreUntil).getTime() - Date.now();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   };
 
