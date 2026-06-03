@@ -1,0 +1,10 @@
+fix: IDs sequenciais e filtros mes/ano no Financeiro
+
+- getNextDisplayId agora usa prefixo '#' como padrao (antes era '')
+  Assim novos registros recebem #001, #002, #003... e o regex
+  consegue reconhece-los em chamadas subsequentes
+
+- Financeiro: adicionados filtros de Mes e Ano
+  Select de mes com 12 meses, select de ano dinamico baseado
+  nos lancamentos existentes. Funciona em conjunto com os
+  filtros de tipo e busca textual existentes

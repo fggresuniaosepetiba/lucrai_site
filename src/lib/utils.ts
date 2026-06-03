@@ -24,7 +24,7 @@ export function generateId(): string {
 
 export async function getNextDisplayId(
   table: { displayId?: string }[],
-  prefix: string = ""
+  prefix: string = "#"
 ): Promise<string> {
   const ids = table
     .map((t) => {

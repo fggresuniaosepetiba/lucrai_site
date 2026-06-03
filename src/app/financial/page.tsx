@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
@@ -14,9 +14,10 @@ import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
 import type { Transaction, Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, ArrowUpDown, Download, Hash } from "lucide-react";
+import { Plus, Search, ArrowUpDown, Download, Hash, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { parseLocalDate } from "@/lib/utils";
 
 export default function FinancialPage() {
@@ -27,12 +28,23 @@ export default function FinancialPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
+  const [filterMonth, setFilterMonth] = useState("");
+  const [filterYear, setFilterYear] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const initialized = useRef(false);
   const company = user?.company ?? "";
   const userName = user?.name ?? "Sistema";
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    transactions.forEach((t) => {
+      const d = parseLocalDate(t.date);
+      years.add(d.getFullYear());
+    });
+    return Array.from(years).sort((a, b) => b - a);
+  }, [transactions]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -118,6 +130,14 @@ export default function FinancialPage() {
   const filtered = transactions
     .filter((t) => {
       if (filterType !== "all" && t.type !== filterType) return false;
+      if (filterMonth) {
+        const d = parseLocalDate(t.date);
+        if (d.getMonth() + 1 !== parseInt(filterMonth)) return false;
+      }
+      if (filterYear) {
+        const d = parseLocalDate(t.date);
+        if (d.getFullYear() !== parseInt(filterYear)) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         return (
@@ -213,6 +233,43 @@ export default function FinancialPage() {
               Novo Lançamento
             </Button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Select value={filterMonth} onValueChange={setFilterMonth}>
+              <SelectTrigger className="w-[150px] h-9">
+                <SelectValue placeholder="Todos os meses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os meses</SelectItem>
+                <SelectItem value="1">Janeiro</SelectItem>
+                <SelectItem value="2">Fevereiro</SelectItem>
+                <SelectItem value="3">Março</SelectItem>
+                <SelectItem value="4">Abril</SelectItem>
+                <SelectItem value="5">Maio</SelectItem>
+                <SelectItem value="6">Junho</SelectItem>
+                <SelectItem value="7">Julho</SelectItem>
+                <SelectItem value="8">Agosto</SelectItem>
+                <SelectItem value="9">Setembro</SelectItem>
+                <SelectItem value="10">Outubro</SelectItem>
+                <SelectItem value="11">Novembro</SelectItem>
+                <SelectItem value="12">Dezembro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Select value={filterYear} onValueChange={setFilterYear}>
+            <SelectTrigger className="w-[140px] h-9">
+              <SelectValue placeholder="Todos os anos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todos os anos</SelectItem>
+              {availableYears.map((y) => (
+                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
