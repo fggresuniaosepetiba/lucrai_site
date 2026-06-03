@@ -113,9 +113,9 @@ export function StatsCards({ transactions, activeFilter, onFilterChange, year }:
                 <div className={cn("absolute top-5 right-5 rounded-xl p-3 transition-transform", card.bg, isActive && "scale-110")}>
                   <card.icon className={cn("h-5 w-5", card.color)} />
                 </div>
-                <div className="h-full flex flex-col justify-center pr-16">
-                  <p className="text-sm text-muted-foreground mb-1.5">{card.title}</p>
-                  <p className="text-2xl font-bold tracking-tight break-words" title={card.fullValue || card.display}>
+                <div className="h-full flex flex-col justify-center pr-14">
+                  <p className="text-sm text-muted-foreground mb-2">{card.title}</p>
+                  <p className="text-xl font-bold tracking-tight truncate" title={card.fullValue || card.display}>
                     {card.display}
                   </p>
                 </div>
