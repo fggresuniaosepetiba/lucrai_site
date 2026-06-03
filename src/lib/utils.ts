@@ -14,6 +14,7 @@ export function formatCurrency(value: number): string {
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? parseLocalDate(date) : date;
+  if (isNaN(d.getTime())) return "—";
   return new Intl.DateTimeFormat("pt-BR").format(d);
 }
 
@@ -173,7 +174,8 @@ export function parseCurrencyInput(formatted: string): number {
 }
 
 export function parseLocalDate(dateStr: string): Date {
-  const [y, m, d] = dateStr.split("-").map(Number);
+  const dateOnly = dateStr.split("T")[0];
+  const [y, m, d] = dateOnly.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
 
