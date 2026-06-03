@@ -66,7 +66,7 @@ export function Sidebar() {
         {collapsed ? (
           <div className="relative h-8 w-8">
             <Image
-              src={logoSrc}
+              src={iconSrc}
               alt="LUCRAÍ"
               fill
               className="object-contain"
