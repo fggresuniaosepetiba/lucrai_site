@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
 import {
+  AlertTriangle,
   Calculator,
   Package,
   DollarSign,
@@ -31,29 +32,34 @@ import {
 
 function calculatePrices(totalCost: number, totalTaxRate: number, desiredMargin: number) {
   if (totalCost <= 0) {
-    return { minPrice: 0, healthyPrice: 0, premiumPrice: 0, netMargin: 0, maxMarginPct: 0, marginValid: false };
+    return {
+      minPrice: 0, healthyPrice: null, premiumPrice: null,
+      netMargin: 0, maxMarginPct: 0, maxAllowedMargin: 0,
+      marginValid: false, healthyValid: false, premiumValid: false,
+    };
   }
   const taxDec = totalTaxRate / 100;
-  const marginDec = desiredMargin / 100;
 
   const maxMarginPct = Math.max(0, 100 - totalTaxRate);
-  const marginValid = desiredMargin > 0 && desiredMargin < maxMarginPct;
-
-  if (!marginValid) {
-    return { minPrice: 0, healthyPrice: 0, premiumPrice: 0, netMargin: desiredMargin, maxMarginPct, marginValid };
-  }
+  const maxAllowedMargin = Math.floor(maxMarginPct);
 
   const minDenom = Math.max(1 - taxDec - 0.10, 0.001);
   const minPrice = totalCost / minDenom;
 
-  const healthyDenom = 1 - taxDec - marginDec;
-  const healthyPrice = totalCost / healthyDenom;
+  const healthyValid = desiredMargin > 0 && desiredMargin < maxAllowedMargin;
+  const healthyPrice = healthyValid ? totalCost / (1 - taxDec - desiredMargin / 100) : null;
 
-  const premiumMarginPct = Math.min(desiredMargin + 15, maxMarginPct - 0.5);
-  const premiumDec = premiumMarginPct / 100;
-  const premiumPrice = totalCost / (1 - taxDec - premiumDec);
+  const premiumMargin = desiredMargin + 15;
+  const premiumValid = desiredMargin > 0 && premiumMargin < maxMarginPct;
+  const premiumPrice = premiumValid ? totalCost / (1 - taxDec - premiumMargin / 100) : null;
 
-  return { minPrice, healthyPrice, premiumPrice, netMargin: desiredMargin, maxMarginPct, marginValid };
+  const marginValid = healthyValid;
+
+  return {
+    minPrice, healthyPrice, premiumPrice,
+    netMargin: desiredMargin, maxMarginPct, maxAllowedMargin,
+    marginValid, healthyValid, premiumValid,
+  };
 }
 
 const months = [
@@ -228,8 +234,8 @@ export default function PricingPage() {
       taxes, cardFee, marketplaceFee, commission, otherFees,
       desiredMargin: marginNum,
       minPrice: prices.minPrice,
-      healthyPrice: prices.healthyPrice,
-      premiumPrice: prices.premiumPrice,
+      healthyPrice: prices.healthyPrice ?? 0,
+      premiumPrice: prices.premiumPrice ?? 0,
       netMargin: prices.netMargin,
     };
 
@@ -511,7 +517,7 @@ export default function PricingPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-blue-400" />
-              Margem Desejada
+              Margem de Lucro Desejada
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -542,6 +548,31 @@ export default function PricingPage() {
                 <span className="text-sm text-muted-foreground">%</span>
               </div>
             </div>
+            {!prices.healthyValid && marginNum > 0 && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-amber-400">Margem acima do limite matemático</p>
+                    <p className="text-xs text-muted-foreground">
+                      Com as taxas atuais de {totalTaxRate.toFixed(1).replace('.', ',')}%, a maior margem líquida possível é de {Math.floor(100 - totalTaxRate)}%.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Isso acontece porque impostos, taxas e comissões já consomem parte do valor da venda.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Se a soma entre taxas e margem atingir ou ultrapassar 100%, não existe preço de venda capaz de gerar essa margem.
+                    </p>
+                    <div className="pt-1 space-y-0.5">
+                      <p className="text-xs text-muted-foreground">Para continuar:</p>
+                      <p className="text-xs text-muted-foreground/80">• Reduza a margem desejada</p>
+                      <p className="text-xs text-muted-foreground/80">ou</p>
+                      <p className="text-xs text-muted-foreground/80">• Reduza as taxas e encargos do produto.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -558,31 +589,57 @@ export default function PricingPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-blue-500/30 ring-2 ring-blue-500/20 scale-[1.02]">
+              <Card className={`border-blue-500/30 ${prices.healthyValid ? 'ring-2 ring-blue-500/20 scale-[1.02]' : ''}`}>
                 <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge className="bg-blue-500/20 text-blue-400 border-0 text-xs">Recomendado</Badge>
-                  </div>
-                  <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Preço Saudável</p>
-                  <p className="text-3xl font-bold text-blue-400">{formatPrice(prices.healthyPrice)}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Preço recomendado para manter lucratividade sustentável.
-                  </p>
+                  {prices.healthyValid ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className="bg-blue-500/20 text-blue-400 border-0 text-xs">Recomendado</Badge>
+                      </div>
+                      <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Preço Saudável</p>
+                      <p className="text-3xl font-bold text-blue-400">{formatPrice(prices.healthyPrice!)}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Preço recomendado para manter lucratividade sustentável.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Preço Saudável</p>
+                      <p className="text-2xl font-bold text-muted-foreground">Indisponível</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {marginNum > 0
+                          ? "A margem desejada excede o limite matemático para as taxas atuais."
+                          : "Informe uma margem de lucro desejada."}
+                      </p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
               <Card className="border-emerald-500/30">
                 <CardContent className="p-6">
-                  <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Preço Premium</p>
-                  <p className="text-2xl font-bold text-emerald-400">{formatPrice(prices.premiumPrice)}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Preço recomendado para posicionamento premium.
-                  </p>
+                  {prices.premiumValid ? (
+                    <>
+                      <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1">Preço Premium</p>
+                      <p className="text-2xl font-bold text-emerald-400">{formatPrice(prices.premiumPrice!)}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Preço recomendado para posicionamento premium.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Preço Premium</p>
+                      <p className="text-2xl font-bold text-muted-foreground">Indisponível</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        A margem premium excede o limite matemático permitido para as taxas atuais.
+                      </p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
 
-            {insights.length > 0 && (
+            {insights.length > 0 && prices.healthyValid && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
