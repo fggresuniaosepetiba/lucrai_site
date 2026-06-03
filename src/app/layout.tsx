@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "LUCRAÍ Core — Trinary Solutions",
   description: "Sistema de gestão financeira empresarial",
   icons: {
-    icon: "/images/lucrai/icon-clean.png",
+    icon: "/images/icon-oficial.png",
   },
 };
 
