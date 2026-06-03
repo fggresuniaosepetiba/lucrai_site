@@ -25,10 +25,12 @@ import { CategoryRepository } from "@/database/repositories/categories";
 import { useAuthStore } from "@/store/auth-store";
 import type { Transaction, Category } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 
 interface TransactionFormProps {
   transaction?: Transaction | null;
   categories: Category[];
+  onCreateCategory: (data: { name: string; type: "income" | "expense" }) => Promise<Category>;
   onSubmit: (data: {
     type: "income" | "expense";
     value: number;
@@ -43,13 +45,14 @@ interface TransactionFormProps {
 
 export function TransactionForm({
   transaction,
-  categories: initialCategories,
+  categories,
+  onCreateCategory,
   onSubmit,
   onClose,
 }: TransactionFormProps) {
   const { user } = useAuthStore();
   const company = user?.company ?? "";
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [type, setType] = useState<"income" | "expense">(
     transaction?.type || "expense"
   );
@@ -63,21 +66,24 @@ export function TransactionForm({
   );
   const [observation, setObservation] = useState(transaction?.observation || "");
   const [submitting, setSubmitting] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setCategories(initialCategories);
-  }, [initialCategories]);
+    setLocalCategories(categories);
+  }, [categories]);
 
   useEffect(() => {
     if (company) {
       CategoryRepository.getAll(company).then((cats) => {
-        if (cats.length > 0) setCategories(cats);
+        if (cats.length > 0) setLocalCategories(cats);
       });
     }
   }, [company]);
 
-  const filteredCategories = categories.filter((c) => c.type === type);
+  const filteredCategories = localCategories.filter((c) => c.type === type);
 
   const amountValue = valueDisplay ? parseCurrencyInput(valueDisplay) : 0;
 
@@ -132,6 +138,25 @@ export function TransactionForm({
   const handleTypeChange = (newType: "income" | "expense") => {
     setType(newType);
     setCategoryId("");
+  };
+
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+
+    setCreatingCategory(true);
+    try {
+      const created = await onCreateCategory({ name, type });
+      setCategoryId(created.id);
+      setNewCategoryName("");
+      setShowCreateCategory(false);
+      setErrors((prev) => ({ ...prev, category: "" }));
+      toast("Categoria criada", "Categoria adicionada e selecionada", "success");
+    } catch {
+      toast("Erro", "Nao foi possivel criar categoria", "destructive");
+    } finally {
+      setCreatingCategory(false);
+    }
   };
 
   return (
@@ -234,7 +259,7 @@ export function TransactionForm({
             </Label>
             {filteredCategories.length > 0 ? (
               <Select
-                key={`${type}-${transaction?.id || "new"}`}
+                key={type + (transaction?.id || "new")}
                 value={categoryId}
                 onValueChange={(v) => {
                   setCategoryId(v);

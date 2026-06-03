@@ -45,11 +45,11 @@ export function ChartRevenue({ transactions }: ChartRevenueProps) {
     return { name, incomes, expenses };
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; name: string; value: number; color: string }[]; label?: string }) => {
     if (!active || !payload || payload.length === 0) return null;
 
     const items = hoveredKey
-      ? payload.filter((p: any) => p.dataKey === hoveredKey)
+      ? payload.filter((p) => p.dataKey === hoveredKey)
       : payload;
 
     if (items.length === 0) return null;
@@ -57,7 +57,7 @@ export function ChartRevenue({ transactions }: ChartRevenueProps) {
     return (
       <div className="rounded-xl border border-border bg-card px-3 py-2 shadow-md">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
-        {items.map((p: any) => (
+        {items.map((p) => (
           <p key={p.dataKey} className="text-sm font-medium" style={{ color: p.color }}>
             {p.name}: {formatCurrency(p.value)}
           </p>
@@ -90,7 +90,7 @@ export function ChartRevenue({ transactions }: ChartRevenueProps) {
               />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted) / 0.25)" }} />
               <Legend
-                onMouseEnter={(o: any) => setHoveredKey(o.dataKey)}
+                onMouseEnter={(o) => setHoveredKey(typeof o.dataKey === "string" ? o.dataKey : null)}
                 onMouseLeave={() => setHoveredKey(null)}
               />
               <Bar

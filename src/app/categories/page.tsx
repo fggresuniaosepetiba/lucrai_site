@@ -82,8 +82,8 @@ export default function CategoriesPage() {
       setShowDuplicatesDialog(false);
       setDuplicates([]);
       await loadCategories();
-    } catch (err: any) {
-      toast("Erro", err?.message || "Não foi possível remover duplicatas", "destructive");
+    } catch {
+      toast("Erro", "Não foi possível remover duplicatas", "destructive");
     } finally {
       setRemovingDuplicates(false);
     }
@@ -105,8 +105,8 @@ export default function CategoriesPage() {
       setEditingCategory(null);
       setName("");
       await loadCategories();
-    } catch (err: any) {
-      toast("Erro", err?.message || "Não foi possível salvar", "destructive");
+    } catch {
+      toast("Erro", "Não foi possível salvar", "destructive");
     }
   };
 
@@ -115,8 +115,8 @@ export default function CategoriesPage() {
       await CategoryRepository.delete(id);
       toast("Categoria excluída", "", "success");
       await loadCategories();
-    } catch (err: any) {
-      toast("Erro", err.message || "Não foi possível excluir", "destructive");
+    } catch {
+      toast("Erro", "Não foi possível excluir", "destructive");
     }
   };
 

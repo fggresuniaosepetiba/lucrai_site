@@ -46,17 +46,13 @@ export async function seedAll(): Promise<void> {
   const emails = defaultUsers.map((u) => u.email);
   const existing = await db.users.where("email").anyOf(emails).count();
   if (existing < emails.length) {
-    await Promise.all([
-      db.users.clear(),
-      db.categories.clear(),
-      db.transactions.clear(),
-      db.settings.clear(),
-      db.deletedTransactions.clear(),
-    ]);
     const now = new Date().toISOString();
-    await db.users.bulkAdd(
-      defaultUsers.map((u) => ({ ...u, id: generateId(), createdAt: now }))
-    );
+    for (const u of defaultUsers) {
+      const exists = await db.users.where("email").equals(u.email).first();
+      if (!exists) {
+        await db.users.add({ ...u, id: generateId(), createdAt: now });
+      }
+    }
   }
 }
 

@@ -1,12 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState, useMemo } from "react";
+import { Suspense, useEffect, useState, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { TransactionRepository } from "@/database/repositories/transactions";
-import { AuditRepository } from "@/database/repositories/audit";
 import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
 import type { CashForecast, ForecastStatus, TransactionType } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,8 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateForecastDate } from "@/lib/utils";
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
-  AlertTriangle, Search, Pencil, EyeOff, CheckCircle2, XCircle,
-  ArrowUpDown, Wallet, Target, BarChart3, Hash, History, Clock,
+  AlertTriangle, Search, Pencil, CheckCircle2, XCircle,
+  Target, BarChart3, Hash, History, Clock, Wallet,
 } from "lucide-react";
 import {
   Dialog,
@@ -32,13 +31,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -87,13 +79,19 @@ function CashForecastContent() {
 
   const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState("");
+  const initialized = useRef(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login");
       return;
     }
-    loadData();
+    if (!initialized.current) {
+      initialized.current = true;
+      runStartup();
+    } else {
+      loadData();
+    }
   }, [isAuthenticated, router, company]);
 
   useEffect(() => {
@@ -101,11 +99,15 @@ function CashForecastContent() {
     if (f) setFilterStatus(f);
   }, [searchParams]);
 
+  const runStartup = async () => {
+    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
+    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
+    try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
+    loadData();
+  };
+
   const loadData = async () => {
     try {
-      await migrateDisplayIds();
-      await fixCompanyName();
-      await useAuthStore.getState().refreshUser();
       const [forecasts, balanceData] = await Promise.all([
         CashForecastRepository.getAll(company),
         TransactionRepository.getAllBalance(company),
@@ -215,7 +217,7 @@ function CashForecastContent() {
         toast("Previsão criada", "Lançamento previsto registrado", "success");
       }
       setShowForm(false);
-      loadData();
+      await loadData();
     } catch { toast("Erro", "Não foi possível salvar", "destructive"); }
   };
 
@@ -255,7 +257,7 @@ function CashForecastContent() {
         toast("Previsão marcada como paga", "", "success");
       }
       setConfirmDialog({ open: false, type: "received", item: null });
-      loadData();
+      await loadData();
     } catch { toast("Erro", "Não foi possível atualizar", "destructive"); }
   };
 

@@ -32,8 +32,6 @@ export function StatsCards({ transactions, activeFilter, onFilterChange }: Stats
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.value, 0);
 
-  const monthBalance = totalIncomes - totalExpenses;
-
   const allIncomes = transactions
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.value, 0);

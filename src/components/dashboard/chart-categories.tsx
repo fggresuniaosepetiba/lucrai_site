@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/utils";
-import type { Transaction, Category } from "@/types";
+import type { Transaction } from "@/types";
 
 const MAX_SLICES = 7;
 
@@ -32,19 +32,18 @@ function generateColors(count: number, palette: "income" | "expense"): string[] 
 
 interface ChartCategoriesProps {
   transactions: Transaction[];
-  categories: Category[];
   syncType?: "income" | "expense" | null;
   onSyncChange?: (type: "income" | "expense") => void;
 }
 
-export function ChartCategories({ transactions, categories, syncType, onSyncChange }: ChartCategoriesProps) {
+export function ChartCategories({ transactions, syncType, onSyncChange }: ChartCategoriesProps) {
   const [type, setType] = useState<"expense" | "income">("expense");
 
   useEffect(() => {
     if (syncType) setType(syncType);
   }, [syncType]);
 
-  const { data, othersTotal } = useMemo(() => {
+  const { data } = useMemo(() => {
     const filtered = transactions.filter((t) => t.type === type);
     const grouped: Record<string, number> = {};
 
@@ -66,7 +65,7 @@ export function ChartCategories({ transactions, categories, syncType, onSyncChan
     if (rest > 0) {
       top.push({ name: "Outros", value: rest });
     }
-    return { data: top, othersTotal: rest };
+    return { data: top };
   }, [transactions, type]);
 
   const colors = useMemo(() => generateColors(data.length, type), [data.length, type]);

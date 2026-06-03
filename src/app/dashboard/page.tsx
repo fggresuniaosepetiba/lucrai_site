@@ -10,21 +10,19 @@ import { ChartCategories } from "@/components/dashboard/chart-categories";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { FinancialHealth } from "@/components/dashboard/financial-health";
 import { TransactionRepository } from "@/database/repositories/transactions";
-import { CategoryRepository } from "@/database/repositories/categories";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { seedDefaultCategories } from "@/database/seed";
 import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
-import type { Transaction, Category } from "@/types";
+import type { Transaction } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Target, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Target } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<DashboardFilter>("all");
   const [forecastIncomes, setForecastIncomes] = useState(0);
@@ -55,13 +53,11 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     try {
-      const [txs, cats, forecastTotals] = await Promise.all([
+      const [txs, forecastTotals] = await Promise.all([
         TransactionRepository.getAll(company),
-        CategoryRepository.getAll(company),
         CashForecastRepository.getTotals(company),
       ]);
       setTransactions(txs);
-      setCategories(cats);
       setForecastIncomes(forecastTotals.predictedIncomes);
       setForecastExpenses(forecastTotals.predictedExpenses);
     } catch (err) {
@@ -200,7 +196,6 @@ export default function DashboardPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <ChartCategories
             transactions={filteredTransactions}
-            categories={categories}
             syncType={filter === "income" ? "income" : filter === "expense" ? "expense" : null}
             onSyncChange={(t) => setFilter(t === "income" ? "income" : "expense")}
           />

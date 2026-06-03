@@ -1,7 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { seedAll } from "@/database/seed";
 
 interface AuthUser {
   email: string;

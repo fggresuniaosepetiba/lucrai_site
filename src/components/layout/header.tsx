@@ -6,7 +6,6 @@ import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore, type ThemeMode } from "@/store/theme-store";
 import { Bell, Menu, Moon, Sun, Monitor, Check } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/cn";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +32,7 @@ const themes: { value: ThemeMode; label: string; icon: typeof Moon }[] = [
 
 export function Header() {
   const pathname = usePathname();
-  const { collapsed, toggle } = useSidebarStore();
+  const { toggle } = useSidebarStore();
   const { user } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
   const title = pageTitles[pathname] || "LUCRAÍ Core";

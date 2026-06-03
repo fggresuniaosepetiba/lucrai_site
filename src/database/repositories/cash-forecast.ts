@@ -3,7 +3,7 @@
 import { db } from "../dexie";
 import { TransactionRepository } from "./transactions";
 import { AuditRepository } from "./audit";
-import type { CashForecast, TransactionType, ForecastStatus } from "@/types";
+import type { CashForecast } from "@/types";
 import { generateId, getNextDisplayId, validateForecastDate } from "@/lib/utils";
 
 export const CashForecastRepository = {

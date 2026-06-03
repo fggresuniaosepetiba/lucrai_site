@@ -105,7 +105,7 @@ export default function UsersPage() {
   const handleUpdate = async () => {
     if (!editingUser) return;
     try {
-      const data: any = { name, email, role, company };
+      const data: Partial<AppUser> = { name, email, role, company };
       if (password.trim()) data.password = password.trim();
       await UserRepository.update(editingUser.id, data);
       setEditingUser(null);
