@@ -277,19 +277,46 @@ export function TransactionForm({
                   ))}
                 </SelectContent>
               </Select>
-            ) : (
-              <div className="rounded-lg border border-border/50 bg-muted/30 p-4 text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma categoria cadastrada para {type === "income" ? "Entrada" : "Saída"}.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Crie uma nova categoria na página{" "}
-                  <Link href="/categories" className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors">
-                    Categorias
-                  </Link>.
-                </p>
-              </div>
-            )}
+            ) : null}
+            <div className="space-y-2">
+              {showCreateCategory ? (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nome da nova categoria"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    disabled={creatingCategory}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleCreateCategory}
+                    disabled={creatingCategory || !newCategoryName.trim()}
+                  >
+                    {creatingCategory ? "Criando..." : "Criar"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setShowCreateCategory(false); setNewCategoryName(""); }}
+                    disabled={creatingCategory}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-xs"
+                  onClick={() => setShowCreateCategory(true)}
+                >
+                  + Criar nova categoria
+                </Button>
+              )}
+            </div>
             {errors.category && <p className="text-xs text-red-400">{errors.category}</p>}
           </div>
 
@@ -308,7 +335,7 @@ export function TransactionForm({
               Cancelar
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Salvando..." : transaction ? "Atualizar" : "Criar"}
+              {submitting ? "Salvando..." : transaction ? "Atualizar" : "Salvar"}
             </Button>
           </DialogFooter>
         </form>
