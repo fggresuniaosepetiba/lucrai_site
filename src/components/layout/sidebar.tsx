@@ -42,7 +42,7 @@ export function Sidebar() {
   const { logout } = useAuthStore();
   const { theme } = useThemeStore();
 
-  // const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/icon-normal.png" : "/images/icon-oficial.png";
+  const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/icon-normal.png" : "/images/icon-oficial.png";
   const logoSrc = theme === "clean" ? "/images/lucrai/logo-lucrai-com-fundo.png" : "/images/lucrai/logo-lucrai-sem-fundo.png";
 
   const handleLogout = () => {
