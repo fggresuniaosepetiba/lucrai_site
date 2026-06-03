@@ -28,8 +28,8 @@ export default function FinancialPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
-  const [filterMonth, setFilterMonth] = useState("");
-  const [filterYear, setFilterYear] = useState("");
+  const [filterMonth, setFilterMonth] = useState("all");
+  const [filterYear, setFilterYear] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
@@ -130,11 +130,11 @@ export default function FinancialPage() {
   const filtered = transactions
     .filter((t) => {
       if (filterType !== "all" && t.type !== filterType) return false;
-      if (filterMonth) {
+      if (filterMonth !== "all") {
         const d = parseLocalDate(t.date);
         if (d.getMonth() + 1 !== parseInt(filterMonth)) return false;
       }
-      if (filterYear) {
+      if (filterYear !== "all") {
         const d = parseLocalDate(t.date);
         if (d.getFullYear() !== parseInt(filterYear)) return false;
       }
@@ -243,7 +243,7 @@ export default function FinancialPage() {
                 <SelectValue placeholder="Todos os meses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os meses</SelectItem>
+                <SelectItem value="all">Todos os meses</SelectItem>
                 <SelectItem value="1">Janeiro</SelectItem>
                 <SelectItem value="2">Fevereiro</SelectItem>
                 <SelectItem value="3">Março</SelectItem>
@@ -264,7 +264,7 @@ export default function FinancialPage() {
               <SelectValue placeholder="Todos os anos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os anos</SelectItem>
+              <SelectItem value="all">Todos os anos</SelectItem>
               {availableYears.map((y) => (
                 <SelectItem key={y} value={String(y)}>{y}</SelectItem>
               ))}
