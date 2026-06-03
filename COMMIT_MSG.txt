@@ -1,1 +1,0 @@
-fix: SelectItem nao aceita value vazio nos filtros Financeiro
