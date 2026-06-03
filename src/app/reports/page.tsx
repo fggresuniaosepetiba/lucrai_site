@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
@@ -23,6 +23,7 @@ export default function ReportsPage() {
   const [forecasts, setForecasts] = useState<CashForecast[]>([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
+  const initialized = useRef(false);
   const company = user?.company ?? "";
 
   useEffect(() => {
@@ -30,14 +31,23 @@ export default function ReportsPage() {
       router.replace("/login");
       return;
     }
-    loadData();
+    if (!initialized.current) {
+      initialized.current = true;
+      runStartup();
+    } else {
+      loadData();
+    }
   }, [isAuthenticated, router, company]);
+
+  const runStartup = async () => {
+    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
+    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
+    try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
+    loadData();
+  };
 
   const loadData = async () => {
     try {
-      await migrateDisplayIds();
-      await fixCompanyName();
-      await useAuthStore.getState().refreshUser();
       const [txs, fcs] = await Promise.all([
         TransactionRepository.getAll(company),
         CashForecastRepository.getAll(company),
