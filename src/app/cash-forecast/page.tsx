@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateForecastDate } from "@/lib/utils";
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
-  AlertTriangle, Search, Pencil, CheckCircle2, XCircle,
+  AlertTriangle, Search, Pencil, CheckCircle2, XCircle, Trash2,
   Target, BarChart3, Hash, History, Clock, Wallet,
 } from "lucide-react";
 import {
@@ -73,7 +73,7 @@ function CashForecastContent() {
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
-    type: "received" | "paid" | "cancelled" | "delete";
+    type: "received" | "paid" | "cancelled" | "delete" | "clear_history";
     item: CashForecast | null;
   }>({ open: false, type: "received", item: null });
 
@@ -255,10 +255,25 @@ function CashForecastContent() {
       } else if (type === "paid") {
         await CashForecastRepository.markAsPaid(item.id, company, userName);
         toast("Previsão marcada como paga", "", "success");
+      } else if (type === "delete") {
+        await CashForecastRepository.softDelete(item.id, "Excluído pelo usuário", userName);
+        toast("Previsão movida para lixeira", "Ela ficará disponível por 30 dias", "success");
       }
       setConfirmDialog({ open: false, type: "received", item: null });
       await loadData();
     } catch { toast("Erro", "Não foi possível atualizar", "destructive"); }
+  };
+
+  const handleClearHistory = async () => {
+    try {
+      const toDelete = items.filter((i) => i.status !== "predicted");
+      for (const item of toDelete) {
+        await CashForecastRepository.delete(item.id);
+      }
+      toast("Histórico limpo", `${toDelete.length} registro(s) removido(s) permanentemente`, "success");
+      setConfirmDialog({ open: false, type: "clear_history", item: null });
+      await loadData();
+    } catch { toast("Erro", "Não foi possível limpar o histórico", "destructive"); }
   };
 
   if (loading) {
@@ -512,6 +527,10 @@ function CashForecastContent() {
                                       className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition-colors"
                                       title="Editar"
                                     ><Pencil className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => setConfirmDialog({ open: true, type: "delete", item })}
+                                      className="rounded-lg p-1.5 text-red-400 hover:bg-red-500/10 transition-colors"
+                                      title="Excluir"
+                                    ><Trash2 className="h-3.5 w-3.5" /></button>
                                   </>
                                 )}
                               </div>
@@ -527,6 +546,13 @@ function CashForecastContent() {
           </TabsContent>
 
           <TabsContent value="history" className="mt-0">
+            {historyItems.length > 0 && (
+              <div className="flex justify-end mb-3">
+                <Button variant="destructive" size="sm" onClick={() => setConfirmDialog({ open: true, type: "clear_history", item: null })} className="gap-2">
+                  <Trash2 className="h-4 w-4" /> Limpar Histórico
+                </Button>
+              </div>
+            )}
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
@@ -677,7 +703,7 @@ function CashForecastContent() {
         </Dialog>
 
         {/* Confirmation Dialog for Received/Paid/Cancelled */}
-        <Dialog open={confirmDialog.open} onOpenChange={(open) => { if (!open) setConfirmDialog({ open: false, type: "received", item: null }); }}>
+        <Dialog open={confirmDialog.open && ["received", "paid", "cancelled"].includes(confirmDialog.type)} onOpenChange={(open) => { if (!open) setConfirmDialog({ open: false, type: "received", item: null }); }}>
           <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <div className="flex items-center gap-3 mb-1">
@@ -755,6 +781,120 @@ function CashForecastContent() {
               <Button variant={confirmDialog.type === "cancelled" ? "destructive" : "default"} onClick={handleConfirmAction}>
                 {confirmDialog.type === "received" ? "Confirmar Recebimento" :
                  confirmDialog.type === "paid" ? "Confirmar Pagamento" : "Confirmar Cancelamento"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete confirmation - moves to trash */}
+        <Dialog open={confirmDialog.type === "delete" && !!confirmDialog.item} onOpenChange={(open) => { if (!open) setConfirmDialog({ open: false, type: "received", item: null }); }}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+                  <Trash2 className="h-5 w-5 text-red-400" />
+                </div>
+                <div>
+                  <DialogTitle>Excluir Previsão</DialogTitle>
+                  <DialogDescription>
+                    Esta ação moverá o lançamento para a lixeira.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {confirmDialog.item && (
+                <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-muted-foreground">{confirmDialog.item.displayId}</span>
+                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                      confirmDialog.item.type === "income" ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                    }`}>
+                      {confirmDialog.item.type === "income" ? "Entrada" : "Saída"}
+                    </span>
+                    <span className="text-sm font-medium">{confirmDialog.item.description}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>{formatCurrency(confirmDialog.item.amount)}</span>
+                    <span>{formatDate(confirmDialog.item.expectedDate)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-300">Atenção</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Esta previsão será enviada para a lixeira, onde ficará disponível por 30 dias. 
+                      Após este prazo, será removida permanentemente e não será possível recuperá-la 
+                      nem auditá-la.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setConfirmDialog({ open: false, type: "received", item: null })}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleConfirmAction} className="gap-2">
+                <Trash2 className="h-4 w-4" /> Mover para Lixeira
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Clear History confirmation - permanent */}
+        <Dialog open={confirmDialog.type === "clear_history"} onOpenChange={(open) => { if (!open) setConfirmDialog({ open: false, type: "received", item: null }); }}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+                  <Trash2 className="h-5 w-5 text-red-400" />
+                </div>
+                <div>
+                  <DialogTitle>Limpar Histórico</DialogTitle>
+                  <DialogDescription>
+                    Esta ação removerá permanentemente todo o histórico de previsões.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-red-300">Isso não poderá ser desfeito!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {historyItems.length} registro(s) serão excluídos permanentemente. 
+                      Eles <strong className="text-red-300">não irão para a lixeira</strong> e 
+                      <strong className="text-red-300"> não poderão ser recuperados</strong> nem auditados futuramente.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
+                <Hash className="h-4 w-4 text-muted-foreground shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  Serão removidos: {historyItems.slice(0, 5).map((i) => i.displayId).join(", ")}
+                  {historyItems.length > 5 && ` e mais ${historyItems.length - 5} registro(s)`}
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setConfirmDialog({ open: false, type: "received", item: null })}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleClearHistory} className="gap-2">
+                <Trash2 className="h-4 w-4" /> Sim, Limpar Histórico
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -57,7 +57,8 @@ export default function TrashPage() {
     try {
       const restored = await TrashRepository.restore(restoreTarget.id, userName);
       if (restored) {
-        toast("Lançamento restaurado", "Voltou para o financeiro", "success");
+        const label = restoreTarget.entryType === "forecast" ? "Previsão" : "Lançamento";
+        toast(`${label} restaurado${label === "Previsão" ? "a" : ""}`, `Voltou para ${label === "Previsão" ? "a Previsão de Caixa" : "o financeiro"}`, "success");
         setRestoreTarget(null);
         load();
       }
@@ -139,6 +140,9 @@ export default function TrashPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px] gap-1">
+                            {item.entryType === "forecast" ? "Previsão" : "Lançamento"}
+                          </Badge>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Hash className="h-3 w-3" />
                             <span className="font-mono">{item.displayId}</span>
@@ -158,13 +162,13 @@ export default function TrashPage() {
                           <span className={`text-base font-semibold ${
                             item.type === "income" ? "text-emerald-400" : "text-red-400"
                           }`}>
-                            {item.type === "income" ? "+" : "-"}{formatCurrency(item.value)}
+                            {item.type === "income" ? "+" : "-"}{formatCurrency(item.value ?? item.amount ?? 0)}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="rounded-md bg-muted px-2 py-0.5">{item.categoryName}</span>
-                          <span>{formatDate(item.date)}</span>
+                          <span className="rounded-md bg-muted px-2 py-0.5">{item.categoryName || item.category || "—"}</span>
+                          <span>{formatDate(item.date || item.expectedDate || "")}</span>
                         </div>
 
                         <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 border border-amber-500/20 p-3">
@@ -219,9 +223,11 @@ export default function TrashPage() {
                 <RotateCcw className="h-5 w-5 text-emerald-400" />
               </div>
               <div>
-                <DialogTitle>Restaurar Lançamento</DialogTitle>
+                <DialogTitle>Restaurar {restoreTarget?.entryType === "forecast" ? "Previsão" : "Lançamento"}</DialogTitle>
                 <DialogDescription>
-                  O lançamento {restoreTarget?.displayId} será restaurado para o financeiro.
+                  {restoreTarget?.entryType === "forecast"
+                    ? `A previsão ${restoreTarget?.displayId} será restaurada para a Previsão de Caixa.`
+                    : `O lançamento ${restoreTarget?.displayId} será restaurado para o financeiro.`}
                 </DialogDescription>
               </div>
             </div>
@@ -237,12 +243,12 @@ export default function TrashPage() {
                 <span className="text-sm font-medium">{restoreTarget?.description}</span>
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{restoreTarget?.categoryName}</span>
-                <span>{restoreTarget ? formatDate(restoreTarget.date) : ""}</span>
+                <span>{restoreTarget?.categoryName || restoreTarget?.category || "—"}</span>
+                <span>{restoreTarget ? formatDate(restoreTarget.date || restoreTarget.expectedDate || "") : ""}</span>
                 <span className={`font-semibold ${
                   restoreTarget?.type === "income" ? "text-emerald-400" : "text-red-400"
                 }`}>
-                  {restoreTarget?.type === "income" ? "+" : "-"}{restoreTarget ? formatCurrency(restoreTarget.value) : ""}
+                  {restoreTarget?.type === "income" ? "+" : "-"}{restoreTarget ? formatCurrency(restoreTarget.value ?? restoreTarget.amount ?? 0) : ""}
                 </span>
               </div>
               <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 p-2 mt-2">
@@ -250,7 +256,7 @@ export default function TrashPage() {
                 <p className="text-xs text-muted-foreground">Motivo: {restoreTarget?.reason}</p>
               </div>
             </div>
-            <p className="text-sm font-semibold text-center">Deseja restaurar este lançamento?</p>
+            <p className="text-sm font-semibold text-center">Deseja restaurar {restoreTarget?.entryType === "forecast" ? "esta previsão" : "este lançamento"}?</p>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setRestoreTarget(null)}>
@@ -274,7 +280,7 @@ export default function TrashPage() {
               <div>
                 <DialogTitle>Excluir Permanentemente</DialogTitle>
                 <DialogDescription>
-                  Esta ação não pode ser desfeita. O lançamento será removido permanentemente.
+                  Esta ação não pode ser desfeita. {deleteTarget?.entryType === "forecast" ? "A previsão" : "O lançamento"} será removido permanentemente.
                 </DialogDescription>
               </div>
             </div>
@@ -290,17 +296,17 @@ export default function TrashPage() {
                 <span className="text-sm font-medium">{deleteTarget?.description}</span>
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span>{deleteTarget?.categoryName}</span>
-                <span>{deleteTarget ? formatDate(deleteTarget.date) : ""}</span>
+                <span>{deleteTarget?.categoryName || deleteTarget?.category || "—"}</span>
+                <span>{deleteTarget ? formatDate(deleteTarget.date || deleteTarget.expectedDate || "") : ""}</span>
                 <span className={`font-semibold ${
                   deleteTarget?.type === "income" ? "text-emerald-400" : "text-red-400"
                 }`}>
-                  {deleteTarget?.type === "income" ? "+" : "-"}{deleteTarget ? formatCurrency(deleteTarget.value) : ""}
+                  {deleteTarget?.type === "income" ? "+" : "-"}{deleteTarget ? formatCurrency(deleteTarget.value ?? deleteTarget.amount ?? 0) : ""}
                 </span>
               </div>
             </div>
             <p className="text-sm font-semibold text-center text-red-400">
-              Deseja excluir permanentemente este lançamento?
+              Deseja excluir permanentemente {deleteTarget?.entryType === "forecast" ? "esta previsão" : "este lançamento"}?
             </p>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">

@@ -93,6 +93,51 @@ export const CashForecastRepository = {
     await db.cashForecasts.delete(id);
   },
 
+  async softDelete(id: string, reason: string, userName?: string): Promise<void> {
+    const forecast = await db.cashForecasts.get(id);
+    if (!forecast) return;
+
+    const now = new Date();
+    const restoreUntil = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    const deleted = {
+      id: generateId(),
+      originalId: forecast.id,
+      displayId: forecast.displayId,
+      entryType: "forecast" as const,
+      type: forecast.type,
+      amount: forecast.amount,
+      category: forecast.category,
+      description: forecast.description,
+      expectedDate: forecast.expectedDate,
+      notes: forecast.notes,
+      status: forecast.status,
+      cancelledReason: forecast.cancelledReason,
+      cancelledAt: forecast.cancelledAt,
+      cancelledBy: forecast.cancelledBy,
+      createdAt: forecast.createdAt,
+      updatedAt: forecast.updatedAt,
+      company: forecast.company,
+      deletedAt: now.toISOString(),
+      reason,
+      restoreUntil: restoreUntil.toISOString(),
+    };
+
+    await db.cashForecasts.delete(id);
+    await db.deletedTransactions.add(deleted);
+
+    await AuditRepository.log({
+      entityId: forecast.id,
+      entityType: "forecast",
+      displayId: forecast.displayId,
+      action: "moved_to_trash",
+      description: `Previsão ${forecast.displayId} - ${forecast.description} movida para lixeira`,
+      user: userName || "Sistema",
+      company: forecast.company,
+      details: reason,
+    });
+  },
+
   async markAsReceived(id: string, company: string, userName?: string): Promise<void> {
     const forecast = await db.cashForecasts.get(id);
     if (!forecast || forecast.status !== "predicted") return;

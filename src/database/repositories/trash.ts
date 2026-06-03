@@ -1,7 +1,7 @@
 "use client";
 
 import { db } from "../dexie";
-import type { Transaction, DeletedTransaction } from "@/types";
+import type { Transaction, CashForecast, DeletedTransaction } from "@/types";
 import { generateId } from "@/lib/utils";
 import { AuditRepository } from "./audit";
 
@@ -36,6 +36,7 @@ export const TrashRepository = {
       id: generateId(),
       originalId: transaction.id,
       displayId: transaction.displayId,
+      entryType: "transaction",
       type: transaction.type,
       value: transaction.value,
       categoryId: transaction.categoryId,
@@ -68,19 +69,54 @@ export const TrashRepository = {
     return deleted;
   },
 
-  async restore(id: string, userName?: string): Promise<Transaction | null> {
+  async restore(id: string, userName?: string): Promise<Transaction | CashForecast | null> {
     const deleted = await db.deletedTransactions.get(id);
     if (!deleted) return null;
+
+    if (deleted.entryType === "forecast") {
+      const restored: CashForecast = {
+        id: deleted.originalId,
+        displayId: deleted.displayId,
+        type: deleted.type,
+        description: deleted.description,
+        amount: deleted.amount ?? 0,
+        category: deleted.category ?? "",
+        expectedDate: deleted.expectedDate ?? "",
+        status: deleted.status ?? "predicted",
+        notes: deleted.notes,
+        company: deleted.company,
+        createdAt: deleted.createdAt,
+        updatedAt: new Date().toISOString(),
+        cancelledReason: deleted.cancelledReason,
+        cancelledAt: deleted.cancelledAt,
+        cancelledBy: deleted.cancelledBy,
+      };
+
+      await db.cashForecasts.add(restored);
+      await db.deletedTransactions.delete(id);
+
+      await AuditRepository.log({
+        entityId: deleted.originalId,
+        entityType: "forecast",
+        displayId: deleted.displayId,
+        action: "restored",
+        description: `Previsão ${deleted.displayId} - ${deleted.description} restaurada da lixeira`,
+        user: userName || "Sistema",
+        company: deleted.company,
+      });
+
+      return restored;
+    }
 
     const restored: Transaction = {
       id: deleted.originalId,
       displayId: deleted.displayId,
       type: deleted.type,
-      value: deleted.value,
-      categoryId: deleted.categoryId,
-      categoryName: deleted.categoryName,
+      value: deleted.value ?? 0,
+      categoryId: deleted.categoryId ?? "",
+      categoryName: deleted.categoryName ?? "",
       description: deleted.description,
-      date: deleted.date,
+      date: deleted.date ?? "",
       observation: deleted.observation,
       createdAt: deleted.createdAt,
       updatedAt: new Date().toISOString(),
@@ -108,12 +144,13 @@ export const TrashRepository = {
     await db.deletedTransactions.delete(id);
 
     if (deleted) {
+      const entityType = deleted.entryType === "forecast" ? "forecast" : "transaction";
       await AuditRepository.log({
         entityId: deleted.originalId,
-        entityType: "transaction",
+        entityType,
         displayId: deleted.displayId,
         action: "deleted",
-        description: `Lançamento ${deleted.displayId} - ${deleted.description} excluído permanentemente`,
+        description: `${entityType === "forecast" ? "Previsão" : "Lançamento"} ${deleted.displayId} - ${deleted.description} excluído permanentemente`,
         user: userName || "Sistema",
         company: deleted.company,
       });
