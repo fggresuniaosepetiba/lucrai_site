@@ -16,19 +16,16 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ transactions, activeFilter, onFilterChange, year }: StatsCardsProps) {
-  const now = new Date();
-  const currentMonth = now.getMonth();
-
-  const monthTransactions = transactions.filter((t) => {
+  const yearTransactions = transactions.filter((t) => {
     const d = parseLocalDate(t.date);
-    return d.getMonth() === currentMonth && d.getFullYear() === year;
+    return d.getFullYear() === year;
   });
 
-  const totalIncomes = monthTransactions
+  const totalIncomes = yearTransactions
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.value, 0);
 
-  const totalExpenses = monthTransactions
+  const totalExpenses = yearTransactions
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.value, 0);
 
@@ -53,7 +50,7 @@ export function StatsCards({ transactions, activeFilter, onFilterChange, year }:
   const cards = [
     {
       key: "income" as DashboardFilter,
-      title: "Entradas (mês)",
+      title: "Entradas",
       value: totalIncomes,
       display: incomeCompact.display,
       fullValue: incomeCompact.full,
@@ -64,7 +61,7 @@ export function StatsCards({ transactions, activeFilter, onFilterChange, year }:
     },
     {
       key: "expense" as DashboardFilter,
-      title: "Saídas (mês)",
+      title: "Saídas",
       value: totalExpenses,
       display: expenseCompact.display,
       fullValue: expenseCompact.full,

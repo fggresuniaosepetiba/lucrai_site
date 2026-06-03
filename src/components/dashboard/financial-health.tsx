@@ -32,23 +32,20 @@ export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
     );
   }
 
-  const now = new Date();
-  const currentMonth = now.getMonth();
-
-  const monthTransactions = transactions.filter((t) => {
+  const yearTransactions = transactions.filter((t) => {
     const d = parseLocalDate(t.date);
-    return d.getMonth() === currentMonth && d.getFullYear() === year;
+    return d.getFullYear() === year;
   });
 
-  const monthIncomes = monthTransactions
+  const yearIncomes = yearTransactions
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.value, 0);
 
-  const monthExpenses = monthTransactions
+  const yearExpenses = yearTransactions
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.value, 0);
 
-  const monthBalance = monthIncomes - monthExpenses;
+  const yearBalance = yearIncomes - yearExpenses;
 
   const allIncomes = transactions
     .filter((t) => t.type === "income")
@@ -60,12 +57,12 @@ export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
 
   const totalBalance = allIncomes - allExpenses;
 
-  const margin = monthIncomes > 0
-    ? ((monthIncomes - monthExpenses) / monthIncomes) * 100
+  const margin = yearIncomes > 0
+    ? ((yearIncomes - yearExpenses) / yearIncomes) * 100
     : 0;
 
-  const expenseRatio = monthIncomes > 0
-    ? (monthExpenses / monthIncomes) * 100
+  const expenseRatio = yearIncomes > 0
+    ? (yearExpenses / yearIncomes) * 100
     : 0;
 
   const healthScore = (() => {
@@ -84,10 +81,10 @@ export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
       color: totalBalance >= 0 ? "text-emerald-400" : "text-red-400",
     },
     {
-      label: "Resultado do Mês",
-      value: formatCurrency(monthBalance),
-      icon: monthBalance >= 0 ? TrendingUp : TrendingDown,
-      color: monthBalance >= 0 ? "text-emerald-400" : "text-red-400",
+      label: "Resultado do Ano",
+      value: formatCurrency(yearBalance),
+      icon: yearBalance >= 0 ? TrendingUp : TrendingDown,
+      color: yearBalance >= 0 ? "text-emerald-400" : "text-red-400",
     },
     {
       label: "Margem Líquida",
