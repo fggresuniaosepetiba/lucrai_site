@@ -240,13 +240,15 @@ function CashForecastContent() {
   const handleConfirmAction = async () => {
     const { type, item } = confirmDialog;
     if (!item) return;
+    if (type === "cancelled" && !cancelReason.trim()) {
+      setCancelError("O motivo do cancelamento é obrigatório.");
+      return;
+    }
+
+    setConfirmDialog({ open: false, type: "received", item: null });
 
     try {
       if (type === "cancelled") {
-        if (!cancelReason.trim()) {
-          setCancelError("O motivo do cancelamento é obrigatório.");
-          return;
-        }
         await CashForecastRepository.markAsCancelled(item.id, cancelReason.trim(), userName);
         toast("Previsão cancelada", "", "success");
       } else if (type === "received") {
@@ -259,19 +261,18 @@ function CashForecastContent() {
         await CashForecastRepository.softDelete(item.id, "Excluído pelo usuário", userName);
         toast("Previsão movida para lixeira", "Ela ficará disponível por 30 dias", "success");
       }
-      setConfirmDialog({ open: false, type: "received", item: null });
       await loadData();
     } catch { toast("Erro", "Não foi possível atualizar", "destructive"); }
   };
 
   const handleClearHistory = async () => {
+    setConfirmDialog({ open: false, type: "received", item: null });
     try {
       const toDelete = items.filter((i) => i.status !== "predicted");
       for (const item of toDelete) {
         await CashForecastRepository.delete(item.id);
       }
       toast("Histórico limpo", `${toDelete.length} registro(s) removido(s) permanentemente`, "success");
-      setConfirmDialog({ open: false, type: "clear_history", item: null });
       await loadData();
     } catch { toast("Erro", "Não foi possível limpar o histórico", "destructive"); }
   };
