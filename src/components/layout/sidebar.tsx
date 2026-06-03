@@ -42,7 +42,7 @@ export function Sidebar() {
   const { logout } = useAuthStore();
   const { theme } = useThemeStore();
 
-  const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/lucrai/icon-clean.png" : "/images/lucrai/icon-normal.png";
+  // const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/icon-normal.png" : "/images/icon-oficial.png";
   const logoSrc = theme === "clean" ? "/images/lucrai/logo-lucrai-com-fundo.png" : "/images/lucrai/logo-lucrai-sem-fundo.png";
 
   const handleLogout = () => {
@@ -66,7 +66,7 @@ export function Sidebar() {
         {collapsed ? (
           <div className="relative h-8 w-8">
             <Image
-              src={iconSrc}
+              src={logoSrc}
               alt="LUCRAÍ"
               fill
               className="object-contain"
@@ -74,20 +74,13 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="relative h-8 w-8 shrink-0 rounded-lg bg-sidebar-logo-bg flex items-center justify-center p-1">
-              <Image
-                src={iconSrc}
-                alt=""
-                fill
-                className="object-contain p-0.5"
-              />
-            </div>
-            <div className="relative h-7 flex-1 max-w-[120px]">
+            {/* Trocar foto da logoSrc */}
+            <div className="relative h-40 flex-1 max-w-60">
               <Image
                 src={logoSrc}
                 alt="LUCRAÍ"
                 fill
-                className="object-contain object-left brightness-110"
+                className="object-contain object-left brightness-110 max-h-full max-w-100"
               />
             </div>
           </div>
