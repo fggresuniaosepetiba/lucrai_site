@@ -174,21 +174,21 @@ export function TransactionForm({
           <div className="flex gap-2">
             <Button
               type="button"
-              variant={type === "expense" ? "destructive" : "outline"}
+              variant={type === "expense" ? "default" : "outline"}
               size="sm"
               onClick={() => handleTypeChange("expense")}
               className="flex-1"
             >
-              Saída
+              Entrada
             </Button>
             <Button
               type="button"
-              variant={type === "income" ? "default" : "outline"}
+              variant={type === "income" ? "destructive" : "outline"}
               size="sm"
               onClick={() => handleTypeChange("income")}
               className="flex-1"
             >
-              Entrada
+              Saída
             </Button>
           </div>
 

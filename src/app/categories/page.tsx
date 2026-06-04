@@ -382,18 +382,18 @@ export default function CategoriesPage() {
                   <div className="flex gap-2">
                     <Button
                       type="button"
-                      variant={type === "income" ? "default" : "outline"}
+                      variant={type === "expense" ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setType("income")}
+                      onClick={() => setType("expense")}
                       className="flex-1"
                     >
                       Entrada
                     </Button>
                     <Button
                       type="button"
-                      variant={type === "expense" ? "destructive" : "outline"}
+                      variant={type === "income" ? "destructive" : "outline"}
                       size="sm"
-                      onClick={() => setType("expense")}
+                      onClick={() => setType("income")}
                       className="flex-1"
                     >
                       Saída
