@@ -75,6 +75,8 @@ export interface DeletedTransaction {
 
 export type ForecastStatus = "predicted" | "received" | "paid" | "cancelled";
 
+export type RecurrenceType = "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "semiannual" | "annual";
+
 export interface CashForecast {
   id: string;
   displayId: string;
@@ -91,6 +93,9 @@ export interface CashForecast {
   cancelledReason?: string;
   cancelledAt?: string;
   cancelledBy?: string;
+  isRecurring?: boolean;
+  recurrenceType?: RecurrenceType;
+  recurrenceEndDate?: string;
 }
 
 export interface MonthlySummary {

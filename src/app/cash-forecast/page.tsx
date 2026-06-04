@@ -21,7 +21,7 @@ import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, va
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
   AlertTriangle, Search, Pencil, CheckCircle2, XCircle, Trash2,
-  Target, BarChart3, Hash, History, Clock, Wallet,
+  Target, BarChart3, Hash, History, Clock, Wallet, Repeat,
 } from "lucide-react";
 import {
   Dialog,
@@ -31,6 +31,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -70,6 +77,10 @@ function CashForecastContent() {
   const [formCategory, setFormCategory] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formNotes, setFormNotes] = useState("");
+  const [formRecurring, setFormRecurring] = useState(false);
+  const [formRecurrenceType, setFormRecurrenceType] = useState("monthly");
+  const [formRecurrenceEndType, setFormRecurrenceEndType] = useState("never");
+  const [formRecurrenceEndDate, setFormRecurrenceEndDate] = useState("");
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -168,6 +179,52 @@ function CashForecastContent() {
 
   const formAmountValue = formAmountDisplay ? parseCurrencyInput(formAmountDisplay) : 0;
 
+  const recurrenceLabels: Record<string, string> = {
+    daily: "Diário",
+    weekly: "Semanal",
+    biweekly: "Quinzenal",
+    monthly: "Mensal",
+    quarterly: "Trimestral",
+    semiannual: "Semestral",
+    annual: "Anual",
+  };
+
+  function generateRecurrenceDates(startStr: string, type: string, endStr: string): Date[] {
+    const dates: Date[] = [];
+    const current = parseLocalDate(startStr);
+    const end = parseLocalDate(endStr);
+    while (current <= end) {
+      dates.push(new Date(current));
+      switch (type) {
+        case "daily": current.setDate(current.getDate() + 1); break;
+        case "weekly": current.setDate(current.getDate() + 7); break;
+        case "biweekly": current.setDate(current.getDate() + 14); break;
+        case "monthly": current.setMonth(current.getMonth() + 1); break;
+        case "quarterly": current.setMonth(current.getMonth() + 3); break;
+        case "semiannual": current.setMonth(current.getMonth() + 6); break;
+        case "annual": current.setFullYear(current.getFullYear() + 1); break;
+      }
+    }
+    return dates;
+  }
+
+  const recurrenceSummary = useMemo(() => {
+    if (!formRecurring || !formDate || formAmountValue <= 0) return null;
+    const defaultEnd = new Date(parseLocalDate(formDate));
+    defaultEnd.setFullYear(defaultEnd.getFullYear() + 5);
+    const endDate = formRecurrenceEndType === "date" && formRecurrenceEndDate
+      ? formRecurrenceEndDate
+      : defaultEnd.toISOString().slice(0, 10);
+    const dates = generateRecurrenceDates(formDate, formRecurrenceType, endDate);
+    const total = dates.length * formAmountValue;
+    return {
+      count: dates.length,
+      total,
+      frequency: recurrenceLabels[formRecurrenceType] || formRecurrenceType,
+      hasEndDate: formRecurrenceEndType === "date" && !!formRecurrenceEndDate,
+    };
+  }, [formRecurring, formDate, formRecurrenceType, formRecurrenceEndType, formRecurrenceEndDate, formAmountValue]);
+
   const openCreate = () => {
     setEditingItem(null);
     setFormType("income");
@@ -176,6 +233,10 @@ function CashForecastContent() {
     setFormCategory("");
     setFormDate("");
     setFormNotes("");
+    setFormRecurring(false);
+    setFormRecurrenceType("monthly");
+    setFormRecurrenceEndType("never");
+    setFormRecurrenceEndDate("");
     setShowForm(true);
   };
 
@@ -187,6 +248,10 @@ function CashForecastContent() {
     setFormCategory(item.category);
     setFormDate(item.expectedDate);
     setFormNotes(item.notes || "");
+    setFormRecurring(item.isRecurring ?? false);
+    setFormRecurrenceType(item.recurrenceType ?? "monthly");
+    setFormRecurrenceEndType(item.recurrenceEndDate ? "date" : "never");
+    setFormRecurrenceEndDate(item.recurrenceEndDate ?? "");
     setShowForm(true);
   };
 
@@ -206,8 +271,38 @@ function CashForecastContent() {
           category: formCategory.trim(),
           expectedDate: formDate,
           notes: formNotes.trim(),
+          isRecurring: formRecurring || undefined,
+          recurrenceType: formRecurring ? (formRecurrenceType as CashForecast["recurrenceType"]) : undefined,
+          recurrenceEndDate: formRecurring && formRecurrenceEndType === "date" ? formRecurrenceEndDate : undefined,
         }, userName);
         toast("Previsão atualizada", "", "success");
+      } else if (formRecurring) {
+        const defaultEnd = new Date(parseLocalDate(formDate));
+        defaultEnd.setFullYear(defaultEnd.getFullYear() + 5);
+        const endDate = formRecurrenceEndType === "date" && formRecurrenceEndDate
+          ? formRecurrenceEndDate
+          : defaultEnd.toISOString().slice(0, 10);
+        const dates = generateRecurrenceDates(formDate, formRecurrenceType, endDate);
+        for (const dt of dates) {
+          const dateStr = dt.toISOString().slice(0, 10);
+          await CashForecastRepository.create(
+            {
+              type: formType,
+              description: formDescription.trim(),
+              amount,
+              category: formCategory.trim(),
+              expectedDate: dateStr,
+              notes: formNotes.trim(),
+              status: "predicted",
+              isRecurring: true,
+              recurrenceType: formRecurrenceType as CashForecast["recurrenceType"],
+              recurrenceEndDate: formRecurrenceEndDate || undefined,
+            },
+            company,
+            userName
+          );
+        }
+        toast("Previsões geradas", `${dates.length} lançamentos recorrentes criados`, "success");
       } else {
         await CashForecastRepository.create(
           { type: formType, description: formDescription.trim(), amount, category: formCategory.trim(), expectedDate: formDate, notes: formNotes.trim(), status: "predicted" },
@@ -626,7 +721,7 @@ function CashForecastContent() {
         </Tabs>
 
         {/* Create/Edit Dialog */}
-        <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setEditingItem(null); } }}>
+        <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setEditingItem(null); setFormRecurring(false); } }}>
           <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingItem ? `Editar Previsão ${editingItem.displayId}` : "Novo Lançamento Previsto"}</DialogTitle>
@@ -674,6 +769,91 @@ function CashForecastContent() {
                   <Input id="date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
                 </div>
               </div>
+              {!editingItem && (
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="recurring"
+                    checked={formRecurring}
+                    onChange={(e) => setFormRecurring(e.target.checked)}
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="recurring" className="text-sm font-medium cursor-pointer">Lançamento recorrente</Label>
+                </div>
+              )}
+              {formRecurring && !editingItem && (
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-4">
+                  <p className="text-sm font-semibold flex items-center gap-2">
+                    <Repeat className="h-4 w-4 text-primary" />
+                    Configuração de Recorrência
+                  </p>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Frequência</Label>
+                    <Select value={formRecurrenceType} onValueChange={setFormRecurrenceType}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(recurrenceLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Encerrar recorrência</Label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="recurrence-end"
+                          checked={formRecurrenceEndType === "never"}
+                          onChange={() => setFormRecurrenceEndType("never")}
+                          className="h-4 w-4 text-primary border-border"
+                        />
+                        <span className="text-sm">Nunca</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="recurrence-end"
+                          checked={formRecurrenceEndType === "date"}
+                          onChange={() => setFormRecurrenceEndType("date")}
+                          className="h-4 w-4 text-primary border-border"
+                        />
+                        <span className="text-sm">Em uma data específica</span>
+                      </label>
+                    </div>
+                    {formRecurrenceEndType === "date" && (
+                      <div className="pt-1">
+                        <Input
+                          type="date"
+                          value={formRecurrenceEndDate}
+                          onChange={(e) => setFormRecurrenceEndDate(e.target.value)}
+                          placeholder="Data final"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {recurrenceSummary && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-1.5">
+                      <p className="text-xs font-semibold text-primary flex items-center gap-2">
+                        <CalendarCheck className="h-3.5 w-3.5" />
+                        Resumo da Recorrência
+                      </p>
+                      <div className="text-xs text-muted-foreground space-y-0.5">
+                        <p>Frequência: <span className="font-medium text-foreground">{recurrenceSummary.frequency}</span></p>
+                        <p>Início: <span className="font-medium text-foreground">{formatDate(formDate)}</span></p>
+                        <p>Fim: <span className="font-medium text-foreground">
+                          {recurrenceSummary.hasEndDate ? formatDate(formRecurrenceEndDate) : "Sem data final definida"}
+                        </span></p>
+                        <p>Serão gerados <span className="font-medium text-foreground">{recurrenceSummary.count}</span> lançamentos previstos.</p>
+                        <p>Valor total projetado: <span className="font-medium text-foreground">{formatCurrency(recurrenceSummary.total)}</span></p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="forecast-extenso">Valor por Extenso</Label>
                 <Textarea
