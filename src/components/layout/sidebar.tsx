@@ -43,7 +43,7 @@ export function Sidebar() {
   const { theme } = useThemeStore();
 
   const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/icon-normal.png" : "/images/icon-oficial.png";
-  const logoSrc = theme === "clean" ? "/images/lucrai/logo-lucrai-com-fundo.png" : "/images/lucrai/logo-lucrai-sem-fundo.png";
+  const logoSrc = theme === "clean" ? "/images/lucrai/logo-lucrai-com-fundo.png" : "/images/lucrai/logo-lucrai-sidebar.png";
 
   const handleLogout = () => {
     logout();
@@ -74,13 +74,12 @@ export function Sidebar() {
           </div>
         ) : (
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            {/* Trocar foto da logoSrc */}
-            <div className="relative h-40 flex-1 max-w-60">
+            <div className="relative h-14 flex-1 max-w-44">
               <Image
                 src={logoSrc}
                 alt="LUCRAÍ"
                 fill
-                className="object-contain object-left brightness-110 max-h-full max-w-100"
+                className="object-contain object-left brightness-110"
               />
             </div>
           </div>
