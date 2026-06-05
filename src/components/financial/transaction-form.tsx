@@ -169,7 +169,7 @@ export function TransactionForm({
             Preencha os dados do lançamento financeiro
           </DialogDescription>
         </DialogHeader>
-{/* teste */}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex gap-2">
             <Button
