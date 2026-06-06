@@ -3,6 +3,35 @@
 @tailwind utilities;
 
 @layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  .skip-to-content {
+    position: absolute;
+    top: -100%;
+    left: 16px;
+    z-index: 9999;
+    padding: 8px 16px;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: top 0.2s;
+  }
+
+  .skip-to-content:focus {
+    top: 8px;
+  }
+}
+
+@layer base {
   :root,
   [data-theme="normal"] {
     --background: 222.2 84% 4.9%;

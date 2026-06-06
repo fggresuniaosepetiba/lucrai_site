@@ -44,6 +44,8 @@ export const TransactionRepository = {
   async create(data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company">, company: string, userName?: string): Promise<Transaction> {
     const dateCheck = validateTransactionDate(data.date);
     if (!dateCheck.valid) throw new Error(dateCheck.message);
+    if (data.value > 999999999999.99) throw new Error("Valor excede o limite máximo permitido de R$ 999.999.999.999,99");
+    if (data.description && data.description.length > 300) throw new Error("Descrição excede o limite máximo de 300 caracteres");
     const now = new Date().toISOString();
     const all = await db.transactions.where("company").equals(company).toArray();
     const displayId = await getNextDisplayId(all);
@@ -76,6 +78,8 @@ export const TransactionRepository = {
       const dateCheck = validateTransactionDate(data.date);
       if (!dateCheck.valid) throw new Error(dateCheck.message);
     }
+    if (data.value && data.value > 999999999999.99) throw new Error("Valor excede o limite máximo permitido de R$ 999.999.999.999,99");
+    if (data.description && data.description.length > 300) throw new Error("Descrição excede o limite máximo de 300 caracteres");
     await db.transactions.update(id, {
       ...data,
       updatedAt: new Date().toISOString(),

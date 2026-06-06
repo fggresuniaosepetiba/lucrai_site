@@ -42,6 +42,10 @@ interface TransactionFormProps {
   onClose: () => void;
 }
 
+const MAX_DESC_LENGTH = 300;
+const MAX_CAT_NAME_LENGTH = 120;
+const MAX_VALUE_CENTS = 99999999999999;
+
 export function TransactionForm({
   transaction,
   categories,
@@ -68,6 +72,7 @@ export function TransactionForm({
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
+  const [newCategoryError, setNewCategoryError] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -89,7 +94,14 @@ export function TransactionForm({
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!description.trim()) errs.description = "Campo obrigatório";
-    if (!valueDisplay) errs.value = "Campo obrigatório";
+    if (!valueDisplay) {
+      errs.value = "Campo obrigatório";
+    } else {
+      const parsedValue = parseCurrencyInput(valueDisplay);
+      if (parsedValue > MAX_VALUE_CENTS / 100) {
+        errs.value = "Limite máximo atingido.";
+      }
+    }
     if (!date) { errs.date = "Campo obrigatório"; } else {
       const dateCheck = validateTransactionDate(date);
       if (!dateCheck.valid) errs.date = dateCheck.message;
@@ -104,9 +116,19 @@ export function TransactionForm({
     const digits = raw.replace(/\D/g, "");
     if (digits === "") {
       setValueDisplay("");
+      setErrors((prev) => ({ ...prev, value: "" }));
+      return;
+    }
+    const numericValue = parseInt(digits, 10);
+    if (numericValue > MAX_VALUE_CENTS) {
+      setErrors((prev) => ({
+        ...prev,
+        value: "Limite máximo atingido.",
+      }));
       return;
     }
     setValueDisplay(formatCurrencyInput(digits));
+    setErrors((prev) => ({ ...prev, value: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,6 +171,7 @@ export function TransactionForm({
       setCategoryId(created.id);
       setNewCategoryName("");
       setShowCreateCategory(false);
+      setNewCategoryError("");
       setErrors((prev) => ({ ...prev, category: "" }));
       toast("Categoria criada", "Categoria adicionada e selecionada", "success");
     } catch {
@@ -245,9 +268,23 @@ export function TransactionForm({
               id="description"
               placeholder="Ex: Venda de serviço"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.length <= MAX_DESC_LENGTH) {
+                  setDescription(val);
+                  if (errors.description) setErrors((prev) => ({ ...prev, description: "" }));
+                } else {
+                  setErrors((prev) => ({
+                    ...prev,
+                    description: "Limite máximo de 300 caracteres atingido.",
+                  }));
+                }
+              }}
               className={errors.description ? "border-red-400" : ""}
             />
+            <p className="text-xs text-muted-foreground">
+              {description.length} / {MAX_DESC_LENGTH} caracteres
+            </p>
             {errors.description && <p className="text-xs text-red-400">{errors.description}</p>}
           </div>
 
@@ -279,30 +316,48 @@ export function TransactionForm({
             ) : null}
             <div className="space-y-2">
               {showCreateCategory ? (
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Nome da nova categoria"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <div className="flex-1 space-y-1">
+                      <Input
+                        placeholder="Nome da nova categoria"
+                        value={newCategoryName}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val.length <= MAX_CAT_NAME_LENGTH) {
+                            setNewCategoryName(val);
+                            if (val.length === MAX_CAT_NAME_LENGTH) {
+                              setNewCategoryError("Limite máximo de 120 caracteres atingido.");
+                            } else {
+                              setNewCategoryError("");
+                            }
+                          }
+                        }}
+                        disabled={creatingCategory}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {newCategoryName.length} / {MAX_CAT_NAME_LENGTH} caracteres
+                      </p>
+                      {newCategoryError && <p className="text-xs text-red-400">{newCategoryError}</p>}
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleCreateCategory}
+                      disabled={creatingCategory || !newCategoryName.trim()}
+                    >
+                      {creatingCategory ? "Criando..." : "Criar"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                    onClick={() => { setShowCreateCategory(false); setNewCategoryName(""); setNewCategoryError(""); }}
                     disabled={creatingCategory}
-                  />
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={handleCreateCategory}
-                    disabled={creatingCategory || !newCategoryName.trim()}
-                  >
-                    {creatingCategory ? "Criando..." : "Criar"}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => { setShowCreateCategory(false); setNewCategoryName(""); }}
-                    disabled={creatingCategory}
-                  >
-                    Cancelar
-                  </Button>
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <Button

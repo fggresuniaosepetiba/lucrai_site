@@ -3,10 +3,15 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
 
 export const metadata: Metadata = {
-  title: "LUCRAÍ Core — Trinary Solutions",
+  title: "LUCRAÍ — CFO Digital Inteligente",
   description: "Sistema de gestão financeira empresarial",
   icons: {
     icon: "/icon.png",

@@ -18,6 +18,7 @@ export const CategoryRepository = {
   },
 
   async create(data: Omit<Category, "id" | "createdAt" | "company">, company: string): Promise<Category> {
+    if (data.name && data.name.length > 120) throw new Error("Nome da categoria excede o limite máximo de 120 caracteres");
     const category: Category = {
       ...data,
       company,
@@ -29,6 +30,7 @@ export const CategoryRepository = {
   },
 
   async update(id: string, data: Partial<Category>): Promise<void> {
+    if (data.name && data.name.length > 120) throw new Error("Nome da categoria excede o limite máximo de 120 caracteres");
     await db.categories.update(id, data);
   },
 
