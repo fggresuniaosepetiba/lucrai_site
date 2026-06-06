@@ -18,7 +18,7 @@ function AnimatedMetric({ value, label, suffix, isActive }: { value: number; lab
 export function DashboardPreview({ isActive, compact }: { isActive: boolean; compact?: boolean }) {
   return (
     <div className="rounded-2xl border bg-card shadow-2xl overflow-hidden">
-      <div className="flex h-12 items-center justify-center bg-muted/50 gap-1.5 px-4">
+      <div className="flex h-12 items-center justify-center bg-muted/50 gap-1.5 px-4 relative">
         <div className="flex gap-1.5 absolute left-4">
           <span className="h-2 w-2 rounded-full bg-red-500" />
           <span className="h-2 w-2 rounded-full bg-yellow-500" />
