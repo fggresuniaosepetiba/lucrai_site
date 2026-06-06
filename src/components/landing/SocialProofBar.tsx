@@ -18,7 +18,7 @@ export function SocialProofBar() {
       <AnimatedSection className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-6">
           <p className="text-sm font-medium text-muted-foreground text-center">
-            Mais de 3.200 empresas já substituíram planilhas e consultores pelo Lucraí
+            Empresas de todo o Brasil estão substituindo planilhas e processos manuais pelo Lucraí.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             {segments.map((segment, i) => (

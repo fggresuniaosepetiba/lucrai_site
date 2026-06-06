@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { AnnouncementBar } from '@/components/landing/AnnouncementBar'
+import { AnnouncementBar, HeaderSpacer } from '@/components/landing/AnnouncementBar'
 import { LandingHeader } from '@/components/landing/LandingHeader'
 import { HeroSection } from '@/components/landing/HeroSection'
 import { SocialProofBar } from '@/components/landing/SocialProofBar'
@@ -43,6 +43,7 @@ export default function LandingPage() {
       </a>
       <AnnouncementBar />
       <LandingHeader />
+      <HeaderSpacer />
       <main>
         <HeroSection />
         <SocialProofBar />

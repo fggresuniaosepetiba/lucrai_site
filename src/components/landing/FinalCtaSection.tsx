@@ -13,7 +13,7 @@ export function FinalCtaSection() {
             Comece hoje. Seu CFO Digital está pronto.
           </h2>
           <p className="mt-4 text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-            Junte-se a mais de 3.200 empresas que já tomam decisões financeiras com inteligência artificial.
+            Empresas de todo o Brasil já estão tomando decisões financeiras com inteligência — e não com intuição.
           </p>
           <div className="mt-10">
             <Button

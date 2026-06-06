@@ -21,12 +21,12 @@ interface Plan {
 const plans: Plan[] = [
   {
     name: 'Starter',
-    audience: 'Para MEIs e freelancers',
+    audience: 'Para empreendedores individuais',
     monthly: 29.90,
     yearly: 22.42,
     features: [
+      '1 usuário',
       'Fluxo de caixa básico',
-      'Até 100 transações/mês',
       'Dashboard financeiro',
       'Relatório mensal',
       'Suporte por e-mail',
@@ -39,8 +39,8 @@ const plans: Plan[] = [
     monthly: 59.90,
     yearly: 44.92,
     features: [
+      'Até 5 usuários',
       'Tudo do Starter',
-      'Transações ilimitadas',
       'Fluxo de caixa preditivo',
       'Alertas inteligentes',
       'Relatórios semanais',
@@ -55,9 +55,9 @@ const plans: Plan[] = [
     yearly: 74.92,
     popular: true,
     features: [
+      'Até 10 usuários',
       'Tudo do Basic',
       'IA preditiva avançada',
-      'Múltiplos usuários (até 5)',
       'Relatórios executivos em PDF',
       'Benchmark setorial',
       'API de integração',
@@ -72,8 +72,8 @@ const plans: Plan[] = [
     monthly: 0,
     yearly: 0,
     features: [
-      'Tudo do Pro',
       'Usuários ilimitados',
+      'Tudo do Pro',
       'Integrações customizadas',
       'SLA garantido',
       'Onboarding dedicado',
@@ -86,10 +86,9 @@ const plans: Plan[] = [
 ]
 
 const allFeatures = [
+  'Usuários',
   'Fluxo de caixa básico',
   'Dashboard financeiro',
-  'Até 100 transações/mês',
-  'Transações ilimitadas',
   'Relatório mensal',
   'Relatórios semanais',
   'Relatórios executivos em PDF',
@@ -98,8 +97,7 @@ const allFeatures = [
   'Alertas inteligentes',
   'Benchmark setorial',
   'API de integração',
-  'Múltiplos usuários (até 5)',
-  'Usuários ilimitados',
+  'Lançamentos financeiros',
   'Suporte por e-mail',
   'Suporte prioritário',
   'Suporte humano dedicado',
@@ -110,10 +108,9 @@ const allFeatures = [
 ]
 
 const featureMap: Record<string, (string | boolean)[]> = {
+  'Usuários': ['1', 'Até 5', 'Até 10', 'Ilimitados'],
   'Fluxo de caixa básico': [true, true, true, true],
   'Dashboard financeiro': [true, true, true, true],
-  'Até 100 transações/mês': [true, false, false, false],
-  'Transações ilimitadas': [false, true, true, true],
   'Relatório mensal': [true, false, false, false],
   'Relatórios semanais': [false, true, false, false],
   'Relatórios executivos em PDF': [false, false, true, true],
@@ -122,8 +119,7 @@ const featureMap: Record<string, (string | boolean)[]> = {
   'Alertas inteligentes': [false, true, true, true],
   'Benchmark setorial': [false, false, true, true],
   'API de integração': [false, false, true, true],
-  'Múltiplos usuários (até 5)': [false, false, true, false],
-  'Usuários ilimitados': [false, false, false, true],
+  'Lançamentos financeiros': [true, true, true, true],
   'Suporte por e-mail': [true, false, false, false],
   'Suporte prioritário': [false, true, false, false],
   'Suporte humano dedicado': [false, false, true, true],
@@ -154,7 +150,7 @@ export function PricingSection() {
     const price = isAnnual ? plan.yearly : plan.monthly
 
     return (
-      <div className={`relative rounded-2xl border border-border/50 bg-card p-8 shadow-sm transition-all duration-200 hover:shadow-md ${
+      <div className={`relative rounded-2xl border border-border/50 bg-card p-8 shadow-sm transition-all duration-200 hover:shadow-md flex flex-col ${
         plan.popular ? 'border-2 border-primary bg-primary/5' : ''
       }`}>
         {plan.popular && (
@@ -179,7 +175,7 @@ export function PricingSection() {
             <p className="text-xs text-emerald-500 mt-1">Economia de 25% no plano anual</p>
           )}
         </div>
-        <ul className="space-y-3 mb-8" role="list">
+        <ul className="space-y-3 mb-8 flex-1" role="list">
           {plan.features.map((f) => (
             <li key={f} className="flex items-start gap-3 text-sm">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
@@ -189,7 +185,7 @@ export function PricingSection() {
         </ul>
         <Button
           variant={plan.popular ? 'default' : plan.ctaVariant || 'outline'}
-          className="w-full"
+          className="w-full mt-auto"
           asChild
         >
           <a href="/cadastro">{plan.cta}</a>
@@ -226,9 +222,9 @@ export function PricingSection() {
           </span>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
           {plans.map((plan) => (
-            <AnimatedSection key={plan.name}>
+            <AnimatedSection key={plan.name} className="h-full">
               <PlanCard plan={plan} />
             </AnimatedSection>
           ))}
@@ -270,7 +266,7 @@ export function PricingSection() {
                             ) : v === false ? (
                               <X className="h-4 w-4 text-muted-foreground/40" aria-label="Não incluso" />
                             ) : (
-                              <span className="text-muted-foreground">—</span>
+                              <span className="text-muted-foreground">{String(v)}</span>
                             )}
                           </td>
                         ))}

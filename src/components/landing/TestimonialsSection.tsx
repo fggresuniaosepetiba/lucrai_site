@@ -6,28 +6,31 @@ import { AnimatedSection } from './AnimatedSection'
 
 const testimonials = [
   {
-    quote: 'Antes do Lucraí, eu olhava para o extrato bancário e tentava adivinhar se tinha dinheiro para contratar alguém. Agora tenho uma projeção de 90 dias que me diz exatamente o que posso fazer.',
-    name: 'Mariana Costa',
-    role: 'Fundadora e CEO',
-    company: 'Studio MC Design',
-    segment: 'Criativo/Agência',
-    initials: 'MC',
+    quote: '<!-- CITAÇÃO REAL PENDENTE: Vitória Justo, CEO da Grão Natural -->',
+    name: 'Vitória Justo',
+    role: 'CEO da Grão Natural',
+    company: 'Grão Natural — RJ',
+    segment: 'Alimentação / Varejo',
+    initials: 'VJ',
+    companyFull: 'Grão Natural — RJ',
   },
   {
-    quote: 'O alerta de fluxo negativo chegou 3 semanas antes do problema acontecer. Consegui renegociar prazos com fornecedores e evitar uma crise que estava chegando sem eu saber.',
-    name: 'João Paulo Ferreira',
-    role: 'Diretor Financeiro',
-    company: 'Construbase Engenharia',
-    segment: 'Construção Civil',
-    initials: 'JF',
+    quote: '<!-- CITAÇÃO REAL PENDENTE: João Ribeiro, CCO da Trinary Solutions -->',
+    name: 'João Ribeiro',
+    role: 'CCO da Trinary Solutions',
+    company: 'Trinary Solutions',
+    segment: 'Tecnologia / B2B',
+    initials: 'JR',
+    companyFull: 'Trinary Solutions',
   },
   {
-    quote: 'Apresentei os relatórios do Lucraí para dois investidores anjos. Eles ficaram impressionados com a qualidade das projeções. Fechamos um aporte de R$ 800k em 6 semanas.',
-    name: 'Beatriz Lemos',
-    role: 'Co-fundadora',
-    company: 'NutriAI Soluções',
-    segment: 'Foodtech / SaaS',
-    initials: 'BL',
+    quote: '<!-- CITAÇÃO REAL PENDENTE: Julia Andrade, CMO da Baobab Cosmetics Manufacturing Company LTDA -->',
+    name: 'Julia Andrade',
+    role: 'CMO da Baobab Cosmetics',
+    company: 'Baobab Cosmetics',
+    segment: 'Cosméticos / Indústria',
+    initials: 'JA',
+    companyFull: 'Baobab Cosmetics Manufacturing Company LTDA',
   },
 ]
 
@@ -65,7 +68,7 @@ export function TestimonialsSection() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold">{t.name}</p>
-                    <p className="text-xs text-muted-foreground">{t.role}, {t.company}</p>
+                    <p className="text-xs text-muted-foreground" title={t.companyFull}>{t.company}</p>
                     <Badge variant="secondary" className="mt-1 text-[10px]">{t.segment}</Badge>
                   </div>
                 </div>

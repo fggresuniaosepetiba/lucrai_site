@@ -1,13 +1,13 @@
 'use client'
 
-import { Lock, FileCheck, MapPin, DatabaseBackup } from 'lucide-react'
+import { FileCheck, MapPin, DatabaseBackup, Shield } from 'lucide-react'
 import { AnimatedSection } from './AnimatedSection'
 
 const items = [
   {
-    icon: Lock,
-    title: 'Criptografia AES-256',
-    text: 'O mesmo padrão usado por bancos e instituições financeiras globais.',
+    icon: Shield,
+    title: 'Conexão segura',
+    text: 'Todo o tráfego do Lucraí usa HTTPS com criptografia de ponta, protegendo seus dados em trânsito.',
   },
   {
     icon: FileCheck,
@@ -22,7 +22,7 @@ const items = [
   {
     icon: DatabaseBackup,
     title: 'Backups automáticos',
-    text: 'Cópias de segurança a cada hora. Seus dados nunca se perdem.',
+    text: 'Seus dados são armazenados com segurança e regularmente protegidos contra perda.',
   },
 ]
 
@@ -41,8 +41,8 @@ export function SecuritySection() {
 
         <div className="grid gap-6 md:grid-cols-4">
           {items.map((item, i) => (
-            <AnimatedSection key={item.title} delay={i * 100}>
-              <div className="rounded-xl border border-border/50 bg-card p-6 text-center transition-all duration-200 hover:shadow-md hover:-translate-y-1">
+            <AnimatedSection key={item.title} delay={i * 100} className="h-full">
+              <div className="rounded-xl border border-border/50 bg-card p-6 text-center transition-all duration-200 hover:shadow-md hover:-translate-y-1 h-full flex flex-col items-center">
                 <item.icon className="h-8 w-8 mx-auto mb-4 text-primary" aria-hidden="true" />
                 <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">{item.text}</p>
