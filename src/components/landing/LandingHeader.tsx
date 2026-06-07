@@ -30,9 +30,9 @@ export function LandingHeader() {
               <Image
                 src="/images/lucrai/logo-lucrai-sem-fundo-otimizada.png"
                 alt="Lucraí"
-                width={120}
-                height={32}
-                className="h-8 w-auto"
+                width={160}
+                height={44}
+                className="h-11 w-auto"
                 priority
               />
             </Link>
@@ -54,7 +54,7 @@ export function LandingHeader() {
                 <a href="/login">Entrar</a>
               </Button>
               <Button size="sm" asChild>
-                <a href="/cadastro">Começar Grátis</a>
+                <a href="/cadastro?origem=menu_cta">Começar Grátis</a>
               </Button>
             </div>
 
@@ -92,7 +92,7 @@ export function LandingHeader() {
               <a href="/login">Entrar</a>
             </Button>
             <Button className="w-full" asChild>
-              <a href="/cadastro">Começar Grátis</a>
+              <a href="/cadastro?origem=menu_cta">Começar Grátis</a>
             </Button>
           </nav>
         </div>

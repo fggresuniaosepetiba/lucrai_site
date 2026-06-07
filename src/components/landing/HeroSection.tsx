@@ -72,7 +72,7 @@ export function HeroSection() {
               }}
             >
               <Button size="lg" asChild>
-                <a href="/cadastro">Começar 14 dias grátis</a>
+                <a href="/cadastro?origem=hero_cta">Começar 14 dias grátis</a>
               </Button>
               <Dialog>
                 <DialogTrigger asChild>

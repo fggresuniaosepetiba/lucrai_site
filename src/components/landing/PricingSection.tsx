@@ -200,7 +200,7 @@ export function PricingSection() {
               {plan.cta}
             </a>
           ) : (
-            <a href="/cadastro">{plan.cta}</a>
+            <a href={`/cadastro?origem=${plan.name.toLowerCase()}`}>{plan.cta}</a>
           )}
         </Button>
       </div>

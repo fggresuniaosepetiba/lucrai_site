@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct } from "@/types";
+import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta } from "@/types";
 
 export class LucraiDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
@@ -10,11 +10,12 @@ export class LucraiDatabase extends Dexie {
   cashForecasts!: Table<CashForecast, string>;
   auditLogs!: Table<AuditLog, string>;
   pricingProducts!: Table<PricingProduct, string>;
+  contas!: Table<Conta, string>;
 
   constructor() {
     super("lucrai-core");
 
-    this.version(8).stores({
+    this.version(9).stores({
       pricingProducts: "id, name, category, company, createdAt",
       transactions: "id, displayId, type, categoryId, date, createdAt, company",
       categories: "id, type, name, company",
@@ -23,6 +24,7 @@ export class LucraiDatabase extends Dexie {
       deletedTransactions: "id, originalId, displayId, deletedAt, restoreUntil, company",
       cashForecasts: "id, displayId, type, status, expectedDate, company, isRecurring",
       auditLogs: "id, entityId, entityType, action, company, timestamp",
+      contas: "id, email, empresa, createdAt",
     });
   }
 }

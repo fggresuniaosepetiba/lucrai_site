@@ -133,6 +133,25 @@ export interface PricingProduct {
   createdBy: string;
 }
 
+export type PorteEmpresa = "MEI" | "ME" | "EPP" | "Médio" | "Grande";
+
+export interface Conta {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  senha: string;
+  empresa: string;
+  porte: PorteEmpresa;
+  faturamento: string;
+  origem: string;
+  plano: string;
+  trialInicio: string;
+  trialFim: string;
+  primeiroAcesso: boolean;
+  createdAt: string;
+}
+
 export type AuditAction =
   | "created"
   | "edited"

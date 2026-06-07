@@ -21,7 +21,7 @@ export function FinalCtaSection() {
               className="bg-white text-primary hover:bg-white/90 px-8 h-12 text-base gap-2"
               asChild
             >
-              <a href="/cadastro">
+              <a href="/cadastro?origem=cta_final">
                 Criar minha conta grátis
                 <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </a>

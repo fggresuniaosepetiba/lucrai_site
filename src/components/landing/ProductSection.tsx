@@ -239,7 +239,7 @@ export function ProductSection() {
                       ))}
                     </ul>
                     <Button variant="link" className="px-0 text-primary" asChild>
-                      <a href="/cadastro">Ver demonstração completa →</a>
+                      <a href="/cadastro?origem=produto_demo">Ver demonstração completa →</a>
                     </Button>
                   </div>
                   <div className="rounded-2xl border bg-card shadow-xl overflow-hidden p-6 min-h-[300px] flex items-center justify-center">
