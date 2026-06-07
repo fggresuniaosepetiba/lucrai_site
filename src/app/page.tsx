@@ -12,6 +12,7 @@ import { PricingSection } from '@/components/landing/PricingSection'
 import { SecuritySection } from '@/components/landing/SecuritySection'
 import { FaqSection } from '@/components/landing/FaqSection'
 import { FinalCtaSection } from '@/components/landing/FinalCtaSection'
+import { WhatsAppButton } from '@/components/landing/WhatsAppButton'
 import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function LandingPage() {
         <FaqSection />
         <FinalCtaSection />
       </main>
+      <WhatsAppButton />
       <Footer />
     </>
   )
