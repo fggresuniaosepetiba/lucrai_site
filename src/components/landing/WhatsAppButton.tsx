@@ -3,15 +3,15 @@
 import { MessageCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-const WHATSAPP_NUMBER = '5521999999999'
-const WHATSAPP_MESSAGE = 'Olá! Gostaria de falar com um consultor sobre o Lucraí.'
+const WHATSAPP_NUMBER = '5500000000000'
+const WHATSAPP_MESSAGE = 'Olá! Gostaria de falar com um especialista sobre o Lucraí.'
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
 
 export function WhatsAppButton() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 800)
+    const timer = setTimeout(() => setIsVisible(true), 1200)
     return () => clearTimeout(timer)
   }, [])
 
@@ -20,21 +20,25 @@ export function WhatsAppButton() {
       href={WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Falar com um consultor pelo WhatsApp"
+      aria-label="Falar com especialista pelo WhatsApp"
       className={`
-        fixed bottom-6 right-6 z-50 flex items-center gap-3
-        rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/25
+        fixed bottom-6 right-6 z-40
+        group
+        flex items-center justify-center
+        w-14 h-14 rounded-full
+        bg-background/80 backdrop-blur-sm border border-border/50
+        shadow-sm hover:shadow-md
         transition-all duration-300 ease-out
-        hover:bg-[#20BD5A] hover:shadow-xl hover:shadow-[#25D366]/30 hover:scale-105
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2 focus-visible:ring-offset-background
-        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}
+        hover:bg-background hover:border-border
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background
+        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'}
       `}
     >
-      <div className="flex items-center justify-center w-12 h-12 shrink-0">
-        <MessageCircle className="h-6 w-6 fill-white stroke-none" aria-hidden="true" />
+      <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#25D366]">
+        <MessageCircle className="h-4.5 w-4.5 fill-white stroke-none" aria-hidden="true" />
       </div>
-      <span className="hidden sm:block pr-5 text-sm font-semibold whitespace-nowrap">
-        Falar com um consultor
+      <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm px-3 py-1.5 text-xs font-medium text-foreground shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+        Falar com um especialista
       </span>
     </a>
   )

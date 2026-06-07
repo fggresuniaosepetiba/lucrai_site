@@ -9,6 +9,7 @@ import { ComparisonSection } from '@/components/landing/ComparisonSection'
 import { ResultsSection } from '@/components/landing/ResultsSection'
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { PricingSection } from '@/components/landing/PricingSection'
+import { ConsultingSection } from '@/components/landing/ConsultingSection'
 import { SecuritySection } from '@/components/landing/SecuritySection'
 import { FaqSection } from '@/components/landing/FaqSection'
 import { FinalCtaSection } from '@/components/landing/FinalCtaSection'
@@ -53,6 +54,7 @@ export default function LandingPage() {
         <ResultsSection />
         <TestimonialsSection />
         <PricingSection />
+        <ConsultingSection />
         <SecuritySection />
         <FaqSection />
         <FinalCtaSection />
