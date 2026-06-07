@@ -1,11 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, X, ChevronDown, ShieldCheck, Zap, Lock, Headphones, RotateCcw } from 'lucide-react'
+import { Check, X, ChevronDown, ShieldCheck, Zap, Lock, Headphones, RotateCcw, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { AnimatedSection } from './AnimatedSection'
+
+const WHATSAPP_PLAN_NUMBER = '5500000000000'
+const WHATSAPP_PLAN_MESSAGE = 'Olá! Gostaria de saber mais sobre o plano Custom do Lucraí.'
+const WHATSAPP_PLAN_URL = `https://wa.me/${WHATSAPP_PLAN_NUMBER}?text=${encodeURIComponent(WHATSAPP_PLAN_MESSAGE)}`
 
 interface Plan {
   name: string
@@ -16,6 +20,7 @@ interface Plan {
   features: string[]
   cta: string
   ctaVariant?: 'default' | 'outline' | 'ghost'
+  whatsapp?: boolean
 }
 
 const plans: Plan[] = [
@@ -82,6 +87,7 @@ const plans: Plan[] = [
     ],
     cta: 'Falar com especialista',
     ctaVariant: 'outline',
+    whatsapp: true,
   },
 ]
 
@@ -185,10 +191,17 @@ export function PricingSection() {
         </ul>
         <Button
           variant={plan.popular ? 'default' : plan.ctaVariant || 'outline'}
-          className="w-full mt-auto"
+          className="w-full mt-auto gap-2"
           asChild
         >
-          <a href="/cadastro">{plan.cta}</a>
+          {plan.whatsapp ? (
+            <a href={WHATSAPP_PLAN_URL} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="h-4 w-4" aria-hidden="true" />
+              {plan.cta}
+            </a>
+          ) : (
+            <a href="/cadastro">{plan.cta}</a>
+          )}
         </Button>
       </div>
     )
