@@ -10,7 +10,7 @@ export function HeroSection() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.1 })
 
   return (
-    <section id="inicio" className="relative pt-28 pb-16 lg:pt-36 lg:pb-24" ref={ref as React.RefObject<HTMLDivElement>}>
+    <section id="inicio" className="relative pt-16 pb-16 lg:pt-24 lg:pb-24" ref={ref as React.RefObject<HTMLDivElement>}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -24,7 +24,7 @@ export function HeroSection() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid gap-12 lg:grid-cols-[55%_45%] lg:gap-20 items-center">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="space-y-8">
             <div
               className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium"
@@ -119,9 +119,11 @@ export function HeroSection() {
               transition: 'opacity 0.7s ease-out 400ms, transform 0.7s ease-out 400ms',
             }}
           >
-            <div className="relative pt-3 pr-3">
-              <DashboardPreview isActive={isVisible} />
-              <div className="absolute -top-0.5 -right-0.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg border-2 border-background">
+            <div className="relative">
+              <div className="pt-3 pr-3">
+                <DashboardPreview isActive={isVisible} />
+              </div>
+              <div className="absolute -top-0.5 right-0 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-lg border-2 border-background whitespace-nowrap">
                 <span className="flex items-center gap-1.5">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />

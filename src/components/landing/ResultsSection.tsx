@@ -1,7 +1,6 @@
 'use client'
 
 import { useScrollAnimation } from '@/hooks/useScrollAnimation'
-import { Badge } from '@/components/ui/badge'
 import { AnimatedSection } from './AnimatedSection'
 
 function StaticMetric({ value, label }: { value: string; label: string }) {
@@ -18,36 +17,6 @@ function StaticMetric({ value, label }: { value: string; label: string }) {
     </div>
   )
 }
-
-const cases = [
-  {
-    segment: 'Varejo',
-    result: '−23% em custos operacionais',
-    period: 'em 90 dias',
-    quote: 'Descobrimos que estávamos pagando por três fornecedores de embalagem sem comparar preço. O Lucraí nos mostrou isso automaticamente.',
-    author: 'C.M.',
-    role: 'Diretor Comercial, Rede de Franquias',
-    initials: 'CM',
-  },
-  {
-    segment: 'Construção Civil',
-    result: 'Crédito aprovado em 15 dias',
-    period: 'com relatórios Lucraí',
-    quote: 'O banco pediu DRE e fluxo de caixa projetado. Em 10 minutos eu tinha tudo pronto. Nunca tinha sido tão fácil.',
-    author: 'A.P.',
-    role: 'CEO, Construtora',
-    initials: 'AP',
-  },
-  {
-    segment: 'Tecnologia/SaaS',
-    result: '2 consultores substituídos',
-    period: 'com mais precisão',
-    quote: 'Pagávamos R$ 8.000/mês em consultoria financeira e os relatórios chegavam atrasados. Com o Lucraí, tenho dados melhores por R$ 99,90.',
-    author: 'R.S.',
-    role: 'Fundador, Empresa de Tecnologia',
-    initials: 'RS',
-  },
-]
 
 export function ResultsSection() {
   return (
@@ -70,29 +39,6 @@ export function ResultsSection() {
           <StaticMetric value="100%" label="baseado em dados reais" />
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {cases.map((c, i) => (
-            <AnimatedSection key={c.author} delay={i * 150}>
-              <div className="rounded-2xl border border-border/50 bg-card p-8 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 h-full flex flex-col">
-                <Badge variant="secondary" className="mb-4 self-start">{c.segment}</Badge>
-                <p className="text-2xl font-bold text-primary mb-1">{c.result}</p>
-                <p className="text-sm text-muted-foreground mb-4">{c.period}</p>
-                <blockquote className="text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/30 pl-4 mb-4 flex-1">
-                  &ldquo;{c.quote}&rdquo;
-                </blockquote>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary shrink-0">
-                    {c.initials}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">{c.author}</p>
-                    <p className="text-xs text-muted-foreground">{c.role}</p>
-                  </div>
-                </div>
-              </div>
-            </AnimatedSection>
-          ))}
-        </div>
       </div>
     </section>
   )

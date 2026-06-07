@@ -5,7 +5,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAnnouncementState } from './AnnouncementBar'
 
 const navLinks = [
   { href: '#produto', label: 'Produto' },
@@ -15,7 +14,6 @@ const navLinks = [
 ]
 
 export function LandingHeader() {
-  const { isVisible } = useAnnouncementState()
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
   useEffect(() => {
@@ -23,14 +21,9 @@ export function LandingHeader() {
     return () => { document.body.style.overflow = '' }
   }, [isMobileOpen])
 
-  const topOffset = isVisible ? '36px' : '0px'
-
   return (
     <>
-      <header
-        className="fixed left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/40 transition-all duration-200"
-        style={{ top: topOffset }}
-      >
+      <header className="relative mt-9 bg-background/95 backdrop-blur-md border-b border-border/40">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Navegação principal">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2" aria-label="Lucraí - Página inicial">
@@ -77,10 +70,10 @@ export function LandingHeader() {
         </nav>
 
         <div
-          className={`fixed inset-0 z-40 bg-background lg:hidden transition-transform duration-300 ${
+          className={`fixed inset-x-0 z-40 bg-background lg:hidden transition-transform duration-300 ${
             isMobileOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
-          style={{ top: isVisible ? '108px' : '64px' }}
+          style={{ top: '36px', bottom: 0 }}
           aria-hidden={!isMobileOpen}
         >
           <nav className="flex flex-col p-6 gap-4" aria-label="Navegação mobile">

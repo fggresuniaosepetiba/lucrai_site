@@ -6,31 +6,25 @@ import { AnimatedSection } from './AnimatedSection'
 
 const testimonials = [
   {
-    quote: '<!-- CITAÇÃO REAL PENDENTE: Vitória Justo, CEO da Grão Natural -->',
+    quote: 'O Lucraí me deu algo que nenhuma planilha conseguia entregar: clareza. Hoje consigo visualizar melhor meu negócio, acompanhar meus resultados e planejar os próximos passos com muito mais segurança.',
     name: 'Vitória Justo',
-    role: 'CEO da Grão Natural',
-    company: 'Grão Natural — RJ',
+    role: 'CEO — Grão Natural (RJ)',
     segment: 'Alimentação / Varejo',
     initials: 'VJ',
-    companyFull: 'Grão Natural — RJ',
   },
   {
-    quote: '<!-- CITAÇÃO REAL PENDENTE: João Ribeiro, CCO da Trinary Solutions -->',
+    quote: 'Antes do Lucraí eu tinha informações espalhadas em vários lugares. Hoje consigo enxergar tudo de forma centralizada, tomar decisões mais rápidas e manter a operação organizada.',
     name: 'João Ribeiro',
-    role: 'CCO da Trinary Solutions',
-    company: 'Trinary Solutions',
+    role: 'CCO — Trinary Solutions',
     segment: 'Tecnologia / B2B',
     initials: 'JR',
-    companyFull: 'Trinary Solutions',
   },
   {
-    quote: '<!-- CITAÇÃO REAL PENDENTE: Julia Andrade, CMO da Baobab Cosmetics Manufacturing Company LTDA -->',
+    quote: 'O Lucraí trouxe mais previsibilidade para nossa gestão. Ficou muito mais fácil acompanhar indicadores, entender os números e planejar o crescimento da empresa.',
     name: 'Julia Andrade',
-    role: 'CMO da Baobab Cosmetics',
-    company: 'Baobab Cosmetics',
+    role: 'CMO — Baobab Cosmetics Manufacturing Company LTDA',
     segment: 'Cosméticos / Indústria',
     initials: 'JA',
-    companyFull: 'Baobab Cosmetics Manufacturing Company LTDA',
   },
 ]
 
@@ -68,7 +62,7 @@ export function TestimonialsSection() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold">{t.name}</p>
-                    <p className="text-xs text-muted-foreground" title={t.companyFull}>{t.company}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
                     <Badge variant="secondary" className="mt-1 text-[10px]">{t.segment}</Badge>
                   </div>
                 </div>

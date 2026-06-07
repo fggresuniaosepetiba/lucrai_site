@@ -224,7 +224,7 @@ export function ProductSection() {
                     <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
                       {tab.badge}
                     </span>
-                    <h3 className="text-2xl font-semibold leading-snug md:text-3xl">
+                    <h3 className="text-xl font-semibold leading-snug md:text-2xl">
                       {tab.headline}
                     </h3>
                     <p className="text-lg leading-relaxed text-muted-foreground">
