@@ -150,7 +150,7 @@ export function PricingSection() {
     const price = isAnnual ? plan.yearly : plan.monthly
 
     return (
-      <div className={`relative rounded-2xl border border-border/50 bg-card p-8 shadow-sm transition-all duration-200 hover:shadow-md flex flex-col ${
+      <div className={`relative rounded-2xl border border-border/50 bg-card p-8 shadow-sm transition-all duration-200 hover:shadow-md h-full flex flex-col ${
         plan.popular ? 'border-2 border-primary bg-primary/5' : ''
       }`}>
         {plan.popular && (

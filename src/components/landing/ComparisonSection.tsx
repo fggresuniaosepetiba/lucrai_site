@@ -42,15 +42,15 @@ export function ComparisonSection() {
         </AnimatedSection>
 
         <div className="grid gap-8 max-w-4xl mx-auto md:grid-cols-2">
-          <AnimatedSection direction="left" className="order-2 md:order-1">
-            <div className="rounded-2xl border border-border/50 bg-muted/20 p-8">
-              <span className="inline-block rounded-full bg-muted px-3 py-1 text-xs font-semibold tracking-wider text-muted-foreground mb-4">
+          <AnimatedSection direction="left" className="order-2 md:order-1 h-full">
+            <div className="rounded-2xl border border-border/50 bg-muted/20 p-8 h-full flex flex-col">
+              <span className="inline-block rounded-full bg-muted px-3 py-1 text-xs font-semibold tracking-wider text-muted-foreground mb-4 shrink-0">
                 CFO TRADICIONAL
               </span>
-              <h3 className="text-xl font-semibold leading-snug text-muted-foreground mb-6">
+              <h3 className="text-xl font-semibold leading-snug text-muted-foreground mb-6 shrink-0">
                 O modelo que está ficando para trás
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-3 flex-1">
                 {traditional.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <CircleX className="mt-0.5 h-4 w-4 shrink-0 text-red-500" aria-hidden="true" />
@@ -61,16 +61,16 @@ export function ComparisonSection() {
             </div>
           </AnimatedSection>
 
-          <AnimatedSection direction="right" className="order-1 md:order-2">
-            <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-8 relative overflow-hidden">
+          <AnimatedSection direction="right" className="order-1 md:order-2 h-full">
+            <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-8 relative overflow-hidden h-full flex flex-col">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-radial from-primary/10 via-transparent to-transparent pointer-events-none" aria-hidden="true" />
-              <span className="inline-block rounded-full bg-primary/20 px-3 py-1 text-xs font-semibold tracking-wider text-primary mb-4">
+              <span className="inline-block rounded-full bg-primary/20 px-3 py-1 text-xs font-semibold tracking-wider text-primary mb-4 shrink-0">
                 CFO DIGITAL LUCRAÍ
               </span>
-              <h3 className="text-xl font-semibold leading-snug mb-6">
+              <h3 className="text-xl font-semibold leading-snug mb-6 shrink-0">
                 Seu Diretor Financeiro Digital
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-3 flex-1">
                 {lucrai.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" />

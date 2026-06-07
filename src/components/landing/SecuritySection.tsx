@@ -43,9 +43,9 @@ export function SecuritySection() {
           {items.map((item, i) => (
             <AnimatedSection key={item.title} delay={i * 100} className="h-full">
               <div className="rounded-xl border border-border/50 bg-card p-6 text-center transition-all duration-200 hover:shadow-md hover:-translate-y-1 h-full flex flex-col items-center">
-                <item.icon className="h-8 w-8 mx-auto mb-4 text-primary" aria-hidden="true" />
-                <h3 className="text-sm font-semibold mb-2">{item.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.text}</p>
+                <item.icon className="h-8 w-8 mx-auto mb-4 text-primary shrink-0" aria-hidden="true" />
+                <h3 className="text-sm font-semibold mb-2 shrink-0">{item.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed flex-1">{item.text}</p>
               </div>
             </AnimatedSection>
           ))}

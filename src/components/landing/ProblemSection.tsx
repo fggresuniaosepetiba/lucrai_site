@@ -39,11 +39,11 @@ export function ProblemSection() {
 
         <div className="grid gap-8 md:grid-cols-3">
           {problems.map((problem, i) => (
-            <AnimatedSection key={problem.headline} delay={i * 150}>
-              <div className="rounded-2xl border border-border/50 bg-card p-8 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1">
-                <problem.icon className="h-12 w-12 text-muted-foreground mb-6" aria-hidden="true" />
+            <AnimatedSection key={problem.headline} delay={i * 150} className="h-full">
+              <div className="rounded-2xl border border-border/50 bg-card p-8 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-1 h-full flex flex-col">
+                <problem.icon className="h-12 w-12 text-muted-foreground mb-6 shrink-0" aria-hidden="true" />
                 <h3 className="text-xl font-semibold leading-snug mb-3">{problem.headline}</h3>
-                <p className="text-base leading-relaxed text-muted-foreground">{problem.text}</p>
+                <p className="text-base leading-relaxed text-muted-foreground flex-1">{problem.text}</p>
               </div>
             </AnimatedSection>
           ))}
