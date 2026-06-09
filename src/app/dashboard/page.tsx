@@ -3,12 +3,14 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
+import { usePeriodoStore } from "@/store/periodo-store";
 import { Shell } from "@/components/layout/shell";
 import { StatsCards, type DashboardFilter } from "@/components/dashboard/stats-cards";
 import { ChartRevenue } from "@/components/dashboard/chart-revenue";
 import { ChartCategories } from "@/components/dashboard/chart-categories";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { FinancialHealth } from "@/components/dashboard/financial-health";
+import { FiltroAtivoIndicator } from "@/components/shared/FiltroAtivoIndicator";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { PricingRepository } from "@/database/repositories/pricing";
@@ -19,18 +21,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Target, Calculator, Percent, AlertTriangle } from "lucide-react";
 import { formatCurrency, parseLocalDate } from "@/lib/utils";
-import { cn } from "@/lib/cn";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
+  const { ano, mes } = usePeriodoStore();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<DashboardFilter>("all");
   const [forecastIncomes, setForecastIncomes] = useState(0);
   const [forecastExpenses, setForecastExpenses] = useState(0);
   const [pricingProducts, setPricingProducts] = useState<PricingProduct[]>([]);
-  const [year, setYear] = useState(new Date().getFullYear());
   const company = user?.company ?? "";
   const initialized = useRef(false);
 
@@ -48,10 +49,10 @@ export default function DashboardPage() {
   }, [isAuthenticated, router, company]);
 
   const runStartup = async () => {
-    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
-    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
-    try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
-    try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
+    try { await migrateDisplayIds(); } catch { /* ignore */ }
+    try { await fixCompanyName(); } catch { /* ignore */ }
+    try { await useAuthStore.getState().refreshUser(); } catch { /* ignore */ }
+    try { await seedDefaultCategories(company); } catch { /* ignore */ }
     loadData();
   };
 
@@ -91,13 +92,21 @@ export default function DashboardPage() {
     : 0;
   const atRiskCount = pricingProducts.filter((p) => p.netMargin < 10).length;
 
+  const filteredTransactionsByPeriod = useMemo(() => {
+    return transactions.filter((t) => {
+      const d = parseLocalDate(t.date);
+      if (d.getFullYear() !== ano) return false;
+      if (mes !== null && d.getMonth() + 1 !== mes) return false;
+      return true;
+    });
+  }, [transactions, ano, mes]);
+
   const filteredTransactions = useMemo(() => {
-    let tx = transactions;
+    let tx = filteredTransactionsByPeriod;
     if (filter === "income") tx = tx.filter((t) => t.type === "income");
     else if (filter === "expense") tx = tx.filter((t) => t.type === "expense");
-    tx = tx.filter((t) => parseLocalDate(t.date).getFullYear() === year);
     return tx;
-  }, [transactions, filter, year]);
+  }, [filteredTransactionsByPeriod, filter]);
 
   const handleFilterChange = (newFilter: DashboardFilter) => {
     setFilter((prev) => (prev === newFilter ? "all" : newFilter));
@@ -133,36 +142,24 @@ export default function DashboardPage() {
   return (
     <Shell>
       <div className="space-y-6">
-        {/* Filtro de Ano */}
-        <div className="flex items-center justify-end gap-1">
-          {[year - 1, year, year + 1].map((y) => (
-            <button
-              key={y}
-              onClick={() => setYear(y)}
-              className={cn(
-                "px-4 py-1.5 text-sm rounded-lg transition-colors",
-                y === year
-                  ? "bg-primary text-primary-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              {y}
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          </div>
         </div>
 
-        {/* Realizados - Stats Cards */}
+        <FiltroAtivoIndicator />
+
         <div>
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Realizado</h3>
           <StatsCards
-            transactions={transactions}
+            transactions={filteredTransactionsByPeriod}
             activeFilter={filter}
             onFilterChange={handleFilterChange}
-            year={year}
+            year={ano}
           />
         </div>
 
-        {/* Previsto - Forecast Cards */}
         <div>
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Previsto</h3>
           <div className="grid gap-4 md:grid-cols-3">
@@ -218,7 +215,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Precificação */}
         {pricingCount > 0 && (
           <div>
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -279,13 +275,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Linha Principal: Entradas x Saídas + Saúde da Empresa */}
         <div className="grid gap-6 lg:grid-cols-2">
-          <ChartRevenue transactions={filteredTransactions} year={year} />
-          <FinancialHealth transactions={transactions} year={year} />
+          <ChartRevenue transactions={filteredTransactions} year={ano} />
+          <FinancialHealth transactions={filteredTransactionsByPeriod} year={ano} />
         </div>
 
-        {/* Linha Secundária: Gastos por Categoria + Últimos Lançamentos */}
         <div className="grid gap-6 lg:grid-cols-2">
           <ChartCategories
             transactions={filteredTransactions}

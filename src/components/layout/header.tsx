@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { PeriodoFilter } from "./PeriodoFilter";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -22,7 +23,10 @@ const pageTitles: Record<string, string> = {
   "/users": "Usuários",
   "/reports": "Relatórios",
   "/settings": "Configurações",
+  "/cash-forecast": "Previsão de Caixa",
 };
+
+const dashRoutes = ["/dashboard", "/dashboard/alertas", "/dashboard/projecoes", "/dashboard/resumo-cfo"];
 
 const themes: { value: ThemeMode; label: string; icon: typeof Moon }[] = [
   { value: "normal", label: "Normal", icon: Monitor },
@@ -36,6 +40,8 @@ export function Header() {
   const { user } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
   const title = pageTitles[pathname] || "LUCRAÍ Core";
+
+  const isDashboard = dashRoutes.includes(pathname) || pathname.startsWith("/dashboard/");
 
   const mobileIcon = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/lucrai/icon-clean.png" : "/images/lucrai/icon-normal.png";
 
@@ -53,6 +59,11 @@ export function Header() {
           <Image src={mobileIcon} alt="LUCRAÍ" fill className="object-contain" />
         </div>
         <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
+        {isDashboard && (
+          <div className="ml-2">
+            <PeriodoFilter />
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">

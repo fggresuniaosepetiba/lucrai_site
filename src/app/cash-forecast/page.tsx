@@ -66,6 +66,8 @@ function CashForecastContent() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("filter") || "all");
+  const [filterMes, setFilterMes] = useState<string>("all");
+  const [filterAno, setFilterAno] = useState<string>(new Date().getFullYear().toString());
   const [currentBalance, setCurrentBalance] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<CashForecast | null>(null);
@@ -160,13 +162,21 @@ function CashForecastContent() {
       if (filterStatus !== "all" && i.status !== filterStatus && filterStatus !== "income" && filterStatus !== "expense") return false;
       if (filterStatus === "income" && i.type !== "income") return false;
       if (filterStatus === "expense" && i.type !== "expense") return false;
+      if (filterMes !== "all") {
+        const mesItem = parseLocalDate(i.expectedDate).getMonth() + 1;
+        if (mesItem !== parseInt(filterMes)) return false;
+      }
+      if (filterAno !== "all") {
+        const anoItem = parseLocalDate(i.expectedDate).getFullYear();
+        if (anoItem !== parseInt(filterAno)) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         return i.description.toLowerCase().includes(q) || i.category.toLowerCase().includes(q) || i.displayId.toLowerCase().includes(q);
       }
       return true;
     });
-  }, [sourceItems, filterStatus, search]);
+  }, [sourceItems, filterStatus, filterMes, filterAno, search]);
 
   const chartData = useMemo(() => {
     const sorted = [...activeItems]
@@ -571,6 +581,30 @@ function CashForecastContent() {
                   >{f.label}</button>
                 ))}
               </div>
+              <div className="flex items-center gap-2 ml-auto">
+                <Select value={filterMes} onValueChange={setFilterMes}>
+                  <SelectTrigger className="h-8 w-36 text-xs">
+                    <SelectValue placeholder="Todos os meses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os meses</SelectItem>
+                    {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((m, i) => (
+                      <SelectItem key={i} value={(i+1).toString()}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filterAno} onValueChange={setFilterAno}>
+                  <SelectTrigger className="h-8 w-28 text-xs">
+                    <SelectValue placeholder="Ano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2024">2024</SelectItem>
+                    <SelectItem value="2025">2025</SelectItem>
+                    <SelectItem value="2026">2026</SelectItem>
+                    <SelectItem value="2027">2027</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -595,7 +629,19 @@ function CashForecastContent() {
                       {filtered.length === 0 ? (
                         <tr>
                           <td colSpan={8} className="p-8 text-center text-muted-foreground">
-                            Nenhuma previsão encontrada
+                            {filterMes !== "all" || filterAno !== "all" ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <Search className="h-10 w-10 opacity-40" />
+                                <p className="font-medium">Nenhum lançamento encontrado</p>
+                                <p className="text-xs">Não há lançamentos para os filtros selecionados.</p>
+                                <button onClick={() => { setFilterMes("all"); setFilterAno(new Date().getFullYear().toString()); }}
+                                  className="text-xs text-primary hover:underline mt-1">
+                                  Limpar filtros
+                                </button>
+                              </div>
+                            ) : (
+                              "Nenhuma previsão encontrada"
+                            )}
                           </td>
                         </tr>
                       ) : (

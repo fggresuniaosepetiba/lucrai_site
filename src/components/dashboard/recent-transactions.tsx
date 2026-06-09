@@ -6,13 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Transaction } from "@/types";
 import Link from "next/link";
+import { LIMITE_LANCAMENTOS_DASH } from "@/lib/constants";
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
 }
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
-  const recent = transactions.slice(0, 10);
+  const recent = transactions.slice(0, LIMITE_LANCAMENTOS_DASH);
 
   return (
     <Card>

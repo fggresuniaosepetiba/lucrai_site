@@ -1,16 +1,53 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, parseLocalDate } from "@/lib/utils";
-import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { parseLocalDate } from "@/lib/utils";
+import { Info, BarChart3 } from "lucide-react";
 import type { Transaction } from "@/types";
+import type { SaudeResult, SubIndicador } from "@/types/dashboard";
+import { calcularSaude } from "@/services/dashboardIntelligenceService";
+import Link from "next/link";
 
 interface FinancialHealthProps {
   transactions: Transaction[];
   year: number;
+  entradasPeriodoAnterior?: number;
 }
 
-export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
+function SubIndicadorPontos({ sub }: { sub: SubIndicador }) {
+  return (
+    <div className="flex items-center justify-between py-1">
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-muted-foreground">{sub.nome}</span>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="inline-flex">
+                <Info className="h-3 w-3 text-muted-foreground/50 hover:text-muted-foreground" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-56">
+              <p className="text-xs leading-relaxed">{sub.tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((ponto) => (
+          <div
+            key={ponto}
+            className={`h-2 w-2 rounded-full ${
+              ponto <= sub.score ? "bg-primary" : "bg-muted/40"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function FinancialHealth({ transactions, year, entradasPeriodoAnterior }: FinancialHealthProps) {
   if (transactions.length === 0) {
     return (
       <Card>
@@ -45,8 +82,6 @@ export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.value, 0);
 
-  const yearBalance = yearIncomes - yearExpenses;
-
   const allIncomes = transactions
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + t.value, 0);
@@ -61,44 +96,17 @@ export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
     ? ((yearIncomes - yearExpenses) / yearIncomes) * 100
     : 0;
 
-  const expenseRatio = yearIncomes > 0
-    ? (yearExpenses / yearIncomes) * 100
-    : 0;
+  const allProjetado = allIncomes - allExpenses;
+  const projectedBalance = allProjetado;
 
-  const healthScore = (() => {
-    if (totalBalance <= 0) return { label: "Crítico", color: "text-red-400", bg: "bg-red-500/10", pct: 15 };
-    if (margin <= 0) return { label: "Atenção", color: "text-amber-400", bg: "bg-amber-500/10", pct: 35 };
-    if (margin < 20) return { label: "Regular", color: "text-yellow-400", bg: "bg-yellow-500/10", pct: 55 };
-    if (margin < 40) return { label: "Bom", color: "text-emerald-400", bg: "bg-emerald-500/10", pct: 75 };
-    return { label: "Excelente", color: "text-emerald-400", bg: "bg-emerald-500/10", pct: 95 };
-  })();
-
-  const metrics = [
-    {
-      label: "Saldo Total",
-      value: formatCurrency(totalBalance),
-      icon: DollarSign,
-      color: totalBalance >= 0 ? "text-emerald-400" : "text-red-400",
-    },
-    {
-      label: "Resultado do Ano",
-      value: formatCurrency(yearBalance),
-      icon: yearBalance >= 0 ? TrendingUp : TrendingDown,
-      color: yearBalance >= 0 ? "text-emerald-400" : "text-red-400",
-    },
-    {
-      label: "Margem Líquida",
-      value: `${margin >= 0 ? "+" : ""}${margin.toFixed(1)}%`,
-      icon: Activity,
-      color: margin >= 10 ? "text-emerald-400" : "text-amber-400",
-    },
-    {
-      label: "Gasto sobre Receita",
-      value: `${expenseRatio.toFixed(1)}%`,
-      icon: TrendingDown,
-      color: expenseRatio <= 80 ? "text-emerald-400" : "text-red-400",
-    },
-  ];
+  const saude: SaudeResult = calcularSaude(
+    totalBalance,
+    projectedBalance,
+    margin,
+    yearIncomes,
+    yearExpenses,
+    entradasPeriodoAnterior
+  );
 
   return (
     <Card>
@@ -106,16 +114,16 @@ export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
         <CardTitle className="text-base">Saúde Financeira</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-4 mb-6">
-          <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full ${healthScore.bg}`}>
-            <span className={`text-2xl font-bold ${healthScore.color}`}>
-              {healthScore.pct}%
+        <div className="flex items-center gap-4 mb-4">
+          <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-full ${saude.bg}`}>
+            <span className={`text-2xl font-bold ${saude.cor}`}>
+              {saude.score}%
             </span>
           </div>
           <div>
-            <p className="text-lg font-semibold">Saúde: {healthScore.label}</p>
+            <p className="text-lg font-semibold">Saúde: {saude.label}</p>
             <p className="text-sm text-muted-foreground">
-              Baseado no saldo total e margem líquida
+              Score calculado com base em {saude.subIndicadores.length} indicadores
             </p>
           </div>
         </div>
@@ -124,32 +132,32 @@ export function FinancialHealth({ transactions, year }: FinancialHealthProps) {
           <div
             className="h-full rounded-full transition-all duration-500"
             style={{
-              width: `${healthScore.pct}%`,
+              width: `${saude.score}%`,
               backgroundColor:
-                healthScore.pct >= 75
+                saude.score >= 80
                   ? "hsl(142, 71%, 45%)"
-                  : healthScore.pct >= 50
+                  : saude.score >= 60
+                  ? "hsl(199, 89%, 48%)"
+                  : saude.score >= 40
                   ? "hsl(48, 96%, 53%)"
-                  : healthScore.pct >= 30
-                  ? "hsl(38, 92%, 50%)"
                   : "hsl(0, 72%, 51%)",
             }}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {metrics.map((m) => (
-            <div
-              key={m.label}
-              className="rounded-lg border border-border/50 bg-muted/30 p-3"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <m.icon className={`h-3.5 w-3.5 ${m.color}`} />
-                <span className="text-xs text-muted-foreground">{m.label}</span>
-              </div>
-              <p className={`text-base font-semibold ${m.color}`}>{m.value}</p>
-            </div>
+        <div className="space-y-1 mb-4">
+          {saude.subIndicadores.map((sub) => (
+            <SubIndicadorPontos key={sub.nome} sub={sub} />
           ))}
+        </div>
+
+        <div className="mt-3 pt-3 border-t border-border/30">
+          <Link
+            href="/dashboard/resumo-cfo"
+            className="text-xs text-primary hover:underline"
+          >
+            Entender minha saúde financeira →
+          </Link>
         </div>
       </CardContent>
     </Card>
