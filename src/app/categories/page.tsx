@@ -377,7 +377,6 @@ export default function CategoriesPage() {
                     ))}
                   </div>
                 </div>
-                {/* todo: fix issues */}
                 <div className="space-y-2">
                   <Label>Tipo</Label>
                   <div className="flex gap-2">
