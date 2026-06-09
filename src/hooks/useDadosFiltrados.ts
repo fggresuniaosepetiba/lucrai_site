@@ -67,7 +67,7 @@ export function useDadosFiltrados(): DadosFiltradosResult {
 
   const margemLiquida = entradas > 0 ? ((entradas - saidas) / entradas) * 100 : 0;
 
-  return {
+  return useMemo(() => ({
     lancamentos: lancamentosFiltrados,
     entradas,
     saidas,
@@ -78,5 +78,5 @@ export function useDadosFiltrados(): DadosFiltradosResult {
     pagamentosPrevistos: forecastExpenses,
     periodoAtivo: { ano, mes },
     isLoading,
-  };
+  }), [lancamentosFiltrados, entradas, saidas, saldoAtual, saldoProjetado, margemLiquida, forecastIncomes, forecastExpenses, ano, mes, isLoading]);
 }

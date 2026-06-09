@@ -5,26 +5,34 @@ import { useDadosFiltrados } from "./useDadosFiltrados";
 import { calcularAlertasAtivos } from "@/services/alertasService";
 
 export function useAlertsCount() {
-  const dados = useDadosFiltrados();
+  const {
+    lancamentos,
+    entradas,
+    saidas,
+    saldoAtual,
+    saldoProjetado,
+    margemLiquida,
+    recebimentosPrevistos,
+    pagamentosPrevistos,
+  } = useDadosFiltrados();
   const [counts, setCounts] = useState({ criticos: 0, atencao: 0, positivos: 0 });
 
   const alertas = useMemo(() => {
     try {
-      const allTransactions = dados.lancamentos;
       return calcularAlertasAtivos({
-        lancamentos: allTransactions,
-        entradas: dados.entradas,
-        saidas: dados.saidas,
-        saldoAtual: dados.saldoAtual,
-        saldoProjetado: dados.saldoProjetado,
-        margemLiquida: dados.margemLiquida,
-        recebimentosPrevistos: dados.recebimentosPrevistos,
-        pagamentosPrevistos: dados.pagamentosPrevistos,
+        lancamentos,
+        entradas,
+        saidas,
+        saldoAtual,
+        saldoProjetado,
+        margemLiquida,
+        recebimentosPrevistos,
+        pagamentosPrevistos,
       });
     } catch {
       return [];
     }
-  }, [dados]);
+  }, [lancamentos, entradas, saidas, saldoAtual, saldoProjetado, margemLiquida, recebimentosPrevistos, pagamentosPrevistos]);
 
   useEffect(() => {
     const criticos = alertas.filter((a) => a.tipo === "critico" && !a.dispensado).length;
