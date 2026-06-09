@@ -38,7 +38,7 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [name, setName] = useState("");
   const [color, setColor] = useState("#0ea5e9");
-  const [type, setType] = useState<TransactionType>("expense");
+  const [type, setType] = useState<TransactionType>("income");
   const [duplicates, setDuplicates] = useState<{ name: string; type: TransactionType; ids: string[]; keepId: string; count: number }[]>([]);
   const [showDuplicatesDialog, setShowDuplicatesDialog] = useState(false);
   const [removingDuplicates, setRemovingDuplicates] = useState(false);
@@ -135,7 +135,7 @@ export default function CategoriesPage() {
     setEditingCategory(null);
     setName("");
     setColor("#0ea5e9");
-    setType("expense");
+    setType("income");
     setShowForm(true);
   };
 

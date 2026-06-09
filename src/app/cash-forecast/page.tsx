@@ -6,8 +6,9 @@ import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { TransactionRepository } from "@/database/repositories/transactions";
+import { CategoryRepository } from "@/database/repositories/categories";
 import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
-import type { CashForecast, ForecastStatus, TransactionType } from "@/types";
+import type { CashForecast, ForecastStatus, TransactionType, Category } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ function CashForecastContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
   const [items, setItems] = useState<CashForecast[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("filter") || "all");
@@ -81,6 +83,10 @@ function CashForecastContent() {
   const [formRecurrenceType, setFormRecurrenceType] = useState("monthly");
   const [formRecurrenceEndType, setFormRecurrenceEndType] = useState("never");
   const [formRecurrenceEndDate, setFormRecurrenceEndDate] = useState("");
+
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -119,12 +125,14 @@ function CashForecastContent() {
 
   const loadData = async () => {
     try {
-      const [forecasts, balanceData] = await Promise.all([
+      const [forecasts, balanceData, cats] = await Promise.all([
         CashForecastRepository.getAll(company),
         TransactionRepository.getAllBalance(company),
+        CategoryRepository.getAll(company),
       ]);
       setItems(forecasts);
       setCurrentBalance(balanceData.balance);
+      setCategories(cats);
     } catch (err) {
       console.error(err);
     } finally {
@@ -253,6 +261,27 @@ function CashForecastContent() {
     setFormRecurrenceEndType(item.recurrenceEndDate ? "date" : "never");
     setFormRecurrenceEndDate(item.recurrenceEndDate ?? "");
     setShowForm(true);
+  };
+
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setCreatingCategory(true);
+    try {
+      const color = formType === "income" ? "#22c55e" : "#ef4444";
+      const created = await CategoryRepository.create(
+        { name, type: formType, color, icon: "tag" },
+        company
+      );
+      setCategories((prev) => [...prev, created]);
+      setFormCategory(created.name);
+      setNewCategoryName("");
+      setShowCreateCategory(false);
+    } catch {
+      toast("Erro", "Não foi possível criar categoria", "destructive");
+    } finally {
+      setCreatingCategory(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -733,10 +762,10 @@ function CashForecastContent() {
               <div className="space-y-2">
                 <Label>Tipo</Label>
                 <div className="flex gap-2">
-                  <Button type="button" variant={formType === "income" ? "default" : "outline"} size="sm" onClick={() => setFormType("income")} className="flex-1 gap-2">
+                  <Button type="button" variant={formType === "income" ? "default" : "outline"} size="sm" onClick={() => { setFormType("income"); setFormCategory(""); }} className="flex-1 gap-2">
                     <TrendingUp className="h-4 w-4" /> Entrada
                   </Button>
-                  <Button type="button" variant={formType === "expense" ? "destructive" : "outline"} size="sm" onClick={() => setFormType("expense")} className="flex-1 gap-2">
+                  <Button type="button" variant={formType === "expense" ? "destructive" : "outline"} size="sm" onClick={() => { setFormType("expense"); setFormCategory(""); }} className="flex-1 gap-2">
                     <TrendingDown className="h-4 w-4" /> Saída
                   </Button>
                 </div>
@@ -866,8 +895,75 @@ function CashForecastContent() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cat">Categoria</Label>
-                <Input id="cat" value={formCategory} onChange={(e) => setFormCategory(e.target.value)} placeholder="Ex: Vendas, Aluguel" />
+                <Label htmlFor="cat" className="flex items-center gap-1">
+                  Categoria
+                </Label>
+                {categories.filter((c) => c.type === formType).length > 0 ? (
+                  <Select
+                    key={formType + (editingItem?.id || "new")}
+                    value={formCategory}
+                    onValueChange={(v) => setFormCategory(v)}
+                  >
+                    <SelectTrigger id="cat">
+                      <SelectValue placeholder="Selecionar categoria" />
+                    </SelectTrigger>
+                    <SelectContent position="popper" className="max-h-60">
+                      {categories
+                        .filter((c) => c.type === formType)
+                        .map((cat) => (
+                          <SelectItem key={cat.id} value={cat.name}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                ) : null}
+                <div className="space-y-2">
+                  {showCreateCategory ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <Input
+                            placeholder="Nome da nova categoria"
+                            value={newCategoryName}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val.length <= 120) setNewCategoryName(val);
+                            }}
+                            disabled={creatingCategory}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleCreateCategory}
+                          disabled={creatingCategory || !newCategoryName.trim()}
+                        >
+                          {creatingCategory ? "Criando..." : "Criar"}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => { setShowCreateCategory(false); setNewCategoryName(""); }}
+                          disabled={creatingCategory}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-xs"
+                      onClick={() => setShowCreateCategory(true)}
+                    >
+                      + Criar nova categoria
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="notes">Observação <span className="text-muted-foreground text-xs">(opcional)</span></Label>

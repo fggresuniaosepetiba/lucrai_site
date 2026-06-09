@@ -57,7 +57,7 @@ export function TransactionForm({
   const company = user?.company ?? "";
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [type, setType] = useState<"income" | "expense">(
-    transaction?.type || "expense"
+    transaction?.type || "income"
   );
   const [valueDisplay, setValueDisplay] = useState(
     transaction ? formatCurrencyInput(String(Math.round(transaction.value * 100))) : ""
@@ -197,18 +197,18 @@ export function TransactionForm({
           <div className="flex gap-2">
             <Button
               type="button"
-              variant={type === "expense" ? "default" : "outline"}
+              variant={type === "income" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleTypeChange("expense")}
+              onClick={() => handleTypeChange("income")}
               className="flex-1"
             >
               Entrada
             </Button>
             <Button
               type="button"
-              variant={type === "income" ? "destructive" : "outline"}
+              variant={type === "expense" ? "destructive" : "outline"}
               size="sm"
-              onClick={() => handleTypeChange("income")}
+              onClick={() => handleTypeChange("expense")}
               className="flex-1"
             >
               Saída
