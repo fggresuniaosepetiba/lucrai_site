@@ -179,7 +179,7 @@ export function parseLocalDate(dateStr: string): Date {
   return new Date(y, m - 1, d);
 }
 
-function todayStr(): string {
+export function todayStr(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
@@ -206,8 +206,8 @@ export function validateForecastDate(dateStr: string): { valid: boolean; message
   if (!dateStr) return { valid: false, message: "Campo obrigatório" };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return { valid: false, message: "Data inválida" };
   const hoje = todayStr();
-  if (dateStr <= hoje) {
-    return { valid: false, message: "Esta funcionalidade é destinada apenas a lançamentos futuros. Para movimentações já realizadas utilize a Página Financeiro." };
+  if (dateStr < hoje) {
+    return { valid: false, message: "A data prevista não pode ser anterior à data atual. Para registrar movimentações passadas utilize a Página Financeiro." };
   }
   const limit = yearsFromNow(10);
   if (dateStr > limit) {

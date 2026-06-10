@@ -29,7 +29,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
 import { useRouter } from "next/navigation";
 import { useAlertsCount } from "@/hooks/useAlertsCount";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const menuItems = [
   { icon: ArrowUpDown, label: "Financeiro", href: "/financial" },
@@ -56,7 +56,15 @@ export function Sidebar() {
   const { logout } = useAuthStore();
   const { theme } = useThemeStore();
   const alertsCount = useAlertsCount();
-  const [dashExpanded, setDashExpanded] = useState(true);
+  const [dashExpanded, setDashExpanded] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = localStorage.getItem("lucrai-dashboard-expanded");
+    return stored !== null ? stored === "true" : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("lucrai-dashboard-expanded", String(dashExpanded));
+  }, [dashExpanded]);
 
   const isDashboardRoute = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const isDashActive = isDashboardRoute;

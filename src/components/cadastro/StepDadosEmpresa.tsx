@@ -44,6 +44,23 @@ export function StepDadosEmpresa({ register, errors, step2Attempted }: StepDados
       </div>
 
       <div className="space-y-2">
+        <label htmlFor="cargo" className="text-sm font-medium text-foreground">
+          Cargo do responsável
+        </label>
+        <input
+          id="cargo"
+          type="text"
+          autoComplete="organization-title"
+          {...register("cargo")}
+          className="flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/40 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="Ex: CEO, Diretor Financeiro, Proprietário"
+        />
+        {step2Attempted && errors.cargo && (
+          <p className="text-xs text-destructive font-medium">{errors.cargo.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
         <label htmlFor="porte" className="text-sm font-medium text-foreground">
           Porte da empresa
         </label>

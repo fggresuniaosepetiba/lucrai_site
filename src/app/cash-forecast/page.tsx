@@ -67,7 +67,7 @@ function CashForecastContent() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("filter") || "all");
   const [filterMes, setFilterMes] = useState<string>("all");
-  const [filterAno, setFilterAno] = useState<string>(new Date().getFullYear().toString());
+  const [filterAno, setFilterAno] = useState<string>("all");
   const [currentBalance, setCurrentBalance] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<CashForecast | null>(null);
@@ -99,6 +99,26 @@ function CashForecastContent() {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState("");
   const initialized = useRef(false);
+
+  const [formCategoryError, setFormCategoryError] = useState("");
+
+  const [recurrenceLimitDialog, setRecurrenceLimitDialog] = useState<{
+    open: boolean;
+    cappedEndDate: string;
+    startDate: string;
+  }>({ open: false, cappedEndDate: "", startDate: "" });
+
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    open: boolean;
+  }>({ open: false });
+
+  const [earlyDownloadDialog, setEarlyDownloadDialog] = useState<{
+    open: boolean;
+    item: CashForecast | null;
+    type: "received" | "paid";
+  }>({ open: false, item: null, type: "received" });
+
+  const duplicateConfirmed = useRef(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -154,6 +174,14 @@ function CashForecastContent() {
 
   const projectedBalance = currentBalance + totals.predictedIncomes - totals.predictedExpenses;
   const hasCashAlert = totals.predictedExpenses > currentBalance;
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    items.forEach((i) => {
+      years.add(parseLocalDate(i.expectedDate).getFullYear());
+    });
+    return Array.from(years).sort((a, b) => a - b);
+  }, [items]);
 
   const sourceItems = activeTab === "active" ? activeItems : historyItems;
 
@@ -294,13 +322,8 @@ function CashForecastContent() {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!formDescription.trim() || !formAmountDisplay || !formDate) return;
-    const dateCheck = validateForecastDate(formDate);
-    if (!dateCheck.valid) { toast("Data inválida", dateCheck.message, "destructive"); return; }
+  const performSave = async (endDateOverride?: string) => {
     const amount = formAmountValue;
-    if (isNaN(amount) || amount <= 0) { toast("Valor inválido", "", "destructive"); return; }
-
     try {
       if (editingItem) {
         await CashForecastRepository.update(editingItem.id, {
@@ -318,9 +341,9 @@ function CashForecastContent() {
       } else if (formRecurring) {
         const defaultEnd = new Date(parseLocalDate(formDate));
         defaultEnd.setFullYear(defaultEnd.getFullYear() + 5);
-        const endDate = formRecurrenceEndType === "date" && formRecurrenceEndDate
+        const endDate = endDateOverride || (formRecurrenceEndType === "date" && formRecurrenceEndDate
           ? formRecurrenceEndDate
-          : defaultEnd.toISOString().slice(0, 10);
+          : defaultEnd.toISOString().slice(0, 10));
         const dates = generateRecurrenceDates(formDate, formRecurrenceType, endDate);
         for (const dt of dates) {
           const dateStr = dt.toISOString().slice(0, 10);
@@ -355,6 +378,70 @@ function CashForecastContent() {
     } catch { toast("Erro", "Não foi possível salvar", "destructive"); }
   };
 
+  const handleSubmit = async () => {
+    if (!formDescription.trim()) { toast("Validação", "A descrição é obrigatória.", "destructive"); return; }
+    if (!formAmountDisplay) { toast("Validação", "O valor é obrigatório.", "destructive"); return; }
+    const amount = formAmountValue;
+    if (isNaN(amount) || amount <= 0) { toast("Valor inválido", "", "destructive"); return; }
+    if (!formDate) { toast("Validação", "A data prevista é obrigatória.", "destructive"); return; }
+    const dateCheck = validateForecastDate(formDate);
+    if (!dateCheck.valid) { toast("Data inválida", dateCheck.message, "destructive"); return; }
+    if (!formCategory.trim()) { setFormCategoryError("A categoria é obrigatória."); return; }
+    setFormCategoryError("");
+
+    if (editingItem) {
+      await performSave();
+      return;
+    }
+
+    const maxEnd = new Date(parseLocalDate(formDate));
+    maxEnd.setFullYear(maxEnd.getFullYear() + 5);
+    const maxEndStr = maxEnd.toISOString().slice(0, 10);
+
+    if (formRecurring && formRecurrenceEndType === "date" && formRecurrenceEndDate && formRecurrenceEndDate > maxEndStr) {
+      setRecurrenceLimitDialog({ open: true, cappedEndDate: maxEndStr, startDate: formDate });
+      return;
+    }
+
+    if (!duplicateConfirmed.current) {
+      const endDate = formRecurring && formRecurrenceEndType === "date" && formRecurrenceEndDate
+        ? formRecurrenceEndDate
+        : (formRecurring ? maxEndStr : formDate);
+      const datesToCheck = formRecurring
+        ? generateRecurrenceDates(formDate, formRecurrenceType, endDate).map((d) => d.toISOString().slice(0, 10))
+        : [formDate];
+      const hasDuplicate = datesToCheck.some((dateStr) =>
+        items.some(
+          (existing) =>
+            existing.type === formType &&
+            existing.description === formDescription.trim() &&
+            existing.amount === amount &&
+            existing.category === formCategory.trim() &&
+            existing.expectedDate === dateStr
+        )
+      );
+      if (hasDuplicate) {
+        setDuplicateDialog({ open: true });
+        return;
+      }
+    }
+    duplicateConfirmed.current = false;
+
+    await performSave();
+  };
+
+  const handleDuplicateConfirm = async () => {
+    setDuplicateDialog({ open: false });
+    duplicateConfirmed.current = true;
+    await performSave();
+  };
+
+  const handleRecurrenceLimitConfirm = async () => {
+    const cappedEndDate = recurrenceLimitDialog.cappedEndDate;
+    setRecurrenceLimitDialog({ open: false, cappedEndDate: "", startDate: "" });
+    await performSave(cappedEndDate);
+  };
+
   const handleFormAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     const digits = raw.replace(/\D/g, "");
@@ -366,6 +453,14 @@ function CashForecastContent() {
   };
 
   const openConfirmDialog = (item: CashForecast, type: "received" | "paid" | "cancelled") => {
+    if (type !== "cancelled") {
+      const hoje = new Date();
+      const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
+      if (item.expectedDate > hojeStr) {
+        setEarlyDownloadDialog({ open: true, item, type });
+        return;
+      }
+    }
     setConfirmDialog({ open: true, type, item });
     setCancelReason("");
     setCancelError("");
@@ -594,14 +689,14 @@ function CashForecastContent() {
                   </SelectContent>
                 </Select>
                 <Select value={filterAno} onValueChange={setFilterAno}>
-                  <SelectTrigger className="h-8 w-28 text-xs">
+                  <SelectTrigger className="h-8 w-36 text-xs">
                     <SelectValue placeholder="Ano" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2024">2024</SelectItem>
-                    <SelectItem value="2025">2025</SelectItem>
-                    <SelectItem value="2026">2026</SelectItem>
-                    <SelectItem value="2027">2027</SelectItem>
+                    <SelectItem value="all">Todos os anos</SelectItem>
+                    {availableYears.map((y) => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -634,7 +729,7 @@ function CashForecastContent() {
                                 <Search className="h-10 w-10 opacity-40" />
                                 <p className="font-medium">Nenhum lançamento encontrado</p>
                                 <p className="text-xs">Não há lançamentos para os filtros selecionados.</p>
-                                <button onClick={() => { setFilterMes("all"); setFilterAno(new Date().getFullYear().toString()); }}
+                                <button onClick={() => { setFilterMes("all"); setFilterAno("all"); }}
                                   className="text-xs text-primary hover:underline mt-1">
                                   Limpar filtros
                                 </button>
@@ -942,15 +1037,15 @@ function CashForecastContent() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cat" className="flex items-center gap-1">
-                  Categoria
+                  Categoria <span className="text-red-400">*</span>
                 </Label>
                 {categories.filter((c) => c.type === formType).length > 0 ? (
                   <Select
                     key={formType + (editingItem?.id || "new")}
                     value={formCategory}
-                    onValueChange={(v) => setFormCategory(v)}
+                    onValueChange={(v) => { setFormCategory(v); setFormCategoryError(""); }}
                   >
-                    <SelectTrigger id="cat">
+                    <SelectTrigger id="cat" className={formCategoryError ? "border-red-400" : ""}>
                       <SelectValue placeholder="Selecionar categoria" />
                     </SelectTrigger>
                     <SelectContent position="popper" className="max-h-60">
@@ -964,6 +1059,7 @@ function CashForecastContent() {
                     </SelectContent>
                   </Select>
                 ) : null}
+                {formCategoryError && <p className="text-xs text-red-400">{formCategoryError}</p>}
                 <div className="space-y-2">
                   {showCreateCategory ? (
                     <div className="flex flex-col gap-2">
@@ -1091,9 +1187,14 @@ function CashForecastContent() {
               )}
 
               {confirmDialog.type !== "cancelled" && (
-                <p className="text-sm font-semibold">
-                  ATENÇÃO: Você está marcando o lançamento {confirmDialog.item?.displayId} como {confirmDialog.type === "received" ? "RECEBIDO" : "PAGO"}. Deseja continuar?
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">
+                    ATENÇÃO: Você está marcando o lançamento {confirmDialog.item?.displayId} como {confirmDialog.type === "received" ? "RECEBIDO" : "PAGO"}. Deseja continuar?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Esta ação criará um lançamento no Financeiro com a data de hoje e atualizará os indicadores automaticamente.
+                  </p>
+                </div>
               )}
             </div>
 
@@ -1218,6 +1319,105 @@ function CashForecastContent() {
               </Button>
               <Button variant="destructive" onClick={handleClearHistory} className="gap-2">
                 <Trash2 className="h-4 w-4" /> Sim, Limpar Histórico
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Early download modal */}
+        <Dialog open={earlyDownloadDialog.open} onOpenChange={(open) => { if (!open) setEarlyDownloadDialog({ open: false, item: null, type: "received" }); }}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/15">
+                  <AlertTriangle className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <DialogTitle>Ação não permitida</DialogTitle>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Este lançamento ainda não atingiu sua data prevista.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Caso o pagamento ou recebimento já tenha ocorrido antecipadamente, cancele esta previsão e registre o lançamento diretamente na página Financeiro.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Previsões representam eventos futuros e não podem ser baixadas antes da data programada.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setEarlyDownloadDialog({ open: false, item: null, type: "received" })}>
+                OK
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Recurrence limit modal */}
+        <Dialog open={recurrenceLimitDialog.open} onOpenChange={(open) => { if (!open) setRecurrenceLimitDialog({ open: false, cappedEndDate: "", startDate: "" }); }}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/15">
+                  <AlertTriangle className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <DialogTitle>Limite de recorrência atingido</DialogTitle>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                O Lucraí permite criar lançamentos recorrentes por até 5 anos para garantir performance, organização e consistência dos dados.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Com base na data inicial informada, serão gerados lançamentos apenas até {recurrenceLimitDialog.cappedEndDate ? formatDate(recurrenceLimitDialog.cappedEndDate) : ""}.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Deseja continuar mesmo assim?
+              </p>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setRecurrenceLimitDialog({ open: false, cappedEndDate: "", startDate: "" })}>
+                Editar recorrência
+              </Button>
+              <Button onClick={handleRecurrenceLimitConfirm}>
+                Continuar e salvar até o limite permitido
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Duplicate modal */}
+        <Dialog open={duplicateDialog.open} onOpenChange={(open) => { if (!open) setDuplicateDialog({ open: false }); }}>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/15">
+                  <AlertTriangle className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <DialogTitle>Possível duplicidade detectada</DialogTitle>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Foram encontrados lançamentos idênticos já existentes para parte das datas selecionadas.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Deseja continuar mesmo assim?
+              </p>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => { setDuplicateDialog({ open: false }); }}>
+                Cancelar
+              </Button>
+              <Button onClick={handleDuplicateConfirm}>
+                Continuar
               </Button>
             </DialogFooter>
           </DialogContent>

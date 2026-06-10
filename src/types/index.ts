@@ -142,6 +142,7 @@ export interface Conta {
   telefone: string;
   senha: string;
   empresa: string;
+  cargo: string;
   porte: PorteEmpresa;
   faturamento: string;
   origem: string;
