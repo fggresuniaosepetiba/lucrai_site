@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta } from "@/types";
+import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta, DocumentoFinanceiro, DocumentoAprendizado, DocumentoLog, DocumentoConfiguracao, DocumentoTrashItem } from "@/types";
 
 export class LucraiDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
@@ -11,11 +11,16 @@ export class LucraiDatabase extends Dexie {
   auditLogs!: Table<AuditLog, string>;
   pricingProducts!: Table<PricingProduct, string>;
   contas!: Table<Conta, string>;
+  documentos!: Table<DocumentoFinanceiro, string>;
+  documentoAprendizado!: Table<DocumentoAprendizado, string>;
+  documentoLogs!: Table<DocumentoLog, string>;
+  documentoConfiguracoes!: Table<DocumentoConfiguracao, string>;
+  documentoTrash!: Table<DocumentoTrashItem, string>;
 
   constructor() {
     super("lucrai-core");
 
-    this.version(9).stores({
+    this.version(11).stores({
       pricingProducts: "id, name, category, company, createdAt",
       transactions: "id, displayId, type, categoryId, date, createdAt, company",
       categories: "id, type, name, company",
@@ -25,6 +30,11 @@ export class LucraiDatabase extends Dexie {
       cashForecasts: "id, displayId, type, status, expectedDate, company, isRecurring",
       auditLogs: "id, entityId, entityType, action, company, timestamp",
       contas: "id, email, empresa, createdAt",
+      documentos: "id, empresa_id, status, tipo_arquivo, hash_arquivo, criado_em, excluido_em, lancamento_id, *tipo_documento_detectado",
+      documentoAprendizado: "id, empresa_id, chave_reconhecimento, categoria_id, frequencia",
+      documentoLogs: "id, documento_id, empresa_id, usuario_id, acao, criado_em",
+      documentoConfiguracoes: "id, empresa_id",
+      documentoTrash: "id, documento_id, empresa_id, excluido_em, restore_until, excluido_por",
     });
   }
 }

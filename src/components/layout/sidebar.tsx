@@ -35,6 +35,7 @@ const menuItems = [
   { icon: ArrowUpDown, label: "Financeiro", href: "/financial" },
   { icon: CalendarCheck, label: "Previsão de Caixa", href: "/cash-forecast" },
   { icon: Tags, label: "Categorias", href: "/categories" },
+  // { icon: ScanSearch, label: "Central de Documentos", href: "/documentos" },
   { icon: FileText, label: "Relatórios", href: "/reports" },
   { icon: Calculator, label: "Calculadora de Precificação", href: "/pricing" },
   { icon: Trash2, label: "Lixeira", href: "/trash" },
@@ -53,7 +54,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { collapsed, toggle } = useSidebarStore();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const { theme } = useThemeStore();
   const alertsCount = useAlertsCount();
   const [dashExpanded, setDashExpanded] = useState(() => {
@@ -231,7 +232,9 @@ export function Sidebar() {
               title={collapsed ? item.label : undefined}
             >
               <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && (
+                <span className="flex-1">{item.label}</span>
+              )}
             </Link>
           );
         })}

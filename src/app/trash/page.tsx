@@ -5,14 +5,18 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { TrashRepository } from "@/database/repositories/trash";
-import type { DeletedTransaction } from "@/types";
+import { DocumentoRepository } from "@/database/repositories/documentos";
+import { DocumentoService } from "@/services/documentos/documentos.service";
+import type { DeletedTransaction, DocumentoTrashItem } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { formatCurrency, formatDate, parseLocalDate } from "@/lib/utils";
-import { Trash2, RotateCcw, AlertTriangle, Clock, Hash, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Trash2, RotateCcw, AlertTriangle, Clock, Hash, ArrowUpRight, ArrowDownRight, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,16 +25,23 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function TrashPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const [items, setItems] = useState<DeletedTransaction[]>([]);
+  const [docItems, setDocItems] = useState<DocumentoTrashItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<DeletedTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeletedTransaction | null>(null);
+  const [docRestoreTarget, setDocRestoreTarget] = useState<DocumentoTrashItem | null>(null);
+  const [docDeleteTarget, setDocDeleteTarget] = useState<DocumentoTrashItem | null>(null);
+  const [docDeleteReason, setDocDeleteReason] = useState("");
+  const [docDeleting, setDocDeleting] = useState(false);
   const company = user?.company ?? "";
   const userName = user?.name ?? "Sistema";
+  const usuario_id = user?.email ?? "";
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -43,8 +54,13 @@ export default function TrashPage() {
   const load = async () => {
     try {
       await TrashRepository.cleanup();
-      const data = await TrashRepository.getAll(company);
+      await DocumentoRepository.cleanupTrash();
+      const [data, docData] = await Promise.all([
+        TrashRepository.getAll(company),
+        DocumentoRepository.getAllInTrash(company),
+      ]);
       setItems(data);
+      setDocItems(docData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -76,6 +92,40 @@ export default function TrashPage() {
       load();
     } catch {
       toast("Erro", "Não foi possível excluir", "destructive");
+    }
+  };
+
+  const handleDocRestore = async () => {
+    if (!docRestoreTarget) return;
+    try {
+      await DocumentoService.restaurarDaTrash(docRestoreTarget.documento_id, company, usuario_id);
+      toast("Documento restaurado", "Voltou para a Central de Documentos", "success");
+      setDocRestoreTarget(null);
+      load();
+    } catch {
+      toast("Erro", "Não foi possível restaurar o documento", "destructive");
+    }
+  };
+
+  const handleDocPermanentDelete = async () => {
+    if (!docDeleteTarget || !docDeleteReason.trim()) return;
+    setDocDeleting(true);
+    try {
+      await DocumentoService.excluirPermanentemente(
+        docDeleteTarget.documento_id,
+        company,
+        docDeleteReason,
+        usuario_id,
+        userName
+      );
+      toast("Documento excluído permanentemente", "", "success");
+      setDocDeleteTarget(null);
+      setDocDeleteReason("");
+      load();
+    } catch {
+      toast("Erro", "Não foi possível excluir permanentemente", "destructive");
+    } finally {
+      setDocDeleting(false);
     }
   };
 
@@ -111,14 +161,7 @@ export default function TrashPage() {
           </div>
         </div>
 
-        {items.length > 0 && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Trash2 className="h-3 w-3" />
-            <span>{items.length} item{items.length !== 1 ? "ns" : ""} na lixeira</span>
-          </div>
-        )}
-
-        {items.length === 0 ? (
+        {items.length === 0 && docItems.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
               <div className="rounded-full bg-muted p-4 mb-4">
@@ -126,95 +169,77 @@ export default function TrashPage() {
               </div>
               <p className="text-lg font-medium">Lixeira vazia</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Nenhum lançamento foi excluído ainda
+                Nenhum item foi excluído ainda
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {items.map((item) => {
-              const days = getDaysRemaining(item.restoreUntil);
-              return (
-                <Card key={item.id} className="group hover:shadow-md transition-all border-border/50">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px] gap-1">
-                            {item.entryType === "forecast" ? "Previsão" : "Lançamento"}
-                          </Badge>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Hash className="h-3 w-3" />
-                            <span className="font-mono">{item.displayId}</span>
-                          </div>
-                          <Badge variant={item.type === "income" ? "success" : "destructive"} className="gap-1 text-[10px]">
-                            {item.type === "income" ? (
-                              <ArrowUpRight className="h-3 w-3" />
-                            ) : (
-                              <ArrowDownRight className="h-3 w-3" />
-                            )}
-                            {item.type === "income" ? "Entrada" : "Saída"}
-                          </Badge>
-                        </div>
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">
+                Todos ({items.length + docItems.length})
+              </TabsTrigger>
+              <TabsTrigger value="financial">
+                Financeiro ({items.length})
+              </TabsTrigger>
+              <TabsTrigger value="documents">
+                Documentos ({docItems.length})
+              </TabsTrigger>
+            </TabsList>
 
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className="font-medium text-base">{item.description}</span>
-                          <span className={`text-base font-semibold ${
-                            item.type === "income" ? "text-emerald-400" : "text-red-400"
-                          }`}>
-                            {item.type === "income" ? "+" : "-"}{formatCurrency(item.value ?? item.amount ?? 0)}
-                          </span>
-                        </div>
+            <TabsContent value="all" className="space-y-3 mt-4">
+              {items.map((item) => (
+                <TrashItemCard
+                  key={item.id}
+                  item={item}
+                  onRestore={() => setRestoreTarget(item)}
+                  onDelete={() => setDeleteTarget(item)}
+                  getDaysRemaining={getDaysRemaining}
+                />
+              ))}
+              {docItems.map((item) => (
+                <DocTrashItemCard
+                  key={item.id}
+                  item={item}
+                  onRestore={() => setDocRestoreTarget(item)}
+                  onDelete={() => setDocDeleteTarget(item)}
+                  getDaysRemaining={getDaysRemaining}
+                />
+              ))}
+            </TabsContent>
 
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span className="rounded-md bg-muted px-2 py-0.5">{item.categoryName || item.category || "—"}</span>
-                          <span>{formatDate(item.date || item.expectedDate || "")}</span>
-                        </div>
+            <TabsContent value="financial" className="space-y-3 mt-4">
+              {items.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum item financeiro na lixeira</p>
+              ) : items.map((item) => (
+                <TrashItemCard
+                  key={item.id}
+                  item={item}
+                  onRestore={() => setRestoreTarget(item)}
+                  onDelete={() => setDeleteTarget(item)}
+                  getDaysRemaining={getDaysRemaining}
+                />
+              ))}
+            </TabsContent>
 
-                        <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 border border-amber-500/20 p-3">
-                          <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-                          <div>
-                            <p className="text-xs text-amber-300 font-medium">Motivo da exclusão:</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{item.reason}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <Clock className="h-3 w-3 text-muted-foreground" />
-                          <span className={days <= 5 ? "text-amber-400 font-medium" : "text-muted-foreground"}>
-                            {days} dia{days !== 1 ? "s" : ""} restante{days !== 1 ? "s" : ""} para restaurar
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 shrink-0 mt-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRestoreTarget(item)}
-                          className="gap-1.5 text-xs"
-                        >
-                          <RotateCcw className="h-3.5 w-3.5" />
-                          Restaurar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteTarget(item)}
-                          className="gap-1.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
-                        >
-                          Excluir
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+            <TabsContent value="documents" className="space-y-3 mt-4">
+              {docItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum documento na lixeira</p>
+              ) : docItems.map((item) => (
+                <DocTrashItemCard
+                  key={item.id}
+                  item={item}
+                  onRestore={() => setDocRestoreTarget(item)}
+                  onDelete={() => setDocDeleteTarget(item)}
+                  getDaysRemaining={getDaysRemaining}
+                />
+              ))}
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
+      {/* Restore dialog (transactions/forecasts) */}
       <Dialog open={!!restoreTarget} onOpenChange={(open) => { if (!open) setRestoreTarget(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -270,6 +295,7 @@ export default function TrashPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Permanent delete dialog (transactions/forecasts) */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -320,6 +346,239 @@ export default function TrashPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Restore dialog (documents) */}
+      <Dialog open={!!docRestoreTarget} onOpenChange={(open) => { if (!open) setDocRestoreTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
+                <RotateCcw className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div>
+                <DialogTitle>Restaurar Documento</DialogTitle>
+                <DialogDescription>
+                  O documento será restaurado para a Central de Documentos.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{docRestoreTarget?.nome_arquivo_original}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <Badge variant="outline" className="text-[10px]">{docRestoreTarget?.tipo_arquivo}</Badge>
+                <span>{docRestoreTarget ? `${(docRestoreTarget.tamanho_bytes / 1024).toFixed(1)}KB` : ""}</span>
+              </div>
+              <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 p-2 mt-2">
+                <AlertTriangle className="h-3 w-3 text-amber-400 mt-0.5" />
+                <p className="text-xs text-muted-foreground">Motivo: {docRestoreTarget?.motivo_exclusao}</p>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-center">Deseja restaurar este documento?</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDocRestoreTarget(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleDocRestore} className="gap-2">
+              <RotateCcw className="h-4 w-4" />
+              Restaurar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permanent delete dialog (documents) */}
+      <Dialog open={!!docDeleteTarget} onOpenChange={(open) => { if (!open) { setDocDeleteTarget(null); setDocDeleteReason(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+                <Trash2 className="h-5 w-5 text-red-400" />
+              </div>
+              <div>
+                <DialogTitle>Excluir Documento Permanentemente</DialogTitle>
+                <DialogDescription>
+                  Esta ação não pode ser desfeita. O documento será removido permanentemente.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{docDeleteTarget?.nome_arquivo_original}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <Badge variant="outline" className="text-[10px]">{docDeleteTarget?.tipo_arquivo}</Badge>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="doc-permanent-delete-reason" className="text-sm font-medium">
+                Motivo da Exclusão Permanente *
+              </Label>
+              <Textarea
+                id="doc-permanent-delete-reason"
+                value={docDeleteReason}
+                onChange={(e) => setDocDeleteReason(e.target.value)}
+                placeholder="Informe o motivo da exclusão permanente..."
+                rows={3}
+              />
+            </div>
+            <p className="text-sm font-semibold text-center text-red-400">
+              Deseja excluir permanentemente este documento?
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setDocDeleteTarget(null); setDocDeleteReason(""); }}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDocPermanentDelete}
+              disabled={docDeleting || !docDeleteReason.trim()}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {docDeleting ? "Excluindo..." : "Excluir Permanentemente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Shell>
+  );
+}
+
+function TrashItemCard({
+  item, onRestore, onDelete, getDaysRemaining,
+}: {
+  item: DeletedTransaction;
+  onRestore: () => void;
+  onDelete: () => void;
+  getDaysRemaining: (restoreUntil: string) => number;
+}) {
+  const days = getDaysRemaining(item.restoreUntil);
+  return (
+    <Card key={item.id} className="group hover:shadow-md transition-all border-border/50">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] gap-1">
+                {item.entryType === "forecast" ? "Previsão" : "Lançamento"}
+              </Badge>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Hash className="h-3 w-3" />
+                <span className="font-mono">{item.displayId}</span>
+              </div>
+              <Badge variant={item.type === "income" ? "success" : "destructive"} className="gap-1 text-[10px]">
+                {item.type === "income" ? (
+                  <ArrowUpRight className="h-3 w-3" />
+                ) : (
+                  <ArrowDownRight className="h-3 w-3" />
+                )}
+                {item.type === "income" ? "Entrada" : "Saída"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="font-medium text-base">{item.description}</span>
+              <span className={`text-base font-semibold ${
+                item.type === "income" ? "text-emerald-400" : "text-red-400"
+              }`}>
+                {item.type === "income" ? "+" : "-"}{formatCurrency(item.value ?? item.amount ?? 0)}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="rounded-md bg-muted px-2 py-0.5">{item.categoryName || item.category || "—"}</span>
+              <span>{formatDate(item.date || item.expectedDate || "")}</span>
+            </div>
+            <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 border border-amber-500/20 p-3">
+              <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-amber-300 font-medium">Motivo da exclusão:</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{item.reason}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span className={days <= 5 ? "text-amber-400 font-medium" : "text-muted-foreground"}>
+                {days} dia{days !== 1 ? "s" : ""} restante{days !== 1 ? "s" : ""} para restaurar
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0 mt-1">
+            <Button variant="outline" size="sm" onClick={onRestore} className="gap-1.5 text-xs">
+              <RotateCcw className="h-3.5 w-3.5" />
+              Restaurar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onDelete} className="gap-1.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10">
+              Excluir
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DocTrashItemCard({
+  item, onRestore, onDelete, getDaysRemaining,
+}: {
+  item: DocumentoTrashItem;
+  onRestore: () => void;
+  onDelete: () => void;
+  getDaysRemaining: (restoreUntil: string) => number;
+}) {
+  const days = getDaysRemaining(item.restore_until);
+  return (
+    <Card key={item.id} className="group hover:shadow-md transition-all border-border/50">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] gap-1">
+                <FileText className="h-3 w-3" />
+                Documento
+              </Badge>
+              <Badge variant="secondary" className="text-[10px]">{item.tipo_arquivo}</Badge>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-base">{item.nome_arquivo_original}</span>
+              <span className="text-xs text-muted-foreground">
+                {(item.tamanho_bytes / 1024).toFixed(1)}KB
+              </span>
+            </div>
+            <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 border border-amber-500/20 p-3">
+              <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs text-amber-300 font-medium">Motivo da exclusão:</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{item.motivo_exclusao}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span className={days <= 5 ? "text-amber-400 font-medium" : "text-muted-foreground"}>
+                {days} dia{days !== 1 ? "s" : ""} restante{days !== 1 ? "s" : ""} para restaurar
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0 mt-1">
+            <Button variant="outline" size="sm" onClick={onRestore} className="gap-1.5 text-xs">
+              <RotateCcw className="h-3.5 w-3.5" />
+              Restaurar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onDelete} className="gap-1.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10">
+              Excluir
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
