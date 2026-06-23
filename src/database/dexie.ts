@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta, DocumentoFinanceiro, DocumentoAprendizado, DocumentoLog, DocumentoConfiguracao, DocumentoTrashItem } from "@/types";
+import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta, DocumentoFinanceiro, DocumentoAprendizado, DocumentoLog, DocumentoConfiguracao, DocumentoTrashItem, Receipt, EventoAuditoria, SignatureConfig } from "@/types";
 
 export class LucraiDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
@@ -16,11 +16,14 @@ export class LucraiDatabase extends Dexie {
   documentoLogs!: Table<DocumentoLog, string>;
   documentoConfiguracoes!: Table<DocumentoConfiguracao, string>;
   documentoTrash!: Table<DocumentoTrashItem, string>;
+  recibos!: Table<Receipt, string>;
+  eventosAuditoria!: Table<EventoAuditoria, string>;
+  configuracoesAssinatura!: Table<SignatureConfig, string>;
 
   constructor() {
     super("lucrai-core");
 
-    this.version(11).stores({
+    this.version(12).stores({
       pricingProducts: "id, name, category, company, createdAt",
       transactions: "id, displayId, type, categoryId, date, createdAt, company",
       categories: "id, type, name, company",
@@ -35,6 +38,9 @@ export class LucraiDatabase extends Dexie {
       documentoLogs: "id, documento_id, empresa_id, usuario_id, acao, criado_em",
       documentoConfiguracoes: "id, empresa_id",
       documentoTrash: "id, documento_id, empresa_id, excluido_em, restore_until, excluido_por",
+      recibos: "id, numero, tipo, status, data, lancamentoId, origem, criadoEm, company",
+      eventosAuditoria: "id, reciboId, acao, realizadoEm, realizadoPor",
+      configuracoesAssinatura: "id, company",
     });
   }
 }

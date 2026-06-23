@@ -25,6 +25,13 @@ const defaultUsers = [
     role: "admin" as const,
     company: "Grão Natural",
   },
+  {
+    name: "João Ribeiro",
+    email: "joao.ribeiro",
+    password: "123",
+    role: "owner" as const,
+    company: "João Ribeiro",
+  },
 ];
 
 const defaultCategories = [

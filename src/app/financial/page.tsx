@@ -281,6 +281,19 @@ export default function FinancialPage() {
           transactions={filtered}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onGerarRecibo={(tx) => {
+            const params = new URLSearchParams({
+              acao: "gerar-recibo",
+              lancamentoId: tx.id,
+              valor: String(tx.value),
+              data: tx.date,
+              referente: tx.description,
+              tipo: tx.type === "income" ? "recebimento" : "pagamento",
+              nomePagador: "",
+              nomeRecebedor: "",
+            });
+            router.push(`/recibos?${params.toString()}`);
+          }}
           categories={categories}
         />
 

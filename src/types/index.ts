@@ -312,3 +312,62 @@ export interface DocumentoStats {
   economia_estimada_minutos: number;
   valor_total_automatizado: number;
 }
+
+export type ReciboTipo = "recebimento" | "pagamento";
+export type ReciboStatus = "emitido" | "cancelado";
+export type ReciboOrigem = "manual" | "lancamento";
+
+export interface CancelamentoRecibo {
+  motivo: string;
+  canceladoEm: string;
+  canceladoPor: string;
+}
+
+export interface EventoAuditoria {
+  id: string;
+  reciboId: string;
+  acao: "criado" | "editado" | "cancelado" | "pdf_baixado" | "impresso";
+  realizadoEm: string;
+  realizadoPor: string;
+  detalhes?: Record<string, unknown>;
+}
+
+export interface Receipt {
+  id: string;
+  company: string;
+  numero: string;
+  tipo: ReciboTipo;
+  status: ReciboStatus;
+  nomePagador: string;
+  documentoPagador: string;
+  nomeRecebedor: string;
+  documentoRecebedor: string;
+  data: string;
+  valor: number;
+  valorPorExtenso: string;
+  referente: string;
+  formaPagamento?: string;
+  observacoes?: string;
+  telefone?: string;
+  email?: string;
+  cidade?: string;
+  estado?: string;
+  exibirAssinatura?: boolean;
+  parcelaAtual?: number;
+  parcelasTotal?: number;
+  lancamentoId?: string | null;
+  origem: ReciboOrigem;
+  criadoEm: string;
+  criadoPor: string;
+  atualizadoEm: string;
+  cancelamento?: CancelamentoRecibo | null;
+}
+
+export interface SignatureConfig {
+  id: string;
+  company: string;
+  imagemBase64: string | null;
+  nomeResponsavel: string;
+  cargo: string;
+  permitirUso: boolean;
+}

@@ -6,14 +6,16 @@ import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { SettingsRepository } from "@/database/repositories/settings";
 import { UserRepository } from "@/database/repositories/users";
-import type { AppSettings } from "@/types";
+import { AssinaturaRepository } from "@/database/repositories/assinatura";
+import { Switch } from "@/components/ui/switch";
+import type { AppSettings, SignatureConfig } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
-import { ImageUp, Building2, Palette, Save, KeyRound, Eye, EyeOff, Check, X } from "lucide-react";
+import { ImageUp, Building2, Palette, Save, KeyRound, Eye, EyeOff, Check, X, Signature, Pen } from "lucide-react";
 import Image from "next/image";
 
 function validatePassword(pw: string): string | null {
@@ -46,6 +48,18 @@ export default function SettingsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
+  const [assinatura, setAssinatura] = useState<SignatureConfig>({
+    id: company,
+    company,
+    imagemBase64: null,
+    nomeResponsavel: "",
+    cargo: "",
+    permitirUso: false,
+  });
+  const [assinaturaPreview, setAssinaturaPreview] = useState<string | null>(null);
+  const assinaturaFileRef = useRef<HTMLInputElement>(null);
+  const [assinaturaLoaded, setAssinaturaLoaded] = useState(false);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("/login");
@@ -65,6 +79,12 @@ export default function SettingsPage() {
       } else {
         setCompanyName(company || "Minha Empresa");
       }
+      const sig = await AssinaturaRepository.get(company);
+      if (sig) {
+        setAssinatura(sig);
+        if (sig.imagemBase64) setAssinaturaPreview(sig.imagemBase64);
+      }
+      setAssinaturaLoaded(true);
     } catch (err) {
       console.error(err);
     } finally {
@@ -83,21 +103,40 @@ export default function SettingsPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleAssinaturaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast("Arquivo muito grande", "O limite é de 2MB", "destructive");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      setAssinaturaPreview(dataUrl);
+      setAssinatura((prev) => ({ ...prev, imagemBase64: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      let logoUrl = settings?.logoUrl;
-      if (logoFile && logoPreview) {
-        logoUrl = logoPreview;
-      }
+      const logoUrl = logoFile && logoPreview ? logoPreview : settings?.logoUrl;
       await SettingsRepository.update(company, {
         companyName,
         primaryColor,
         logoUrl,
       });
+      await AssinaturaRepository.save(company, {
+        ...assinatura,
+        id: company,
+        company,
+      });
       toast("Configurações salvas", "Dados atualizados com sucesso", "success");
-      loadSettings();
-    } catch {
+      await loadSettings();
+    } catch (err) {
+      console.error("Erro ao salvar configurações:", err);
       toast("Erro", "Não foi possível salvar", "destructive");
     } finally {
       setSaving(false);
@@ -244,6 +283,98 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {assinaturaLoaded && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Pen className="h-5 w-5 text-primary" />
+                <div>
+                  <CardTitle className="text-base">Assinatura do Responsável</CardTitle>
+                  <CardDescription>Configuração de assinatura para recibos</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Imagem da Assinatura</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative h-20 w-40 rounded-xl border border-border bg-muted overflow-hidden flex items-center justify-center">
+                    {assinaturaPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={assinaturaPreview} alt="Assinatura" className="object-contain p-2 max-h-full" />
+                    ) : (
+                      <Signature className="h-8 w-8 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      ref={assinaturaFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      onChange={handleAssinaturaUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => assinaturaFileRef.current?.click()}
+                    >
+                      Selecionar imagem
+                    </Button>
+                    <p className="text-xs text-muted-foreground">PNG (transparente) ou JPG. Máx 2MB.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="nomeResponsavel">Nome do Responsável</Label>
+                <Input
+                  id="nomeResponsavel"
+                  placeholder="Nome completo"
+                  value={assinatura.nomeResponsavel}
+                  onChange={(e) => setAssinatura((prev) => ({ ...prev, nomeResponsavel: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cargo">Cargo</Label>
+                <Input
+                  id="cargo"
+                  placeholder="Ex: Diretor Financeiro"
+                  value={assinatura.cargo}
+                  onChange={(e) => setAssinatura((prev) => ({ ...prev, cargo: e.target.value }))}
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="permitirUso"
+                  checked={assinatura.permitirUso}
+                  onCheckedChange={(checked) => setAssinatura((prev) => ({ ...prev, permitirUso: checked }))}
+                />
+                <Label htmlFor="permitirUso" className="cursor-pointer">
+                  Permitir uso de assinatura nos recibos
+                </Label>
+              </div>
+
+              {assinatura.permitirUso && assinaturaPreview && (
+                <div className="rounded-xl border bg-muted/30 p-4">
+                  <p className="text-xs font-medium text-muted-foreground mb-3">Preview da assinatura no recibo:</p>
+                  <div className="flex flex-col items-center gap-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={assinaturaPreview} alt="Assinatura" className="max-h-12 object-contain" />
+                    <div className="w-48 border-t border-foreground/30"></div>
+                    <p className="text-sm font-medium">{assinatura.nomeResponsavel || "Nome do Responsável"}</p>
+                    <p className="text-xs text-muted-foreground">{assinatura.cargo || "Cargo"}</p>
+                    <p className="text-xs text-muted-foreground">{companyName}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
