@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { useRecibosStore } from "@/store/recibos-store";
@@ -22,7 +22,15 @@ import { toast } from "@/components/ui/toast";
 import { Plus, FileText } from "lucide-react";
 import type { Receipt, SignatureConfig, AppSettings } from "@/types";
 
-export default function RecibosPage() {
+export default function RecibosPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Carregando...</div>}>
+      <RecibosPage />
+    </Suspense>
+  );
+}
+
+function RecibosPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
