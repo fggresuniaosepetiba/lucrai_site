@@ -14,10 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatCurrencyInput, parseCurrencyInput, todayStr } from "@/lib/utils";
 import { valorPorExtenso } from "@/services/recibos/valorPorExtenso";
 import { validarDocumento, formatarDocumento, validarEmail, detectarTipoDocumento } from "@/services/recibos/cpfCnpjValidator";
-import type { ReciboTipo, ReciboOrigem } from "@/types";
+import type { ReciboTipo, ReciboOrigem, SignatureConfig } from "@/types";
 
 const ESTADOS = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO",
@@ -31,8 +32,10 @@ export interface ReciboFormData {
   tipo: ReciboTipo;
   nomePagador: string;
   documentoPagador: string;
+  semDocumentoPagador?: boolean;
   nomeRecebedor: string;
   documentoRecebedor: string;
+  semDocumentoRecebedor?: boolean;
   data: string;
   valor: number;
   referente: string;
@@ -53,14 +56,17 @@ interface ReciboFormProps {
   onClose: () => void;
   onSubmit: (data: ReciboFormData, criarLancamento: boolean) => Promise<void>;
   prefill?: Partial<ReciboFormData>;
+  assinatura?: SignatureConfig | null;
 }
 
-export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps) {
+export function ReciboForm({ open, onClose, onSubmit, prefill, assinatura }: ReciboFormProps) {
   const [tipo, setTipo] = useState<ReciboTipo>("recebimento");
   const [nomePagador, setNomePagador] = useState("");
   const [documentoPagador, setDocumentoPagador] = useState("");
+  const [semDocumentoPagador, setSemDocumentoPagador] = useState(false);
   const [nomeRecebedor, setNomeRecebedor] = useState("");
   const [documentoRecebedor, setDocumentoRecebedor] = useState("");
+  const [semDocumentoRecebedor, setSemDocumentoRecebedor] = useState(false);
   const [data, setData] = useState(todayStr());
   const [valorDisplay, setValorDisplay] = useState("");
   const [referente, setReferente] = useState("");
@@ -82,8 +88,10 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
       if (prefill.tipo) setTipo(prefill.tipo);
       if (prefill.nomePagador !== undefined) setNomePagador(prefill.nomePagador);
       if (prefill.documentoPagador !== undefined) setDocumentoPagador(prefill.documentoPagador);
+      if (prefill.semDocumentoPagador !== undefined) setSemDocumentoPagador(prefill.semDocumentoPagador);
       if (prefill.nomeRecebedor !== undefined) setNomeRecebedor(prefill.nomeRecebedor);
       if (prefill.documentoRecebedor !== undefined) setDocumentoRecebedor(prefill.documentoRecebedor);
+      if (prefill.semDocumentoRecebedor !== undefined) setSemDocumentoRecebedor(prefill.semDocumentoRecebedor);
       if (prefill.data) setData(prefill.data);
       if (prefill.valor) setValorDisplay(formatCurrencyInput(String(Math.round(prefill.valor * 100))));
       if (prefill.referente !== undefined) setReferente(prefill.referente);
@@ -104,13 +112,24 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
     setErrors({});
     setSubmitting(false);
     setShowCriarLancamento(false);
+    setSemDocumentoPagador(false);
+    setSemDocumentoRecebedor(false);
     onClose();
   };
 
   const amountValue = valorDisplay ? parseCurrencyInput(valorDisplay) : 0;
 
   const handleDocumentoChange = (value: string, campo: "pagador" | "recebedor") => {
-    const digits = value.replace(/\D/g, "");
+    const digits = value.replace(/\D/g, "").slice(0, 14);
+    const setter = campo === "pagador" ? setDocumentoPagador : setDocumentoRecebedor;
+    setter(digits);
+    setErrors((prev) => ({ ...prev, [`documento${campo === "pagador" ? "Pagador" : "Recebedor"}`]: "" }));
+  };
+
+  const handleDocumentoPaste = (e: React.ClipboardEvent<HTMLInputElement>, campo: "pagador" | "recebedor") => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text");
+    const digits = pasted.replace(/\D/g, "").slice(0, 14);
     const setter = campo === "pagador" ? setDocumentoPagador : setDocumentoRecebedor;
     setter(digits);
     setErrors((prev) => ({ ...prev, [`documento${campo === "pagador" ? "Pagador" : "Recebedor"}`]: "" }));
@@ -120,19 +139,23 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
     const errs: Record<string, string> = {};
 
     if (!nomePagador.trim()) errs.nomePagador = "Campo obrigatório";
-    if (!documentoPagador.trim()) {
-      errs.documentoPagador = "Campo obrigatório";
-    } else {
-      const val = validarDocumento(documentoPagador);
-      if (!val.valido) errs.documentoPagador = val.mensagem;
+    if (!semDocumentoPagador) {
+      if (!documentoPagador.trim()) {
+        errs.documentoPagador = "Campo obrigatório";
+      } else {
+        const val = validarDocumento(documentoPagador);
+        if (!val.valido) errs.documentoPagador = val.mensagem;
+      }
     }
 
     if (!nomeRecebedor.trim()) errs.nomeRecebedor = "Campo obrigatório";
-    if (!documentoRecebedor.trim()) {
-      errs.documentoRecebedor = "Campo obrigatório";
-    } else {
-      const val = validarDocumento(documentoRecebedor);
-      if (!val.valido) errs.documentoRecebedor = val.mensagem;
+    if (!semDocumentoRecebedor) {
+      if (!documentoRecebedor.trim()) {
+        errs.documentoRecebedor = "Campo obrigatório";
+      } else {
+        const val = validarDocumento(documentoRecebedor);
+        if (!val.valido) errs.documentoRecebedor = val.mensagem;
+      }
     }
 
     if (!data) errs.data = "Campo obrigatório";
@@ -173,16 +196,18 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (criarLancamentoOverride?: boolean) => {
     if (!validate()) return;
     setSubmitting(true);
     try {
       const formData: ReciboFormData = {
         tipo,
         nomePagador: nomePagador.trim(),
-        documentoPagador: formatarDocumento(documentoPagador),
+        documentoPagador: semDocumentoPagador ? "" : formatarDocumento(documentoPagador),
+        semDocumentoPagador,
         nomeRecebedor: nomeRecebedor.trim(),
-        documentoRecebedor: formatarDocumento(documentoRecebedor),
+        documentoRecebedor: semDocumentoRecebedor ? "" : formatarDocumento(documentoRecebedor),
+        semDocumentoRecebedor,
         data: data,
         valor: amountValue,
         referente: referente.trim(),
@@ -197,7 +222,7 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
         parcelasTotal: parcelasTotal ? parseInt(parcelasTotal, 10) : undefined,
         lancamentoId: prefill?.lancamentoId,
       };
-      await onSubmit(formData, showCriarLancamento);
+      await onSubmit(formData, criarLancamentoOverride ?? showCriarLancamento);
       handleClose();
     } finally {
       setSubmitting(false);
@@ -214,8 +239,7 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
   };
 
   const handleSaveWithLancamento = (criar: boolean) => {
-    setShowCriarLancamento(false);
-    handleSubmit();
+    handleSubmit(criar);
   };
 
   const getDocumentoPreview = (documento: string) => {
@@ -285,21 +309,36 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
               </div>
               <div className="space-y-2">
                 <Label htmlFor="documentoPagador" className="flex items-center gap-1">
-                  CPF/CNPJ do Pagador <span className="text-red-400">*</span>
+                  CPF/CNPJ do Pagador {!semDocumentoPagador && <span className="text-red-400">*</span>}
                 </Label>
                 <Input
                   id="documentoPagador"
                   placeholder="999.999.999-99"
                   value={getDocumentoPreview(documentoPagador)}
                   onChange={(e) => handleDocumentoChange(e.target.value, "pagador")}
-                  className={inputStyle("documentoPagador")}
+                  onPaste={(e) => handleDocumentoPaste(e, "pagador")}
+                  disabled={semDocumentoPagador}
+                  className={`${semDocumentoPagador ? "bg-muted/50 text-muted-foreground cursor-not-allowed" : ""} ${inputStyle("documentoPagador")}`}
                 />
                 {errors.documentoPagador && <p className="text-xs text-red-400">{errors.documentoPagador}</p>}
-                {documentoPagador.replace(/\D/g, "").length > 0 && (
+                {!semDocumentoPagador && documentoPagador.replace(/\D/g, "").length > 0 && (
                   <p className="text-[10px] text-muted-foreground">
                     {detectarTipoDocumento(documentoPagador) === "cpf" ? "CPF detectado" : "CNPJ detectado"}
                   </p>
                 )}
+                <div className="flex items-center gap-2 pt-1">
+                  <Checkbox
+                    id="semDocumentoPagador"
+                    checked={semDocumentoPagador}
+                    onCheckedChange={(checked) => {
+                      setSemDocumentoPagador(!!checked);
+                      if (checked) setDocumentoPagador("");
+                    }}
+                  />
+                  <Label htmlFor="semDocumentoPagador" className="text-xs cursor-pointer font-normal">
+                    Não informar
+                  </Label>
+                </div>
               </div>
             </div>
 
@@ -320,21 +359,36 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
               </div>
               <div className="space-y-2">
                 <Label htmlFor="documentoRecebedor" className="flex items-center gap-1">
-                  CPF/CNPJ do Recebedor <span className="text-red-400">*</span>
+                  CPF/CNPJ do Recebedor {!semDocumentoRecebedor && <span className="text-red-400">*</span>}
                 </Label>
                 <Input
                   id="documentoRecebedor"
                   placeholder="99.999.999/9999-99"
                   value={getDocumentoPreview(documentoRecebedor)}
                   onChange={(e) => handleDocumentoChange(e.target.value, "recebedor")}
-                  className={inputStyle("documentoRecebedor")}
+                  onPaste={(e) => handleDocumentoPaste(e, "recebedor")}
+                  disabled={semDocumentoRecebedor}
+                  className={`${semDocumentoRecebedor ? "bg-muted/50 text-muted-foreground cursor-not-allowed" : ""} ${inputStyle("documentoRecebedor")}`}
                 />
                 {errors.documentoRecebedor && <p className="text-xs text-red-400">{errors.documentoRecebedor}</p>}
-                {documentoRecebedor.replace(/\D/g, "").length > 0 && (
+                {!semDocumentoRecebedor && documentoRecebedor.replace(/\D/g, "").length > 0 && (
                   <p className="text-[10px] text-muted-foreground">
                     {detectarTipoDocumento(documentoRecebedor) === "cpf" ? "CPF detectado" : "CNPJ detectado"}
                   </p>
                 )}
+                <div className="flex items-center gap-2 pt-1">
+                  <Checkbox
+                    id="semDocumentoRecebedor"
+                    checked={semDocumentoRecebedor}
+                    onCheckedChange={(checked) => {
+                      setSemDocumentoRecebedor(!!checked);
+                      if (checked) setDocumentoRecebedor("");
+                    }}
+                  />
+                  <Label htmlFor="semDocumentoRecebedor" className="text-xs cursor-pointer font-normal">
+                    Não informar
+                  </Label>
+                </div>
               </div>
             </div>
 
@@ -486,16 +540,18 @@ export function ReciboForm({ open, onClose, onSubmit, prefill }: ReciboFormProps
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Switch
-                id="exibirAssinatura"
-                checked={exibirAssinatura}
-                onCheckedChange={setExibirAssinatura}
-              />
-              <Label htmlFor="exibirAssinatura" className="cursor-pointer">
-                Exibir assinatura neste recibo
-              </Label>
-            </div>
+            {assinatura?.permitirUso && (
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="exibirAssinatura"
+                  checked={exibirAssinatura}
+                  onCheckedChange={setExibirAssinatura}
+                />
+                <Label htmlFor="exibirAssinatura" className="cursor-pointer">
+                  Exibir assinatura neste recibo
+                </Label>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="observacoes">Observações</Label>

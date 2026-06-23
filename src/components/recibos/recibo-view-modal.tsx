@@ -86,11 +86,19 @@ export function ReciboViewModal({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="font-medium">{isRecebimento ? recibo.nomePagador : recibo.nomeRecebedor}</p>
-              <p className="text-muted-foreground">{isRecebimento ? recibo.documentoPagador : recibo.documentoRecebedor}</p>
+              <p className="text-muted-foreground">
+                {isRecebimento
+                  ? (recibo.semDocumentoPagador ? "Documento não informado" : recibo.documentoPagador)
+                  : (recibo.semDocumentoRecebedor ? "Documento não informado" : recibo.documentoRecebedor)}
+              </p>
             </div>
             <div>
               <p className="font-medium">{isRecebimento ? recibo.nomeRecebedor : recibo.nomePagador}</p>
-              <p className="text-muted-foreground">{isRecebimento ? recibo.documentoRecebedor : recibo.documentoPagador}</p>
+              <p className="text-muted-foreground">
+                {isRecebimento
+                  ? (recibo.semDocumentoRecebedor ? "Documento não informado" : recibo.documentoRecebedor)
+                  : (recibo.semDocumentoPagador ? "Documento não informado" : recibo.documentoPagador)}
+              </p>
             </div>
           </div>
 

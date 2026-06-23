@@ -340,8 +340,10 @@ export interface Receipt {
   status: ReciboStatus;
   nomePagador: string;
   documentoPagador: string;
+  semDocumentoPagador?: boolean;
   nomeRecebedor: string;
   documentoRecebedor: string;
+  semDocumentoRecebedor?: boolean;
   data: string;
   valor: number;
   valorPorExtenso: string;

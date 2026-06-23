@@ -73,12 +73,16 @@ export function gerarHtmlRecibo({ recibo, logoUrl, nomeEmpresa, assinatura }: {
     <div>
       <div class="label">${isRecebimento ? "Pagador" : "Recebedor"}</div>
       <div class="valor">${isRecebimento ? recibo.nomePagador : recibo.nomeRecebedor}</div>
-      <div style="font-size:11px;color:#64748b;">${isRecebimento ? recibo.documentoPagador : recibo.documentoRecebedor}</div>
+      <div style="font-size:11px;color:#64748b;">${isRecebimento
+        ? (recibo.semDocumentoPagador ? "Documento não informado" : recibo.documentoPagador)
+        : (recibo.semDocumentoRecebedor ? "Documento não informado" : recibo.documentoRecebedor)}</div>
     </div>
     <div>
       <div class="label">${isRecebimento ? "Recebedor" : "Pagador"}</div>
       <div class="valor">${isRecebimento ? recibo.nomeRecebedor : recibo.nomePagador}</div>
-      <div style="font-size:11px;color:#64748b;">${isRecebimento ? recibo.documentoRecebedor : recibo.documentoPagador}</div>
+      <div style="font-size:11px;color:#64748b;">${isRecebimento
+        ? (recibo.semDocumentoRecebedor ? "Documento não informado" : recibo.documentoRecebedor)
+        : (recibo.semDocumentoPagador ? "Documento não informado" : recibo.documentoPagador)}</div>
     </div>
   </div>
 

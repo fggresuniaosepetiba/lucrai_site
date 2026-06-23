@@ -120,8 +120,10 @@ function RecibosPage() {
         status: "emitido",
         nomePagador: data.nomePagador,
         documentoPagador: data.documentoPagador,
+        semDocumentoPagador: data.semDocumentoPagador,
         nomeRecebedor: data.nomeRecebedor,
         documentoRecebedor: data.documentoRecebedor,
+        semDocumentoRecebedor: data.semDocumentoRecebedor,
         data: data.data,
         valor: data.valor,
         referente: data.referente,
@@ -184,8 +186,10 @@ function RecibosPage() {
         tipo: data.tipo,
         nomePagador: data.nomePagador,
         documentoPagador: data.documentoPagador,
+        semDocumentoPagador: data.semDocumentoPagador,
         nomeRecebedor: data.nomeRecebedor,
         documentoRecebedor: data.documentoRecebedor,
+        semDocumentoRecebedor: data.semDocumentoRecebedor,
         data: data.data,
         valor: data.valor,
         referente: data.referente,
@@ -278,8 +282,10 @@ function RecibosPage() {
       tipo: recibo.tipo,
       nomePagador: recibo.nomePagador,
       documentoPagador: recibo.documentoPagador,
+      semDocumentoPagador: recibo.semDocumentoPagador,
       nomeRecebedor: recibo.nomeRecebedor,
       documentoRecebedor: recibo.documentoRecebedor,
+      semDocumentoRecebedor: recibo.semDocumentoRecebedor,
       data: recibo.data,
       valor: recibo.valor,
       referente: recibo.referente,
@@ -354,6 +360,7 @@ function RecibosPage() {
             onClose={() => { setShowForm(false); setEditRecibo(null); }}
             onSubmit={editRecibo ? handleEdit : handleCreate}
             prefill={formPrefill}
+            assinatura={assinatura}
           />
         )}
 
