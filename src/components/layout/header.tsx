@@ -24,6 +24,9 @@ const pageTitles: Record<string, string> = {
   "/reports": "Relatórios",
   "/settings": "Configurações",
   "/cash-forecast": "Previsão de Caixa",
+  "/pricing": "Calculadora de Precificação",
+  "/pricing/fixed-costs": "Custos Fixos",
+  "/pricing/insumos": "Insumos",
 };
 
 const dashRoutes = ["/dashboard", "/dashboard/alertas", "/dashboard/projecoes", "/dashboard/resumo-cfo"];

@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta, DocumentoFinanceiro, DocumentoAprendizado, DocumentoLog, DocumentoConfiguracao, DocumentoTrashItem, Receipt, EventoAuditoria, SignatureConfig } from "@/types";
+import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta, DocumentoFinanceiro, DocumentoAprendizado, DocumentoLog, DocumentoConfiguracao, DocumentoTrashItem, Receipt, EventoAuditoria, SignatureConfig, FixedCost, Insumo } from "@/types";
 
 export class LucraiDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
@@ -19,11 +19,13 @@ export class LucraiDatabase extends Dexie {
   recibos!: Table<Receipt, string>;
   eventosAuditoria!: Table<EventoAuditoria, string>;
   configuracoesAssinatura!: Table<SignatureConfig, string>;
+  fixedCosts!: Table<FixedCost, string>;
+  insumos!: Table<Insumo, string>;
 
   constructor() {
     super("lucrai-core");
 
-    this.version(12).stores({
+    this.version(13).stores({
       pricingProducts: "id, name, category, company, createdAt",
       transactions: "id, displayId, type, categoryId, date, createdAt, company",
       categories: "id, type, name, company",
@@ -41,6 +43,8 @@ export class LucraiDatabase extends Dexie {
       recibos: "id, numero, tipo, status, data, lancamentoId, origem, criadoEm, company",
       eventosAuditoria: "id, reciboId, acao, realizadoEm, realizadoPor",
       configuracoesAssinatura: "id, company",
+      fixedCosts: "id, company",
+      insumos: "id, company, nome, categoria",
     });
   }
 }

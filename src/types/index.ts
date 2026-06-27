@@ -118,8 +118,8 @@ export interface PricingProduct {
   freight: number;
   otherCosts: number;
   taxes: number;
-  cardFee: number;
   marketplaceFee: number;
+  platformFee: number;
   commission: number;
   otherFees: number;
   desiredMargin: number;
@@ -373,3 +373,159 @@ export interface SignatureConfig {
   cargo: string;
   permitirUso: boolean;
 }
+
+// ============ CUSTOS FIXOS ============
+
+export interface CustomCostItem {
+  id: string;
+  name: string;
+  value: number;
+}
+
+export interface FixedCost {
+  id: string;
+  company: string;
+  aluguel: number;
+  energia: number;
+  agua: number;
+  internet: number;
+  contador: number;
+  proLabore: number;
+  softwares: number;
+  telefone: number;
+  marketing: number;
+  limpeza: number;
+  outros: number;
+  customCosts?: CustomCostItem[];
+  total: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const FIXED_COST_FIELDS = [
+  "aluguel", "energia", "agua", "internet", "contador",
+  "proLabore", "softwares", "telefone", "marketing", "limpeza", "outros",
+] as const;
+
+export type FixedCostField = (typeof FIXED_COST_FIELDS)[number];
+
+export const FIXED_COST_LABELS: Record<FixedCostField, string> = {
+  aluguel: "Aluguel",
+  energia: "Energia",
+  agua: "Água",
+  internet: "Internet",
+  contador: "Contador",
+  proLabore: "Pró-labore",
+  softwares: "Softwares",
+  telefone: "Telefone",
+  marketing: "Marketing",
+  limpeza: "Limpeza",
+  outros: "Outros",
+};
+
+// ============ INSUMOS ============
+
+export type UnidadeMedida = "kg" | "g" | "litro" | "ml" | "unidade" | "caixa" | "pacote" | "saco" | "garrafa" | "lata" | "fardo" | "duzia" | "metro" | "centimetro" | "milimetro";
+
+export const UNIDADES_MEDIDA: UnidadeMedida[] = [
+  "kg", "g", "litro", "ml", "unidade", "caixa", "pacote", "saco", "garrafa", "lata", "fardo", "duzia", "metro", "centimetro", "milimetro",
+];
+
+export const UNIDADES_MEDIDA_LABELS: Record<UnidadeMedida, string> = {
+  kg: "Quilograma",
+  g: "Grama",
+  litro: "Litro",
+  ml: "Mililitro",
+  unidade: "Unidade",
+  caixa: "Caixa",
+  pacote: "Pacote",
+  saco: "Saco",
+  garrafa: "Garrafa",
+  lata: "Lata",
+  fardo: "Fardo",
+  duzia: "Dúzia",
+  metro: "Metro",
+  centimetro: "Centímetro",
+  milimetro: "Milímetro",
+};
+
+// Compatible unit groups for automatic conversion in Ficha Técnica
+export const COMPATIBLE_UNITS: Record<UnidadeMedida, UnidadeMedida[]> = {
+  kg: ["kg", "g"],
+  g: ["kg", "g"],
+  litro: ["litro", "ml"],
+  ml: ["litro", "ml"],
+  unidade: ["unidade"],
+  caixa: ["caixa"],
+  pacote: ["pacote"],
+  saco: ["saco"],
+  garrafa: ["garrafa"],
+  lata: ["lata"],
+  fardo: ["fardo"],
+  duzia: ["duzia"],
+  metro: ["metro"],
+  centimetro: ["centimetro"],
+  milimetro: ["milimetro"],
+};
+
+// Conversion factor FROM consumptionUnit TO insumoBaseUnit
+// e.g. getConversionFactor("g", "kg") = 1/1000 (350g → 0.35kg)
+export function getConversionFactor(consumptionUnit: UnidadeMedida, baseUnit: UnidadeMedida): number {
+  if (consumptionUnit === baseUnit) return 1;
+  if (consumptionUnit === "g" && baseUnit === "kg") return 1 / 1000;
+  if (consumptionUnit === "kg" && baseUnit === "g") return 1000;
+  if (consumptionUnit === "ml" && baseUnit === "litro") return 1 / 1000;
+  if (consumptionUnit === "litro" && baseUnit === "ml") return 1000;
+  return 1;
+}
+
+export interface Insumo {
+  id: string;
+  company: string;
+  nome: string;
+  categoria: string;
+  unidadeMedida: UnidadeMedida;
+  quantidadeComprada: number;
+  valorPago: number;
+  custoPorUnidade: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FichaTecnicaItem {
+  insumoId: string;
+  insumoNome: string;
+  unidadeMedida: UnidadeMedida;
+  consumoUnidadeMedida: UnidadeMedida;
+  quantidadeUtilizada: number;
+  custoCalculado: number;
+}
+
+// ============ MODO DE PRODUÇÃO ============
+
+export type ProductionMode = "unitaria" | "lote";
+
+// ============ FORMA DE RECEBIMENTO ============
+
+export type PaymentMethod =
+  | "pix"
+  | "dinheiro"
+  | "debito"
+  | "credito"
+  | "parcelado";
+
+export const PAYMENT_METHODS: PaymentMethod[] = [
+  "pix",
+  "dinheiro",
+  "debito",
+  "credito",
+  "parcelado",
+];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  pix: "PIX",
+  dinheiro: "Dinheiro",
+  debito: "Cartão de Débito",
+  credito: "Cartão de Crédito",
+  parcelado: "Parcelado",
+};
