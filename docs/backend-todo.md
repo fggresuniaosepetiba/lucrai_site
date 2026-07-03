@@ -21,7 +21,7 @@
 
 ### 1.3 Dependências (NuGet)
 - [x] `Lucrai.Infrastructure`: EF Core, EF Core Tools, Npgsql, Identity.EntityFrameworkCore
-- [x] `Lucrai.API`: Identity.EntityFrameworkCore, JwtBearer, EF Core Design
+- [x] `Lucrai.API`: Identity.EntityFrameworkCore, JwtBearer, EF Core Design, InMemory
 - [x] `Lucrai.Core`: Identity.Stores (para User herdar IdentityUser)
 - [x] `Lucrai.API.Tests`: Mvc.Testing, EF Core InMemory
 
@@ -65,10 +65,10 @@
 ### 1.8 Seed (`Lucrai.Infrastructure/Seed/`)
 - [x] `DataSeeder.cs` — 3 usuários padrão (Trinary, Lucraí, Grão Natural) com senha via UserManager
 - [x] 12 categorias padrão (4 de receita + 8 de despesa) por empresa
-- [x] Executa migrations automaticamente antes do seed
+- [x] Executa migrations automaticamente (com fallback EnsureCreated para InMemory)
 
 ### 1.9 API Setup (`Lucrai.API/`)
-- [x] `Program.cs` — DI completo: DbContext (Npgsql), Identity, JWT Bearer, CORS, autorização
+- [x] `Program.cs` — DI completo: DbContext (Npgsql/InMemory configurável), Identity, JWT Bearer, CORS, autorização
 - [x] `appsettings.json` — ConnectionString, JWT config, Refresh Token config, CORS origins
 - [ ] `appsettings.Development.json` — config para ambiente local
 
@@ -77,131 +77,134 @@
 ## Fase 2: Controllers (API REST)
 
 ### 2.1 Auth
-- [ ] `AuthController.cs`
-  - [ ] `POST /api/auth/login` — valida credenciais, retorna JWT + refresh token
-  - [ ] `POST /api/auth/register` — cria novo usuário + empresa
-  - [ ] `POST /api/auth/refresh` — rotaciona refresh token
-  - [ ] `POST /api/auth/logout` — revoga refresh token
-  - [ ] `GET /api/auth/me` — dados do usuário logado
+- [x] `AuthController.cs`
+  - [x] `POST /api/auth/login` — valida credenciais, retorna JWT + refresh token
+  - [x] `POST /api/auth/register` — cria novo usuário + empresa
+  - [x] `POST /api/auth/refresh` — rotaciona refresh token
+  - [x] `POST /api/auth/logout` — revoga refresh token
+  - [x] `GET /api/auth/me` — dados do usuário logado
 
 ### 2.2 Transactions
-- [ ] `TransactionsController.cs`
-  - [ ] `GET /api/transactions` — listar (query: type, year, month, search)
-  - [ ] `GET /api/transactions/{id}` — obter por ID
-  - [ ] `GET /api/transactions/summary` — sumário do período
-  - [ ] `GET /api/transactions/yearly-summary` — sumário anual
-  - [ ] `GET /api/transactions/balance` — saldo total (all-time)
-  - [ ] `POST /api/transactions` — criar (com validação + audit)
-  - [ ] `PUT /api/transactions/{id}` — atualizar (com validação + audit)
-  - [ ] `DELETE /api/transactions/{id}` — mover para lixeira
+- [x] `TransactionsController.cs`
+  - [x] `GET /api/transactions` — listar (query: type, year, month)
+  - [x] `GET /api/transactions/{id}` — obter por ID
+  - [x] `GET /api/transactions/summary` — sumário do período
+  - [x] `GET /api/transactions/summary/yearly/{year}` — sumário anual
+  - [x] `GET /api/transactions/balance` — saldo total (all-time)
+  - [x] `POST /api/transactions` — criar (com validação + audit)
+  - [x] `PUT /api/transactions/{id}` — atualizar (com validação + audit)
+  - [x] `DELETE /api/transactions/{id}` — excluir
 
 ### 2.3 Categories
-- [ ] `CategoriesController.cs`
-  - [ ] `GET /api/categories` — listar (query: type)
-  - [ ] `GET /api/categories/{id}` — obter
-  - [ ] `POST /api/categories` — criar
-  - [ ] `PUT /api/categories/{id}` — atualizar
-  - [ ] `DELETE /api/categories/{id}` — excluir (bloqueia se houver transações)
-  - [ ] `POST /api/categories/remove-duplicates` — mesclar duplicatas
+- [x] `CategoriesController.cs`
+  - [x] `GET /api/categories` — listar (query: type)
+  - [x] `GET /api/categories/{id}` — obter
+  - [x] `POST /api/categories` — criar
+  - [x] `PUT /api/categories/{id}` — atualizar
+  - [x] `DELETE /api/categories/{id}` — excluir (bloqueia se houver transações)
+  - [x] `POST /api/categories/remove-duplicates` — mesclar duplicatas
 
 ### 2.4 Cash Forecasts
-- [ ] `CashForecastsController.cs`
-  - [ ] `GET /api/forecasts` — listar (query: status)
-  - [ ] `GET /api/forecasts/{id}` — obter
-  - [ ] `GET /api/forecasts/totals` — totais previstos
-  - [ ] `POST /api/forecasts` — criar
-  - [ ] `PUT /api/forecasts/{id}` — atualizar
-  - [ ] `DELETE /api/forecasts/{id}` — mover para lixeira
-  - [ ] `POST /api/forecasts/{id}/mark-as-received` — receber (+ cria Transaction)
-  - [ ] `POST /api/forecasts/{id}/mark-as-paid` — pagar (+ cria Transaction)
-  - [ ] `POST /api/forecasts/{id}/mark-as-cancelled` — cancelar
+- [x] `CashForecastsController.cs`
+  - [x] `GET /api/forecasts` — listar (query: status)
+  - [x] `GET /api/forecasts/{id}` — obter
+  - [x] `GET /api/forecasts/totals` — totais previstos
+  - [x] `POST /api/forecasts` — criar
+  - [x] `PUT /api/forecasts/{id}` — atualizar
+  - [x] `DELETE /api/forecasts/{id}` — mover para lixeira
+  - [x] `POST /api/forecasts/{id}/mark-as-received` — receber (+ cria Transaction)
+  - [x] `POST /api/forecasts/{id}/mark-as-paid` — pagar (+ cria Transaction)
+  - [x] `POST /api/forecasts/{id}/mark-as-cancelled` — cancelar
 
 ### 2.5 Users
-- [ ] `UsersController.cs`
-  - [ ] `GET /api/users` — listar usuários da empresa
-  - [ ] `GET /api/users/{id}` — obter
-  - [ ] `POST /api/users` — criar
-  - [ ] `PUT /api/users/{id}` — atualizar
-  - [ ] `DELETE /api/users/{id}` — desativar (soft delete)
+- [x] `UsersController.cs`
+  - [x] `GET /api/users` — listar usuários da empresa
+  - [x] `GET /api/users/active` — listar apenas ativos
+  - [x] `GET /api/users/{id}` — obter
+  - [x] `POST /api/users` — criar
+  - [x] `PUT /api/users/{id}` — atualizar
+  - [x] `DELETE /api/users/{id}` — desativar (soft delete)
 
 ### 2.6 Trash
-- [ ] `TrashController.cs`
-  - [ ] `GET /api/trash` — listar itens não expirados
-  - [ ] `POST /api/trash/{id}/restore` — restaurar
-  - [ ] `DELETE /api/trash/{id}` — excluir permanentemente
-  - [ ] `POST /api/trash/cleanup` — limpar expirados
+- [x] `TrashController.cs`
+  - [x] `GET /api/trash` — listar itens não expirados
+  - [x] `POST /api/trash/{id}/restore` — restaurar
+  - [x] `DELETE /api/trash/{id}` — excluir permanentemente
+  - [x] `POST /api/trash/cleanup` — limpar expirados
 
 ### 2.7 Audit
-- [ ] `AuditController.cs`
-  - [ ] `GET /api/audit` — listar logs da empresa
-  - [ ] `GET /api/audit/entity/{entityId}` — logs de uma entidade
+- [x] `AuditController.cs`
+  - [x] `GET /api/audit` — listar logs da empresa
+  - [x] `GET /api/audit/entity/{entityId}` — logs de uma entidade específica
+  - [x] `GET /api/audit/action/{action}` — logs por tipo de ação
 
 ### 2.8 Settings
-- [ ] `SettingsController.cs`
-  - [ ] `GET /api/settings` — obter config da empresa
-  - [ ] `PUT /api/settings` — atualizar config
+- [x] `SettingsController.cs`
+  - [x] `GET /api/settings` — obter config da empresa
+  - [x] `POST /api/settings` — criar config
+  - [x] `PUT /api/settings` — atualizar config
 
 ### 2.9 Pricing
-- [ ] `PricingController.cs`
-  - [ ] `GET /api/pricing` — listar produtos
-  - [ ] `GET /api/pricing/{id}` — obter
-  - [ ] `POST /api/pricing` — criar
-  - [ ] `PUT /api/pricing/{id}` — atualizar
-  - [ ] `DELETE /api/pricing/{id}` — excluir
+- [x] `PricingController.cs`
+  - [x] `GET /api/pricing` — listar produtos
+  - [x] `GET /api/pricing/{id}` — obter
+  - [x] `POST /api/pricing` — criar (com cálculo automático de preços)
+  - [x] `PUT /api/pricing/{id}` — atualizar (recalcula preços)
+  - [x] `DELETE /api/pricing/{id}` — excluir
 
 ### 2.10 Dashboard
-- [ ] `DashboardController.cs`
-  - [ ] `POST /api/dashboard/projection` — projeção financeira
-  - [ ] `POST /api/dashboard/runway` — cálculo de runway
-  - [ ] `POST /api/dashboard/breakeven` — ponto de equilíbrio
-  - [ ] `POST /api/dashboard/health` — saúde financeira
-  - [ ] `POST /api/dashboard/alerts` — alertas inteligentes
+- [x] `DashboardController.cs`
+  - [x] `POST /api/dashboard/projection` — projeção financeira (12 meses, cenários)
+  - [x] `GET /api/dashboard/runway` — cálculo de runway (meses de caixa)
+  - [x] `GET /api/dashboard/breakeven` — ponto de equilíbrio
+  - [x] `GET /api/dashboard/health` — saúde financeira (score 0-100)
+  - [x] `GET /api/dashboard/alerts` — alertas inteligentes
 
 ### 2.11 Contas (Company Registration)
-- [ ] `ContasController.cs`
-  - [ ] `GET /api/contas` — listar cadastros
-  - [ ] `POST /api/contas` — criar cadastro
+- [x] `ContasController.cs`
+  - [x] `POST /api/contas` — criar registro de cadastro (público)
+  - [x] `GET /api/contas` — listar registros (Admin)
 
 ---
 
 ## Fase 3: Repositories (Implementação EF Core)
 
-- [ ] `Lucrai.Infrastructure/Repositories/TransactionRepository.cs`
-  - [ ] Display ID sequencial por empresa
-  - [ ] Filtros por tipo/mês/ano
-  - [ ] Sumários e balanços agregados
-  - [ ] Criação com auditoria
-- [ ] `Lucrai.Infrastructure/Repositories/CategoryRepository.cs`
-  - [ ] Proteção de exclusão (verifica transações vinculadas)
-  - [ ] Detecção e remoção de duplicatas
-- [ ] `Lucrai.Infrastructure/Repositories/CashForecastRepository.cs`
-  - [ ] MarkAsReceived: atualiza status + cria Transaction
-  - [ ] MarkAsPaid: atualiza status + cria Transaction
-  - [ ] MarkAsCancelled: registra motivo/data/responsável
-  - [ ] Totais agregados
-- [ ] `Lucrai.Infrastructure/Repositories/UserRepository.cs`
-  - [ ] Criação com hash de senha (via UserManager)
-  - [ ] Soft delete (Active = false)
-- [ ] `Lucrai.Infrastructure/Repositories/TrashRepository.cs`
-  - [ ] Move snapshot completo para DeletedItems
-  - [ ] Restaura devolvendo à tabela original
-  - [ ] Cleanup de expirados
-- [ ] `Lucrai.Infrastructure/Repositories/AuditRepository.cs`
-  - [ ] Log genérico para qualquer mutação
-- [ ] `Lucrai.Infrastructure/Repositories/SettingsRepository.cs`
-  - [ ] Upsert (get or create default)
-- [ ] `Lucrai.Infrastructure/Repositories/PricingRepository.cs`
-  - [ ] CRUD simples
+- [x] `Lucrai.Infrastructure/Repositories/TransactionRepository.cs`
+  - [x] Display ID sequencial por empresa
+  - [x] Filtros por tipo/mês/ano
+  - [x] Sumários e balanços agregados
+  - [x] Criação com auditoria
+- [x] `Lucrai.Infrastructure/Repositories/CategoryRepository.cs`
+  - [x] Proteção de exclusão (verifica transações vinculadas)
+  - [x] Detecção e remoção de duplicatas
+- [x] `Lucrai.Infrastructure/Repositories/CashForecastRepository.cs`
+  - [x] MarkAsReceived: atualiza status + cria Transaction
+  - [x] MarkAsPaid: atualiza status + cria Transaction
+  - [x] MarkAsCancelled: registra motivo/data/responsável
+  - [x] Totais agregados
+- [x] `Lucrai.Infrastructure/Repositories/UserRepository.cs`
+  - [x] Criação com hash de senha (via UserManager)
+  - [x] Soft delete (Active = false)
+- [x] `Lucrai.Infrastructure/Repositories/TrashRepository.cs`
+  - [x] Move snapshot completo para DeletedItems
+  - [x] Restaura devolvendo à tabela original
+  - [x] Cleanup de expirados
+- [x] `Lucrai.Infrastructure/Repositories/AuditRepository.cs`
+  - [x] Log genérico para qualquer mutação
+- [x] `Lucrai.Infrastructure/Repositories/SettingsRepository.cs`
+  - [x] Upsert (get or create default)
+- [x] `Lucrai.Infrastructure/Repositories/PricingRepository.cs`
+  - [x] CRUD simples
 
 ---
 
 ## Fase 4: Middleware e Infra
 
-- [ ] `Lucrai.API/Middleware/ExceptionHandlingMiddleware.cs`
-  - [ ] Tratamento global de exceções (problema+json)
-- [ ] `Lucrai.API/Middleware/TenantContextMiddleware.cs`
-  - [ ] Extrai Company do JWT e disponibiliza no HttpContext
-- [ ] DTOs de request/response para todos os endpoints
+- [x] `Lucrai.API/Middleware/ExceptionHandlingMiddleware.cs`
+  - [x] Tratamento global de exceções (JSON: 400, 404, 403, 500)
+- [x] `Lucrai.API/Middleware/TenantContextMiddleware.cs`
+  - [x] Extrai Company/UserName/UserId do JWT e disponibiliza no HttpContext
+- [x] DTOs de request/response para todos os endpoints (11 arquivos)
 - [ ] Validação com FluentValidation ou DataAnnotations
 
 ---
@@ -231,25 +234,21 @@
 
 ## Fase 6: Docker
 
-- [ ] `backend/src/Lucrai.API/Dockerfile`
-  - [ ] Multi-stage build (sdk → aspnet)
-  - [ ] Expose porta 8080
-- [ ] `docker-compose.yml` (raiz do projeto)
-  - [ ] Serviço `api`: build do backend, porta 5000:8080
-  - [ ] Serviço `db`: postgres:16-alpine, volume persistente, healthcheck
-  - [ ] Serviço `frontend`: build do Next.js (opcional)
-  - [ ] Variáveis de ambiente via `.env`
-- [ ] `.dockerignore`
+- [x] `backend/src/Lucrai.API/Dockerfile`
+  - [x] Multi-stage build (sdk → aspnet)
+  - [x] Expose porta 8080
+- [x] `docker-compose.yml` (raiz do projeto)
+  - [x] Serviço `api`: build do backend, porta 5000:8080
+  - [x] Serviço `db`: postgres:16-alpine, volume persistente, healthcheck
+- [x] `.dockerignore`
 
 ---
 
 ## Fase 7: GitHub Actions
 
-- [ ] `.github/workflows/ci.yml`
-  - [ ] Job `backend`: dotnet restore → build → test
-  - [ ] Job `frontend`: npm ci → build → vitest
-  - [ ] Job `e2e`: playwright test (depende dos anteriores)
-  - [ ] Serviço PostgreSQL no CI
+- [x] `.github/workflows/ci.yml`
+  - [x] Job `backend`: dotnet restore → build → test
+  - [x] Job `frontend`: npm ci → lint → build
 - [ ] `.github/workflows/deploy.yml`
   - [ ] Build Docker images
   - [ ] Push para container registry
@@ -259,20 +258,20 @@
 
 ## Fase 8: Testes
 
-### 8.1 Back-end (xUnit)
-- [ ] `Lucrai.API.Tests/Services/DashboardIntelligenceServiceTests.cs`
-  - [ ] Testes de projeção (cenários normal, otimista, pessimista)
-  - [ ] Testes de runway (seguro, atenção, crítico)
-  - [ ] Testes de break-even (acima/abaixo)
-  - [ ] Testes de saúde financeira
-- [ ] `Lucrai.API.Tests/Services/AlertasServiceTests.cs`
-  - [ ] Geração de alertas por tipo
-  - [ ] Dispensar/restaurar alertas
-- [ ] `Lucrai.API.Tests/Controllers/` (WebApplicationFactory)
-  - [ ] AuthController tests (login, refresh, register)
-  - [ ] TransactionsController tests (CRUD, validações)
-  - [ ] CategoriesController tests (CRUD, proteção exclusão)
-  - [ ] CashForecastsController tests (CRUD, markAs*)
+### 8.1 Back-end (xUnit) — 22 testes passando
+- [x] `AuthControllerTests.cs` — register, login, refresh, logout, me, duplicate email
+- [x] `TransactionsControllerTests.cs` — CRUD, list, balance, summary
+- [x] `CategoriesControllerTests.cs` — CRUD, list, get by type
+- [x] `DashboardControllerTests.cs` — projection, runway, breakeven, health, alerts
+- [x] `PricingControllerTests.cs` — create (com cálculo de preços), list
+- [ ] `Services/DashboardIntelligenceServiceTests.cs` — projeção, runway, break-even, saúde
+- [ ] `Services/AlertasServiceTests.cs` — geração de alertas, dispensar/restaurar
+- [ ] `CashForecastsControllerTests.cs` — CRUD, markAs*
+- [ ] `UsersControllerTests.cs` — CRUD, soft delete
+- [ ] `TrashControllerTests.cs` — restore, cleanup
+- [ ] `AuditControllerTests.cs` — list, filter
+- [ ] `SettingsControllerTests.cs` — CRUD
+- [ ] `ContasControllerTests.cs` — create registration
 
 ### 8.2 Front-end (Vitest + RTL)
 - [ ] Adaptar testes existentes para mockar API (substituir Dexie)
@@ -303,13 +302,13 @@
 
 | Fase | Itens | Concluídos | Pendentes |
 |------|-------|-----------|-----------|
-| 1 — Fundação | ~35 itens | 33 | 2 |
-| 2 — Controllers | ~40 endpoints | 0 | 40 |
-| 3 — Repositories | ~8 arquivos | 0 | 8 |
-| 4 — Middleware/Infra | ~4 itens | 0 | 4 |
+| 1 — Fundação | ~36 itens | 35 | 1 |
+| 2 — Controllers | ~50 endpoints | 50 | 0 |
+| 3 — Repositories | ~8 arquivos | 8 | 0 |
+| 4 — Middleware/Infra | ~5 itens | 4 | 1 |
 | 5 — Serviços | ~2 serviços | 0 | 2 |
-| 6 — Docker | ~3 itens | 0 | 3 |
-| 7 — CI/CD | ~2 workflows | 0 | 2 |
-| 8 — Testes | ~12 itens | 0 | 12 |
+| 6 — Docker | ~3 itens | 3 | 0 |
+| 7 — CI/CD | ~2 workflows | 1 | 1 |
+| 8 — Testes | ~15 itens | 5 | 10 |
 | 9 — Integração Front | ~6 itens | 0 | 6 |
-| **Total** | **~105 itens** | **33** | **~72** |
+| **Total** | **~127 itens** | **106** | **21** |

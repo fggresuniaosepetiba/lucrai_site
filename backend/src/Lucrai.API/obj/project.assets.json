@@ -521,6 +521,22 @@
           "build/net10.0/Microsoft.EntityFrameworkCore.Design.props": {}
         }
       },
+      "Microsoft.EntityFrameworkCore.InMemory/10.0.0-preview.3.25171.6": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "10.0.0-preview.3.25171.6"
+        },
+        "compile": {
+          "lib/net10.0/Microsoft.EntityFrameworkCore.InMemory.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.EntityFrameworkCore.InMemory.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.EntityFrameworkCore.Relational/10.0.0-preview.3.25171.6": {
         "type": "package",
         "dependencies": {
@@ -2305,6 +2321,21 @@
         "microsoft.entityframeworkcore.design.nuspec"
       ]
     },
+    "Microsoft.EntityFrameworkCore.InMemory/10.0.0-preview.3.25171.6": {
+      "sha512": "0h1kavFp5VJgMWecziETnSv0bVKln05GZO3lDEinoNfH//EVUFdon7kJ/CO4EZJn28CoEXTUWTm5I1y2zMYtyw==",
+      "type": "package",
+      "path": "microsoft.entityframeworkcore.inmemory/10.0.0-preview.3.25171.6",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "PACKAGE.md",
+        "lib/net10.0/Microsoft.EntityFrameworkCore.InMemory.dll",
+        "lib/net10.0/Microsoft.EntityFrameworkCore.InMemory.xml",
+        "microsoft.entityframeworkcore.inmemory.10.0.0-preview.3.25171.6.nupkg.sha512",
+        "microsoft.entityframeworkcore.inmemory.nuspec"
+      ]
+    },
     "Microsoft.EntityFrameworkCore.Relational/10.0.0-preview.3.25171.6": {
       "sha512": "a4u68469kYNVhEKtEMouvn8RiK+7spEeFBk+iDTaBD85NJGzH8fCNtz8E4DRUsvn3Y9mBH5wBh/N1Bwi/O/Xlw==",
       "type": "package",
@@ -3058,7 +3089,8 @@
       "Lucrai.Infrastructure >= 1.0.0",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 10.0.0-preview.3.25171.1",
       "Microsoft.AspNetCore.Identity.EntityFrameworkCore >= 10.0.0-preview.3.25171.1",
-      "Microsoft.EntityFrameworkCore.Design >= 10.0.0-preview.3.25171.1"
+      "Microsoft.EntityFrameworkCore.Design >= 10.0.0-preview.3.25171.1",
+      "Microsoft.EntityFrameworkCore.InMemory >= 10.0.0-preview.3.25171.6"
     ]
   },
   "packageFolders": {
@@ -3133,6 +3165,10 @@
             "suppressParent": "All",
             "target": "Package",
             "version": "[10.0.0-preview.3.25171.1, )"
+          },
+          "Microsoft.EntityFrameworkCore.InMemory": {
+            "target": "Package",
+            "version": "[10.0.0-preview.3.25171.6, )"
           }
         },
         "imports": [
@@ -3577,7 +3613,7 @@
       "code": "NU1603",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Lucrai.API depends on Microsoft.AspNetCore.Authentication.JwtBearer (>= 10.0.0-preview.3.25171.1) but Microsoft.AspNetCore.Authentication.JwtBearer 10.0.0-preview.3.25171.1 was not found. Microsoft.AspNetCore.Authentication.JwtBearer 10.0.0-preview.3.25172.1 was resolved instead.",
+      "message": "Lucrai.API depende de Microsoft.AspNetCore.Authentication.JwtBearer (>= 10.0.0-preview.3.25171.1), mas Microsoft.AspNetCore.Authentication.JwtBearer 10.0.0-preview.3.25171.1 não foi encontrado. Microsoft.AspNetCore.Authentication.JwtBearer 10.0.0-preview.3.25172.1 foi resolvido em vez disso.",
       "libraryId": "Microsoft.AspNetCore.Authentication.JwtBearer",
       "targetGraphs": [
         "net10.0"
@@ -3587,7 +3623,7 @@
       "code": "NU1603",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Lucrai.API depends on Microsoft.AspNetCore.Identity.EntityFrameworkCore (>= 10.0.0-preview.3.25171.1) but Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.0-preview.3.25171.1 was not found. Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.0-preview.3.25172.1 was resolved instead.",
+      "message": "Lucrai.API depende de Microsoft.AspNetCore.Identity.EntityFrameworkCore (>= 10.0.0-preview.3.25171.1), mas Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.0-preview.3.25171.1 não foi encontrado. Microsoft.AspNetCore.Identity.EntityFrameworkCore 10.0.0-preview.3.25172.1 foi resolvido em vez disso.",
       "libraryId": "Microsoft.AspNetCore.Identity.EntityFrameworkCore",
       "targetGraphs": [
         "net10.0"
@@ -3597,7 +3633,7 @@
       "code": "NU1603",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Lucrai.API depends on Microsoft.EntityFrameworkCore.Design (>= 10.0.0-preview.3.25171.1) but Microsoft.EntityFrameworkCore.Design 10.0.0-preview.3.25171.1 was not found. Microsoft.EntityFrameworkCore.Design 10.0.0-preview.3.25171.6 was resolved instead.",
+      "message": "Lucrai.API depende de Microsoft.EntityFrameworkCore.Design (>= 10.0.0-preview.3.25171.1), mas Microsoft.EntityFrameworkCore.Design 10.0.0-preview.3.25171.1 não foi encontrado. Microsoft.EntityFrameworkCore.Design 10.0.0-preview.3.25171.6 foi resolvido em vez disso.",
       "libraryId": "Microsoft.EntityFrameworkCore.Design",
       "targetGraphs": [
         "net10.0"
@@ -3607,7 +3643,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Package 'Microsoft.Build.Tasks.Core' 17.7.2 has a known high severity vulnerability, https://github.com/advisories/GHSA-h4j7-5rxr-p4wc",
+      "message": "O pacote 'Microsoft.Build.Tasks.Core' 17.7.2 tem uma alta vulnerabilidade de gravidade conhecida, https://github.com/advisories/GHSA-h4j7-5rxr-p4wc",
       "libraryId": "Microsoft.Build.Tasks.Core",
       "targetGraphs": [
         "net10.0"

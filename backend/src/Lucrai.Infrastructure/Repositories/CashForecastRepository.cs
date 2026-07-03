@@ -1,0 +1,224 @@
+using Lucrai.Core.Entities;
+using Lucrai.Core.Enums;
+using Lucrai.Core.Interfaces;
+using Lucrai.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace Lucrai.Infrastructure.Repositories;
+
+public class CashForecastRepository : ICashForecastRepository
+{
+    private readonly LucraiDbContext _context;
+
+    public CashForecastRepository(LucraiDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<CashForecast>> GetAllAsync(string company)
+    {
+        return await _context.CashForecasts
+            .Where(f => f.Company == company)
+            .OrderBy(f => f.ExpectedDate)
+            .ToListAsync();
+    }
+
+    public async Task<CashForecast?> GetByIdAsync(Guid id)
+    {
+        return await _context.CashForecasts.FindAsync(id);
+    }
+
+    public async Task<List<CashForecast>> GetByStatusAsync(ForecastStatus status, string company)
+    {
+        return await _context.CashForecasts
+            .Where(f => f.Company == company && f.Status == status)
+            .OrderBy(f => f.ExpectedDate)
+            .ToListAsync();
+    }
+
+    public async Task<CashForecast> CreateAsync(CashForecast forecast, string? userName)
+    {
+        forecast.DisplayId = await GetNextDisplayIdAsync(forecast.Company);
+        forecast.CreatedAt = DateTime.UtcNow;
+        forecast.UpdatedAt = DateTime.UtcNow;
+
+        _context.CashForecasts.Add(forecast);
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            EntityId = forecast.Id,
+            EntityType = "forecast",
+            DisplayId = forecast.DisplayId,
+            Action = AuditAction.Created,
+            Description = $"Previsão {forecast.DisplayId} criada: {forecast.Description}",
+            User = userName ?? "Sistema",
+            Company = forecast.Company
+        });
+
+        await _context.SaveChangesAsync();
+        return forecast;
+    }
+
+    public async Task<CashForecast> UpdateAsync(CashForecast forecast, string? userName)
+    {
+        forecast.UpdatedAt = DateTime.UtcNow;
+        _context.CashForecasts.Update(forecast);
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            EntityId = forecast.Id,
+            EntityType = "forecast",
+            DisplayId = forecast.DisplayId,
+            Action = AuditAction.Edited,
+            Description = $"Previsão {forecast.DisplayId} editada: {forecast.Description}",
+            User = userName ?? "Sistema",
+            Company = forecast.Company
+        });
+
+        await _context.SaveChangesAsync();
+        return forecast;
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var forecast = await _context.CashForecasts.FindAsync(id);
+        if (forecast != null)
+        {
+            _context.CashForecasts.Remove(forecast);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<CashForecast> MarkAsReceivedAsync(Guid id, string? userName)
+    {
+        var forecast = await _context.CashForecasts.FindAsync(id)
+            ?? throw new InvalidOperationException("Previsão não encontrada");
+
+        forecast.Status = ForecastStatus.Received;
+        forecast.UpdatedAt = DateTime.UtcNow;
+
+        var transaction = new Transaction
+        {
+            Type = TransactionType.Income,
+            Value = forecast.Amount,
+            CategoryName = forecast.Category,
+            Description = forecast.Description,
+            Date = DateTime.UtcNow,
+            Observation = $"Originado da previsão {forecast.DisplayId}",
+            Company = forecast.Company
+        };
+
+        var txRepo = new TransactionRepository(_context);
+        await txRepo.CreateAsync(transaction, userName);
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            EntityId = forecast.Id,
+            EntityType = "forecast",
+            DisplayId = forecast.DisplayId,
+            Action = AuditAction.Received,
+            Description = $"Previsão {forecast.DisplayId} marcada como recebida: {forecast.Description}",
+            User = userName ?? "Sistema",
+            Company = forecast.Company,
+            Details = $"TransactionId: {transaction.Id}"
+        });
+
+        await _context.SaveChangesAsync();
+        return forecast;
+    }
+
+    public async Task<CashForecast> MarkAsPaidAsync(Guid id, string? userName)
+    {
+        var forecast = await _context.CashForecasts.FindAsync(id)
+            ?? throw new InvalidOperationException("Previsão não encontrada");
+
+        forecast.Status = ForecastStatus.Paid;
+        forecast.UpdatedAt = DateTime.UtcNow;
+
+        var transaction = new Transaction
+        {
+            Type = TransactionType.Expense,
+            Value = forecast.Amount,
+            CategoryName = forecast.Category,
+            Description = forecast.Description,
+            Date = DateTime.UtcNow,
+            Observation = $"Originado da previsão {forecast.DisplayId}",
+            Company = forecast.Company
+        };
+
+        var txRepo = new TransactionRepository(_context);
+        await txRepo.CreateAsync(transaction, userName);
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            EntityId = forecast.Id,
+            EntityType = "forecast",
+            DisplayId = forecast.DisplayId,
+            Action = AuditAction.Paid,
+            Description = $"Previsão {forecast.DisplayId} marcada como paga: {forecast.Description}",
+            User = userName ?? "Sistema",
+            Company = forecast.Company,
+            Details = $"TransactionId: {transaction.Id}"
+        });
+
+        await _context.SaveChangesAsync();
+        return forecast;
+    }
+
+    public async Task<CashForecast> MarkAsCancelledAsync(Guid id, string? reason, string? userName)
+    {
+        var forecast = await _context.CashForecasts.FindAsync(id)
+            ?? throw new InvalidOperationException("Previsão não encontrada");
+
+        forecast.Status = ForecastStatus.Cancelled;
+        forecast.CancelledReason = reason;
+        forecast.CancelledAt = DateTime.UtcNow;
+        forecast.CancelledBy = userName;
+        forecast.UpdatedAt = DateTime.UtcNow;
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            EntityId = forecast.Id,
+            EntityType = "forecast",
+            DisplayId = forecast.DisplayId,
+            Action = AuditAction.Cancelled,
+            Description = $"Previsão {forecast.DisplayId} cancelada: {reason}",
+            User = userName ?? "Sistema",
+            Company = forecast.Company,
+            Details = reason
+        });
+
+        await _context.SaveChangesAsync();
+        return forecast;
+    }
+
+    public async Task<(decimal PredictedIncomes, decimal PredictedExpenses, decimal AllIncomes, decimal AllExpenses)> GetTotalsAsync(string company)
+    {
+        var predictedIncomes = await _context.CashForecasts
+            .Where(f => f.Company == company && f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Income)
+            .SumAsync(f => f.Amount);
+
+        var predictedExpenses = await _context.CashForecasts
+            .Where(f => f.Company == company && f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Expense)
+            .SumAsync(f => f.Amount);
+
+        var allIncomes = await _context.CashForecasts
+            .Where(f => f.Company == company && f.Type == TransactionType.Income)
+            .SumAsync(f => f.Amount);
+
+        var allExpenses = await _context.CashForecasts
+            .Where(f => f.Company == company && f.Type == TransactionType.Expense)
+            .SumAsync(f => f.Amount);
+
+        return (predictedIncomes, predictedExpenses, allIncomes, allExpenses);
+    }
+
+    public async Task<string> GetNextDisplayIdAsync(string company)
+    {
+        var count = await _context.CashForecasts
+            .Where(f => f.Company == company)
+            .CountAsync();
+
+        return $"#{(count + 1):D3}";
+    }
+}

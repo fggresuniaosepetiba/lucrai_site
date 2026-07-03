@@ -1418,7 +1418,8 @@
           "Lucrai.Core": "1.0.0",
           "Lucrai.Infrastructure": "1.0.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "10.0.0-preview.3.25171.1",
-          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "10.0.0-preview.3.25171.1"
+          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "10.0.0-preview.3.25171.1",
+          "Microsoft.EntityFrameworkCore.InMemory": "10.0.0-preview.3.25171.6"
         },
         "compile": {
           "bin/placeholder/Lucrai.API.dll": {}

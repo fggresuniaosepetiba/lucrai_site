@@ -10,7 +10,10 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(LucraiDbContext context, UserManager<User> userManager)
     {
-        await context.Database.MigrateAsync();
+        if (context.Database.IsRelational())
+            await context.Database.MigrateAsync();
+        else
+            await context.Database.EnsureCreatedAsync();
 
         if (!await context.Users.AnyAsync())
         {
@@ -47,7 +50,7 @@ public static class DataSeeder
 
             foreach (var user in users)
             {
-                var result = await userManager.CreateAsync(user, "Lucrai@@");
+                var result = await userManager.CreateAsync(user, "Lucrai@1");
                 if (!result.Succeeded)
                     throw new Exception($"Failed to seed user {user.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }

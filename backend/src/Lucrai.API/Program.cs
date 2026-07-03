@@ -1,6 +1,9 @@
 using System.Text;
+using Lucrai.API.Middleware;
 using Lucrai.Core.Entities;
+using Lucrai.Core.Interfaces;
 using Lucrai.Infrastructure.Data;
+using Lucrai.Infrastructure.Repositories;
 using Lucrai.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -11,8 +14,23 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICashForecastRepository, CashForecastRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITrashRepository, TrashRepository>();
+builder.Services.AddScoped<IAuditRepository, AuditRepository>();
+builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
+builder.Services.AddScoped<IPricingRepository, PricingRepository>();
+
+var dbProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
 builder.Services.AddDbContext<LucraiDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+{
+    if (dbProvider == "InMemory")
+        options.UseInMemoryDatabase(builder.Configuration.GetValue<string>("InMemoryDbName") ?? "LucraiTestDb");
+    else
+        options.UseNpgsql(builder.Configuration.GetConnectionString("Default"));
+});
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
@@ -62,9 +80,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<TenantContextMiddleware>();
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

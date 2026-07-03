@@ -1,0 +1,13 @@
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\bin\Release\net10.0\Lucrai.Core.deps.json
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\bin\Release\net10.0\Lucrai.Core.dll
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\bin\Release\net10.0\Lucrai.Core.pdb
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.csproj.AssemblyReference.cache
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.AssemblyInfoInputs.cache
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.AssemblyInfo.cs
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.csproj.CoreCompileInputs.cache
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.sourcelink.json
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.dll
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\refint\Lucrai.Core.dll
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\Lucrai.Core.pdb
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\src\Lucrai.Core\obj\Release\net10.0\ref\Lucrai.Core.dll

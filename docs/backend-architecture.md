@@ -63,7 +63,7 @@ O backend do Lucraí é uma **Web API REST** construída em **ASP.NET Core 10 LT
 
 ```
 backend/
-├── Lucrai.sln
+├── Lucrai.slnx
 ├── src/
 │   ├── Lucrai.API/
 │   │   ├── Controllers/
@@ -95,13 +95,16 @@ backend/
 │   │   │   ├── DeletedItem.cs
 │   │   │   ├── AuditLog.cs
 │   │   │   ├── CompanySettings.cs
-│   │   │   └── CompanyRegistration.cs
+│   │   │   ├── CompanyRegistration.cs
+│   │   │   └── RefreshToken.cs
 │   │   ├── Enums/
 │   │   │   ├── TransactionType.cs
 │   │   │   ├── ForecastStatus.cs
 │   │   │   ├── UserRole.cs
 │   │   │   ├── AuditAction.cs
-│   │   │   └── EntryType.cs
+│   │   │   ├── EntryType.cs
+│   │   │   ├── RecurrenceType.cs
+│   │   │   └── PorteEmpresa.cs
 │   │   ├── DTOs/
 │   │   │   ├── Auth/
 │   │   │   ├── Transactions/
@@ -123,7 +126,7 @@ backend/
 │   │   │   ├── IAuditRepository.cs
 │   │   │   ├── ISettingsRepository.cs
 │   │   │   └── IPricingRepository.cs
-│   │   └── Services/
+│   │   └── Services/           (📁 a criar — lógica no DashboardController por enquanto)
 │   │       ├── IDashboardIntelligenceService.cs
 │   │       ├── DashboardIntelligenceService.cs
 │   │       ├── IAlertasService.cs
@@ -131,13 +134,7 @@ backend/
 │   │
 │   └── Lucrai.Infrastructure/
 │       ├── Data/
-│       │   ├── LucraiDbContext.cs
-│       │   └── EntityConfigurations/
-│       │       ├── TransactionConfiguration.cs
-│       │       ├── CategoryConfiguration.cs
-│       │       ├── UserConfiguration.cs
-│       │       ├── CashForecastConfiguration.cs
-│       │       └── ...
+│       │   └── LucraiDbContext.cs  (Fluent API inline)
 │       ├── Repositories/
 │       │   ├── TransactionRepository.cs
 │       │   ├── CategoryRepository.cs
@@ -153,9 +150,14 @@ backend/
 │
 ├── tests/
 │   └── Lucrai.API.Tests/
-│       ├── Services/
 │       ├── Controllers/
-│       └── Integration/
+│       │   ├── AuthControllerTests.cs
+│       │   ├── TransactionsControllerTests.cs
+│       │   ├── CategoriesControllerTests.cs
+│       │   ├── DashboardControllerTests.cs
+│       │   └── PricingControllerTests.cs
+│       ├── CustomWebApplicationFactory.cs
+│       └── Services/           (📁 a criar)
 │
 ├── .dockerignore
 └── Dockerfile
@@ -278,15 +280,17 @@ Todas as tabelas possuem um campo `Company` (string). Toda query é filtrada por
 
 ```json
 {
-  "sub": "guid-do-usuario",
-  "email": "usuario@empresa.com",
-  "name": "Nome do Usuário",
-  "role": "admin",
-  "company": "Nome da Empresa",
+  "sub": "guid-do-usuario",          // ClaimTypes.NameIdentifier
+  "email": "usuario@empresa.com",    // ClaimTypes.Email
+  "name": "Nome do Usuário",         // ClaimTypes.Name
+  "role": "admin",                   // ClaimTypes.Role
+  "company": "Nome da Empresa",      // custom claim
   "iat": 1719000000,
   "exp": 1719000900
 }
 ```
+
+> **Nota:** O `TenantContextMiddleware` extrai `Company`, `UserName` e `UserId` do JWT após validação e disponibiliza em `HttpContext.Items` para os controllers.
 
 ---
 
@@ -386,11 +390,11 @@ Todas as tabelas possuem um campo `Company` (string). Toda query é filtrada por
 
 | Método | Rota | Descrição |
 |---|---|---|
-| POST | /api/dashboard/projection | Projeção financeira |
-| POST | /api/dashboard/runway | Cálculo de runway |
-| POST | /api/dashboard/breakeven | Ponto de equilíbrio |
-| POST | /api/dashboard/health | Saúde financeira |
-| POST | /api/dashboard/alerts | Alertas inteligentes |
+| POST | /api/dashboard/projection | Projeção financeira (12 meses, cenários) |
+| GET | /api/dashboard/runway | Cálculo de runway (meses de caixa) |
+| GET | /api/dashboard/breakeven | Ponto de equilíbrio |
+| GET | /api/dashboard/health | Saúde financeira (score 0-100) |
+| GET | /api/dashboard/alerts | Alertas inteligentes |
 
 ### Contas (Company Registration)
 
@@ -489,51 +493,64 @@ tests/Lucrai.API.Tests/
 ## Docker
 
 ```yaml
-# docker-compose.yml
+# docker-compose.yml (raiz do projeto)
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lucrai-db
+    environment:
+      POSTGRES_DB: lucrai
+      POSTGRES_USER: lucrai
+      POSTGRES_PASSWORD: devpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lucrai -d lucrai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: ./backend
       dockerfile: src/Lucrai.API/Dockerfile
+    container_name: lucrai-api
     ports:
       - "5000:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Default: ${DB_CONNECTION_STRING}
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=lucrai;Username=lucrai;Password=devpass
+      Jwt__Key: dev-secret-key-lucrai-at-least-32-chars!!
+      Cors__Origins: http://localhost:3000
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
 
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: lucrai
-      POSTGRES_USER: lucrai
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U lucrai"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+volumes:
+  pgdata:
 ```
 
-### Dockerfile (API)
+### Dockerfile (API) — `backend/src/Lucrai.API/Dockerfile`
 
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
-COPY . .
-RUN dotnet restore
-RUN dotnet publish src/Lucrai.API/Lucrai.API.csproj -c Release -o /app
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+COPY ["src/Lucrai.API/Lucrai.API.csproj", "src/Lucrai.API/"]
+COPY ["src/Lucrai.Core/Lucrai.Core.csproj", "src/Lucrai.Core/"]
+COPY ["src/Lucrai.Infrastructure/Lucrai.Infrastructure.csproj", "src/Lucrai.Infrastructure/"]
+RUN dotnet restore "src/Lucrai.API/Lucrai.API.csproj"
+
+COPY . .
+WORKDIR "/src/src/Lucrai.API"
+RUN dotnet publish "Lucrai.API.csproj" -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
 WORKDIR /app
-COPY --from=build /app .
 EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Lucrai.API.dll"]
 ```
 
@@ -542,6 +559,7 @@ ENTRYPOINT ["dotnet", "Lucrai.API.dll"]
 ## CI/CD (GitHub Actions)
 
 ```yaml
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -552,49 +570,44 @@ on:
 
 jobs:
   backend:
+    name: Backend - Build & Test
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: lucrai-test
-          POSTGRES_USER: lucrai
-          POSTGRES_PASSWORD: testpass
-        ports:
-          - 5432:5432
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
-      - run: dotnet restore ./backend
-      - run: dotnet build ./backend --no-restore --configuration Release
-      - run: dotnet test ./backend --no-build --configuration Release
+          dotnet-quality: preview
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+      - name: Test
+        run: dotnet test --no-restore --configuration Release --verbosity normal
 
   frontend:
+    name: Frontend - Lint & Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: npm ci
-      - run: npm run build --if-present
-      - run: npx playwright install --with-deps
-      - run: npm test
-
-  e2e:
-    needs: [backend, frontend]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: npm ci
-      - run: npx playwright install --with-deps
-      - run: npx playwright test
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
 ```
+
+> **Nota:** Os testes usam `DatabaseProvider=InMemory`, portanto não precisam de PostgreSQL no CI. O workflow de deploy (com Docker build + push + deploy) está pendente.
 
 ---
 
@@ -613,14 +626,11 @@ jobs:
 # 1. Subir PostgreSQL
 docker compose up -d db
 
-# 2. Aplicar migrations
+# 2. Rodar API (migrations + seed automáticos)
 cd backend
-dotnet ef database update --project src/Lucrai.Infrastructure --startup-project src/Lucrai.API
-
-# 3. Rodar API
 dotnet run --project src/Lucrai.API
 
-# 4. Rodar front-end (outro terminal)
+# 3. Rodar front-end (outro terminal)
 cd ..
 npm run dev
 ```
@@ -634,15 +644,32 @@ npm run dev
     "Default": "Host=localhost;Port=5432;Database=lucrai;Username=lucrai;Password=devpass"
   },
   "Jwt": {
-    "Key": "dev-secret-key-at-least-32-chars-long!!",
+    "Key": "dev-secret-key-lucrai-at-least-32-chars!!",
     "Issuer": "lucrai-api",
     "Audience": "lucrai-frontend",
     "ExpiresInMinutes": 15
   },
   "RefreshToken": {
     "ExpiresInDays": 7
+  },
+  "Cors": {
+    "Origins": ["http://localhost:3000"]
   }
 }
+```
+
+### Banco de Dados Configurável
+
+O `Program.cs` suporta dois providers via config:
+
+| Provider | Uso |
+|---|---|
+| `PostgreSQL` (default) | Produção — usa Npgsql + ConnectionString |
+| `InMemory` | Testes — usa EF Core InMemory Database |
+
+```bash
+# Para usar InMemory localmente:
+dotnet run --project src/Lucrai.API --DatabaseProvider=InMemory
 ```
 
 ---
