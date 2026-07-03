@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lucrai.API/Lucrai.API.csproj" />
+    <Project Path="src/Lucrai.Core/Lucrai.Core.csproj" />
+    <Project Path="src/Lucrai.Infrastructure/Lucrai.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lucrai.API.Tests/Lucrai.API.Tests.csproj" />
+  </Folder>
+</Solution>
