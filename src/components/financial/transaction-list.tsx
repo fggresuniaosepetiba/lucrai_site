@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Pencil, Trash2, Hash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ArrowUpRight, ArrowDownRight, Pencil, Trash2, Hash, MoreHorizontal, Receipt } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +20,7 @@ interface TransactionListProps {
   transactions: Transaction[];
   onEdit: (tx: Transaction) => void;
   onDelete: (id: string, reason: string) => Promise<void>;
+  onGerarRecibo?: (tx: Transaction) => void;
   categories: Category[];
 }
 
@@ -21,6 +28,7 @@ export function TransactionList({
   transactions,
   onEdit,
   onDelete,
+  onGerarRecibo,
 }: TransactionListProps) {
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
 
@@ -103,23 +111,30 @@ export function TransactionList({
                       {formatCurrency(t.value)}
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(t)}
-                          className="h-8 w-8"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteTarget(t)}
-                          className="h-8 w-8 text-muted-foreground hover:text-red-400"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                      <div className="flex items-center justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem onClick={() => onEdit(t)} className="gap-2">
+                              <Pencil className="h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeleteTarget(t)} className="gap-2 text-red-400">
+                              <Trash2 className="h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                            {onGerarRecibo && (
+                              <DropdownMenuItem onClick={() => onGerarRecibo(t)} className="gap-2">
+                                <Receipt className="h-4 w-4" />
+                                Gerar Recibo
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>

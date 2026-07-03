@@ -118,8 +118,8 @@ export interface PricingProduct {
   freight: number;
   otherCosts: number;
   taxes: number;
-  cardFee: number;
   marketplaceFee: number;
+  platformFee: number;
   commission: number;
   otherFees: number;
   desiredMargin: number;
@@ -142,6 +142,7 @@ export interface Conta {
   telefone: string;
   senha: string;
   empresa: string;
+  cargo: string;
   porte: PorteEmpresa;
   faturamento: string;
   origem: string;
@@ -174,3 +175,357 @@ export interface AuditLog {
   timestamp: string;
   details?: string;
 }
+
+// ============ DOCUMENTOS FINANCEIROS ============
+
+export type DocumentoStatus = "NOVO" | "PROCESSANDO" | "AGUARDANDO_CONFERENCIA" | "CONVERTIDO" | "REJEITADO" | "ERRO";
+
+export type TipoArquivo = "PDF" | "XML" | "JPG" | "JPEG" | "PNG";
+
+export type TipoDocumentoDetectado =
+  | "NOTA_FISCAL"
+  | "XML_NFE"
+  | "COMPROVANTE_PIX"
+  | "COMPROVANTE_TED"
+  | "BOLETO"
+  | "RECIBO"
+  | "EXTRATO_BANCARIO"
+  | "COMPROVANTE_PAGAMENTO"
+  | "OUTRO";
+
+export type TipoMovimentacao = "RECEITA" | "DESPESA" | "TRANSFERENCIA";
+
+export interface DocumentoFinanceiro {
+  id: string;
+  empresa_id: string;
+  usuario_upload_id: string;
+  nome_arquivo_original: string;
+  nome_arquivo_storage: string;
+  path_storage: string;
+  tipo_arquivo: TipoArquivo;
+  tamanho_bytes: number;
+  hash_arquivo: string;
+  status: DocumentoStatus;
+  tipo_documento_detectado: TipoDocumentoDetectado | null;
+  valor_extraido: number | null;
+  data_extraida: string | null;
+  favorecido_extraido: string | null;
+  emitente_extraido: string | null;
+  descricao_extraida: string | null;
+  tipo_movimentacao_sugerido: TipoMovimentacao | null;
+  categoria_sugerida_id: string | null;
+  confianca_extracao: number | null;
+  dados_extraidos_raw: string | null;
+  dados_estruturados: string | null;
+  observacoes_ia: string | null;
+  resumo_executivo: string | null;
+  lancamento_id: string | null;
+  usuario_conferencia_id: string | null;
+  data_conferencia: string | null;
+  motivo_rejeicao: string | null;
+  motivo_exclusao: string | null;
+  exclusao_permanente: boolean | null;
+  excluido_por: string | null;
+  data_exclusao: string | null;
+  tentativas_processamento: number;
+  ultimo_erro: string | null;
+  arquivo_data: ArrayBuffer | null;
+  criado_em: string;
+  atualizado_em: string;
+  excluido_em: string | null;
+}
+
+export interface DocumentoAprendizado {
+  id: string;
+  empresa_id: string;
+  chave_reconhecimento: string;
+  categoria_id: string;
+  tipo_movimentacao: TipoMovimentacao;
+  frequencia: number;
+  ultima_confirmacao: string;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+export type DocumentoLogAcao =
+  | "UPLOAD"
+  | "PROCESSAMENTO_INICIADO"
+  | "PROCESSAMENTO_CONCLUIDO"
+  | "PROCESSAMENTO_ERRO"
+  | "CONFERENCIA_ABERTA"
+  | "DADOS_EDITADOS"
+  | "CONFIRMADO"
+  | "REJEITADO"
+  | "REPROCESSADO"
+  | "EXCLUIDO"
+  | "MOVED_TO_TRASH"
+  | "PERMANENTLY_DELETED"
+  | "RESTAURADO"
+  | "CRIADO_PREVISAO"
+  | "DOWNLOAD";
+
+export interface DocumentoLog {
+  id: string;
+  documento_id: string;
+  empresa_id: string;
+  usuario_id: string | null;
+  acao: DocumentoLogAcao;
+  detalhes: string | null;
+  ip_origem: string | null;
+  criado_em: string;
+}
+
+export interface DocumentoConfiguracao {
+  id: string;
+  empresa_id: string;
+  retencao_dias: number;
+  notificar_email: boolean;
+  notificar_sistema: boolean;
+  auto_sugerir_categoria: boolean;
+  limite_tamanho_mb: number;
+  criado_em: string;
+  atualizado_em: string;
+}
+
+export interface DocumentoTrashItem {
+  id: string;
+  documento_id: string;
+  empresa_id: string;
+  nome_arquivo_original: string;
+  tipo_arquivo: TipoArquivo;
+  tamanho_bytes: number;
+  status_original: DocumentoStatus;
+  motivo_exclusao: string;
+  excluido_por: string;
+  dados_documento: string;
+  criado_em: string;
+  excluido_em: string;
+  restore_until: string;
+}
+
+export interface DocumentoStats {
+  total: number;
+  aguardando: number;
+  processando: number;
+  convertidos_mes: number;
+  rejeitados_mes: number;
+  economia_estimada_minutos: number;
+  valor_total_automatizado: number;
+}
+
+export type ReciboTipo = "recebimento" | "pagamento";
+export type ReciboStatus = "emitido" | "cancelado";
+export type ReciboOrigem = "manual" | "lancamento";
+
+export interface CancelamentoRecibo {
+  motivo: string;
+  canceladoEm: string;
+  canceladoPor: string;
+}
+
+export interface EventoAuditoria {
+  id: string;
+  reciboId: string;
+  acao: "criado" | "editado" | "cancelado" | "pdf_baixado" | "impresso";
+  realizadoEm: string;
+  realizadoPor: string;
+  detalhes?: Record<string, unknown>;
+}
+
+export interface Receipt {
+  id: string;
+  company: string;
+  numero: string;
+  tipo: ReciboTipo;
+  status: ReciboStatus;
+  nomePagador: string;
+  documentoPagador: string;
+  semDocumentoPagador?: boolean;
+  nomeRecebedor: string;
+  documentoRecebedor: string;
+  semDocumentoRecebedor?: boolean;
+  data: string;
+  valor: number;
+  valorPorExtenso: string;
+  referente: string;
+  formaPagamento?: string;
+  observacoes?: string;
+  telefone?: string;
+  email?: string;
+  cidade?: string;
+  estado?: string;
+  exibirAssinatura?: boolean;
+  parcelaAtual?: number;
+  parcelasTotal?: number;
+  lancamentoId?: string | null;
+  origem: ReciboOrigem;
+  criadoEm: string;
+  criadoPor: string;
+  atualizadoEm: string;
+  cancelamento?: CancelamentoRecibo | null;
+}
+
+export interface SignatureConfig {
+  id: string;
+  company: string;
+  imagemBase64: string | null;
+  nomeResponsavel: string;
+  cargo: string;
+  permitirUso: boolean;
+}
+
+// ============ CUSTOS FIXOS ============
+
+export interface CustomCostItem {
+  id: string;
+  name: string;
+  value: number;
+}
+
+export interface FixedCost {
+  id: string;
+  company: string;
+  aluguel: number;
+  energia: number;
+  agua: number;
+  internet: number;
+  contador: number;
+  proLabore: number;
+  softwares: number;
+  telefone: number;
+  marketing: number;
+  limpeza: number;
+  outros: number;
+  customCosts?: CustomCostItem[];
+  total: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const FIXED_COST_FIELDS = [
+  "aluguel", "energia", "agua", "internet", "contador",
+  "proLabore", "softwares", "telefone", "marketing", "limpeza", "outros",
+] as const;
+
+export type FixedCostField = (typeof FIXED_COST_FIELDS)[number];
+
+export const FIXED_COST_LABELS: Record<FixedCostField, string> = {
+  aluguel: "Aluguel",
+  energia: "Energia",
+  agua: "Água",
+  internet: "Internet",
+  contador: "Contador",
+  proLabore: "Pró-labore",
+  softwares: "Softwares",
+  telefone: "Telefone",
+  marketing: "Marketing",
+  limpeza: "Limpeza",
+  outros: "Outros",
+};
+
+// ============ INSUMOS ============
+
+export type UnidadeMedida = "kg" | "g" | "litro" | "ml" | "unidade" | "caixa" | "pacote" | "saco" | "garrafa" | "lata" | "fardo" | "duzia" | "metro" | "centimetro" | "milimetro";
+
+export const UNIDADES_MEDIDA: UnidadeMedida[] = [
+  "kg", "g", "litro", "ml", "unidade", "caixa", "pacote", "saco", "garrafa", "lata", "fardo", "duzia", "metro", "centimetro", "milimetro",
+];
+
+export const UNIDADES_MEDIDA_LABELS: Record<UnidadeMedida, string> = {
+  kg: "Quilograma",
+  g: "Grama",
+  litro: "Litro",
+  ml: "Mililitro",
+  unidade: "Unidade",
+  caixa: "Caixa",
+  pacote: "Pacote",
+  saco: "Saco",
+  garrafa: "Garrafa",
+  lata: "Lata",
+  fardo: "Fardo",
+  duzia: "Dúzia",
+  metro: "Metro",
+  centimetro: "Centímetro",
+  milimetro: "Milímetro",
+};
+
+// Compatible unit groups for automatic conversion in Ficha Técnica
+export const COMPATIBLE_UNITS: Record<UnidadeMedida, UnidadeMedida[]> = {
+  kg: ["kg", "g"],
+  g: ["kg", "g"],
+  litro: ["litro", "ml"],
+  ml: ["litro", "ml"],
+  unidade: ["unidade"],
+  caixa: ["caixa"],
+  pacote: ["pacote"],
+  saco: ["saco"],
+  garrafa: ["garrafa"],
+  lata: ["lata"],
+  fardo: ["fardo"],
+  duzia: ["duzia"],
+  metro: ["metro"],
+  centimetro: ["centimetro"],
+  milimetro: ["milimetro"],
+};
+
+// Conversion factor FROM consumptionUnit TO insumoBaseUnit
+// e.g. getConversionFactor("g", "kg") = 1/1000 (350g → 0.35kg)
+export function getConversionFactor(consumptionUnit: UnidadeMedida, baseUnit: UnidadeMedida): number {
+  if (consumptionUnit === baseUnit) return 1;
+  if (consumptionUnit === "g" && baseUnit === "kg") return 1 / 1000;
+  if (consumptionUnit === "kg" && baseUnit === "g") return 1000;
+  if (consumptionUnit === "ml" && baseUnit === "litro") return 1 / 1000;
+  if (consumptionUnit === "litro" && baseUnit === "ml") return 1000;
+  return 1;
+}
+
+export interface Insumo {
+  id: string;
+  company: string;
+  nome: string;
+  categoria: string;
+  unidadeMedida: UnidadeMedida;
+  quantidadeComprada: number;
+  valorPago: number;
+  custoPorUnidade: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FichaTecnicaItem {
+  insumoId: string;
+  insumoNome: string;
+  unidadeMedida: UnidadeMedida;
+  consumoUnidadeMedida: UnidadeMedida;
+  quantidadeUtilizada: number;
+  custoCalculado: number;
+}
+
+// ============ MODO DE PRODUÇÃO ============
+
+export type ProductionMode = "unitaria" | "lote";
+
+// ============ FORMA DE RECEBIMENTO ============
+
+export type PaymentMethod =
+  | "pix"
+  | "dinheiro"
+  | "debito"
+  | "credito"
+  | "parcelado";
+
+export const PAYMENT_METHODS: PaymentMethod[] = [
+  "pix",
+  "dinheiro",
+  "debito",
+  "credito",
+  "parcelado",
+];
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  pix: "PIX",
+  dinheiro: "Dinheiro",
+  debito: "Cartão de Débito",
+  credito: "Cartão de Crédito",
+  parcelado: "Parcelado",
+};

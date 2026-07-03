@@ -23,7 +23,7 @@ import {
 import { CategoryRepository } from "@/database/repositories/categories";
 import { useAuthStore } from "@/store/auth-store";
 import type { Transaction, Category } from "@/types";
-import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate } from "@/lib/utils";
+import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, todayStr } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 
 interface TransactionFormProps {
@@ -65,7 +65,7 @@ export function TransactionForm({
   const [categoryId, setCategoryId] = useState(transaction?.categoryId || "");
   const [description, setDescription] = useState(transaction?.description || "");
   const [date, setDate] = useState(
-    transaction?.date || new Date().toISOString().slice(0, 10)
+    transaction?.date || todayStr()
   );
   const [observation, setObservation] = useState(transaction?.observation || "");
   const [submitting, setSubmitting] = useState(false);

@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { PricingRepository } from "@/database/repositories/pricing";
+import { FixedCostsRepository } from "@/database/repositories/fixed-costs";
 import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
 import { seedDefaultCategories } from "@/database/seed";
-import type { PricingProduct } from "@/types";
+import type { PricingProduct, ProductionMode, PaymentMethod, FixedCost } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,16 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
+import { usePricingCalculations, calculateUnitsForProLabore, calculateDiscountSimulation, type ScenarioType } from "@/hooks/usePricingCalculations";
+import { ProductionModeSelector } from "@/components/pricing/ProductionModeSelector";
+import { FixedCostsCheckbox } from "@/components/pricing/FixedCostsCheckbox";
+import { PaymentMethodSelector } from "@/components/pricing/PaymentMethodSelector";
+import { FinancialSummaryCard } from "@/components/pricing/FinancialSummaryCard";
+import { BreakEvenCard } from "@/components/pricing/BreakEvenCard";
+import { ProLaboreSection } from "@/components/pricing/ProLaboreSection";
+import { DiscountSimulation } from "@/components/pricing/DiscountSimulation";
+import { TechnicalSheetModal } from "@/components/pricing/TechnicalSheetModal";
 import {
   AlertTriangle,
   Calculator,
@@ -29,38 +40,10 @@ import {
   Pencil,
   X,
 } from "lucide-react";
-
-function calculatePrices(totalCost: number, totalTaxRate: number, desiredMargin: number) {
-  if (totalCost <= 0) {
-    return {
-      minPrice: 0, healthyPrice: null, premiumPrice: null,
-      netMargin: 0, maxMarginPct: 0, maxAllowedMargin: 0,
-      marginValid: false, healthyValid: false, premiumValid: false,
-    };
-  }
-  const taxDec = totalTaxRate / 100;
-
-  const maxMarginPct = Math.max(0, 100 - totalTaxRate);
-  const maxAllowedMargin = Math.floor(maxMarginPct);
-
-  const minDenom = Math.max(1 - taxDec - 0.10, 0.001);
-  const minPrice = totalCost / minDenom;
-
-  const healthyValid = desiredMargin > 0 && desiredMargin < maxAllowedMargin;
-  const healthyPrice = healthyValid ? totalCost / (1 - taxDec - desiredMargin / 100) : null;
-
-  const premiumMargin = desiredMargin + 15;
-  const premiumValid = desiredMargin > 0 && premiumMargin < maxMarginPct;
-  const premiumPrice = premiumValid ? totalCost / (1 - taxDec - premiumMargin / 100) : null;
-
-  const marginValid = healthyValid;
-
-  return {
-    minPrice, healthyPrice, premiumPrice,
-    netMargin: desiredMargin, maxMarginPct, maxAllowedMargin,
-    marginValid, healthyValid, premiumValid,
-  };
-}
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 
 const months = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -87,7 +70,9 @@ function MonetaryInput({ label, value, onChange }: { label: string; value: numbe
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
     if (!raw) { setDisplay(""); onChange(0); return; }
-    const num = parseInt(raw) / 100;
+    const parsed = parseInt(raw);
+    if (parsed > 99999999) return;
+    const num = parsed / 100;
     onChange(num);
     setDisplay(formatBRL(num));
   };
@@ -115,9 +100,16 @@ function PercentInput({ label, value, onChange }: { label: string; value: number
         <input
           type="number"
           min={0}
+          max={100}
           step={0.1}
           value={value || ""}
-          onChange={(e) => onChange(Number(e.target.value) || 0)}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw === "") { onChange(0); return; }
+            const v = Number(raw);
+            if (isNaN(v) || v > 100 || v < 0) return;
+            onChange(v);
+          }}
           className="flex h-8 w-20 rounded-lg border border-input bg-background px-3 py-2 text-right text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
         <span className="text-xs text-muted-foreground w-4">%</span>
@@ -136,6 +128,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<PricingProduct[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<PricingProduct | null>(null);
   const initialized = useRef(false);
   const company = user?.company ?? "";
   const userName = user?.name ?? "Sistema";
@@ -152,22 +145,52 @@ export default function PricingPage() {
   const [otherCosts, setOtherCosts] = useState(0);
 
   const [taxes, setTaxes] = useState(0);
-  const [cardFee, setCardFee] = useState(0);
   const [marketplaceFee, setMarketplaceFee] = useState(0);
+  const [platformFee, setPlatformFee] = useState(0);
   const [commission, setCommission] = useState(0);
   const [otherFees, setOtherFees] = useState(0);
 
   const [marginStr, setMarginStr] = useState("");
-  const [lastWasPreset, setLastWasPreset] = useState(true);
-
   const marginNum = Number(marginStr) || 0;
 
-  const totalCost = rawMaterial + packaging + labor + freight + otherCosts;
-  const totalTaxRate = taxes + cardFee + marketplaceFee + commission + otherFees;
+  const [productionMode, setProductionMode] = useState<ProductionMode>("unitaria");
+  const [lotQuantity, setLotQuantity] = useState(0);
+  const [useFixedCosts, setUseFixedCosts] = useState(false);
+  const [estimatedUnitsPerMonth, setEstimatedUnitsPerMonth] = useState(0);
+  const [fixedCostsData, setFixedCostsData] = useState<FixedCost | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
+  const [creditCardRate, setCreditCardRate] = useState(0);
+  const [debitCardRate, setDebitCardRate] = useState(0);
+  const [installmentCount, setInstallmentCount] = useState(2);
+  const [installmentRate, setInstallmentRate] = useState(0);
+  const [proLaboreValue, setProLaboreValue] = useState(0);
+  const [simulatedPrice, setSimulatedPrice] = useState(0);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioType>("saudavel");
 
-  const prices = useMemo(
-    () => calculatePrices(totalCost, totalTaxRate, marginNum),
-    [totalCost, totalTaxRate, marginNum]
+  const prices = usePricingCalculations({
+    rawMaterial, packaging, labor, freight, otherCosts,
+    taxes, marketplaceFee, platformFee, commission, otherFees,
+    desiredMargin: marginNum,
+    productionMode, lotQuantity,
+    useFixedCosts, fixedCosts: fixedCostsData, estimatedUnitsPerMonth,
+    paymentMethod, creditCardRate, debitCardRate, installmentCount, installmentRate,
+  });
+
+  const unitsForProLabore = calculateUnitsForProLabore(
+    proLaboreValue,
+    fixedCostsData,
+    prices.netProfit
+  );
+
+  const discountResult = useMemo(
+    () => calculateDiscountSimulation(
+      simulatedPrice,
+      prices.healthyPrice,
+      prices.effectiveCost,
+      prices.paymentFeeAmount,
+      prices.finalMargin
+    ),
+    [simulatedPrice, prices.healthyPrice, prices.effectiveCost, prices.paymentFeeAmount, prices.finalMargin]
   );
 
   useEffect(() => {
@@ -188,7 +211,17 @@ export default function PricingPage() {
     try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
     try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
+    loadFixedCosts();
     loadProducts();
+  };
+
+  const loadFixedCosts = async () => {
+    try {
+      const data = await FixedCostsRepository.getByCompany(company);
+      setFixedCostsData(data ?? null);
+    } catch (err) {
+      console.error("Error loading fixed costs:", err);
+    }
   };
 
   const loadProducts = async () => {
@@ -213,17 +246,32 @@ export default function PricingPage() {
     setFreight(0);
     setOtherCosts(0);
     setTaxes(0);
-    setCardFee(0);
     setMarketplaceFee(0);
+    setPlatformFee(0);
     setCommission(0);
     setOtherFees(0);
     setMarginStr("");
-    setLastWasPreset(true);
+    setProductionMode("unitaria");
+    setLotQuantity(0);
+    setUseFixedCosts(false);
+    setEstimatedUnitsPerMonth(0);
+    setPaymentMethod("pix");
+    setCreditCardRate(0);
+    setDebitCardRate(0);
+    setInstallmentCount(2);
+    setInstallmentRate(0);
+    setProLaboreValue(0);
+    setSimulatedPrice(0);
+    setSelectedScenario("saudavel");
     setEditingId(null);
   };
 
   const handleSave = async () => {
     if (!name.trim() || !category.trim()) return;
+    if (useFixedCosts && estimatedUnitsPerMonth <= 0) {
+      toast("Informe a estimativa de vendas por mês para ratear os custos fixos.", undefined, "destructive");
+      return;
+    }
 
     const data = {
       name: name.trim(),
@@ -231,7 +279,7 @@ export default function PricingPage() {
       sku: sku.trim() || undefined,
       description: description.trim() || undefined,
       rawMaterial, packaging, labor, freight, otherCosts,
-      taxes, cardFee, marketplaceFee, commission, otherFees,
+      taxes, marketplaceFee, platformFee, commission, otherFees,
       desiredMargin: marginNum,
       minPrice: prices.minPrice,
       healthyPrice: prices.healthyPrice ?? 0,
@@ -260,12 +308,11 @@ export default function PricingPage() {
     setFreight(p.freight);
     setOtherCosts(p.otherCosts);
     setTaxes(p.taxes);
-    setCardFee(p.cardFee);
     setMarketplaceFee(p.marketplaceFee);
+    setPlatformFee(p.platformFee);
     setCommission(p.commission);
     setOtherFees(p.otherFees);
     setMarginStr(String(p.desiredMargin));
-    setLastWasPreset(true);
     setEditingId(p.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -278,7 +325,7 @@ export default function PricingPage() {
       description: p.description,
       rawMaterial: p.rawMaterial, packaging: p.packaging, labor: p.labor,
       freight: p.freight, otherCosts: p.otherCosts,
-      taxes: p.taxes, cardFee: p.cardFee, marketplaceFee: p.marketplaceFee,
+      taxes: p.taxes, marketplaceFee: p.marketplaceFee, platformFee: p.platformFee,
       commission: p.commission, otherFees: p.otherFees,
       desiredMargin: p.desiredMargin,
       minPrice: p.minPrice, healthyPrice: p.healthyPrice,
@@ -288,17 +335,23 @@ export default function PricingPage() {
     loadProducts();
   };
 
-  const handleDelete = async (id: string) => {
-    await PricingRepository.delete(id);
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
+    await PricingRepository.delete(deleteConfirm.id);
+    setDeleteConfirm(null);
     loadProducts();
   };
 
-  const marginPresets = [20, 30, 40, 50];
+  const marginPresets = [10, 20, 30, 40, 50];
+
+  const totalCostInput = rawMaterial + packaging + labor + freight + otherCosts;
+
+  const { effectiveCost } = prices;
 
   const insights = useMemo(() => {
     const list: { type: "danger" | "warning" | "success" | "info"; title: string; body: string; tips: string[] }[] = [];
 
-    if (totalCost > 0) {
+    if (totalCostInput > 0) {
       if (prices.netMargin < 5) {
         list.push({
           type: "danger",
@@ -325,7 +378,7 @@ export default function PricingPage() {
         });
       }
 
-      if (totalTaxRate > 20) {
+      if (prices.totalTaxRate > 20) {
         list.push({
           type: "warning",
           title: "Taxas Elevadas",
@@ -395,7 +448,7 @@ export default function PricingPage() {
         });
       }
 
-      if (prices.netMargin >= 10 && prices.netMargin <= 50 && totalTaxRate <= 20) {
+      if (prices.netMargin >= 10 && prices.netMargin <= 50 && prices.totalTaxRate <= 20) {
         list.push({
           type: "success",
           title: "Margem Saudável",
@@ -408,10 +461,95 @@ export default function PricingPage() {
           ],
         });
       }
+
+      // Evolved insights
+      const laborPct = totalCostInput > 0 ? (labor / totalCostInput) * 100 : 0;
+      const packagingPct = totalCostInput > 0 ? (packaging / totalCostInput) * 100 : 0;
+
+      if (laborPct > 30) {
+        list.push({
+          type: "warning",
+          title: "Mão de Obra Elevada",
+          body: `Sua mão de obra representa ${laborPct.toFixed(0)}% do custo do produto — um dos maiores componentes. Avalie se há espaço para otimização.`,
+          tips: ["Avaliar automação de processos.", "Revisar produtividade.", "Comparar com média do mercado."],
+        });
+      }
+
+      if (packagingPct < 5 && packaging > 0) {
+        list.push({
+          type: "success",
+          title: "Embalagem Eficiente",
+          body: `Sua embalagem representa apenas ${packagingPct.toFixed(1)}% do custo total — um componente eficiente.`,
+          tips: [],
+        });
+      }
+
+      if (paymentMethod !== "pix" && paymentMethod !== "dinheiro") {
+        const feeDisplay = prices.paymentFeeAmount;
+        if (feeDisplay > 0) {
+          list.push({
+            type: "info",
+            title: "Taxa no Recebimento",
+            body: `O ${paymentMethod === "parcelado" ? "parcelamento" : "recebimento por " + paymentMethod} escolhido reduz seu lucro em ${formatCurrency(feeDisplay)} por venda.`,
+            tips: ["Considerar repasse da taxa ao preço.", "Oferecer desconto para PIX/Dinheiro."],
+          });
+        }
+      }
+
+      if (marginNum > 0 && prices.healthyPrice !== null) {
+        const maxDiscount = Math.min(100, (prices.finalMargin - marginNum));
+        if (maxDiscount >= 5) {
+          list.push({
+            type: "success",
+            title: "Margem para Desconto",
+            body: `Você ainda pode conceder até ${maxDiscount.toFixed(0)}% de desconto sem comprometer sua margem saudável.`,
+            tips: ["Criar estratégias promocionais.", "Oferecer descontos por volume."],
+          });
+        }
+      }
+
+      if (useFixedCosts && fixedCostsData) {
+        list.push({
+          type: "info",
+          title: "Custos Fixos por Unidade",
+          body: `Seus custos fixos representam ${formatCurrency(prices.fixedCostRateio)} por unidade vendida.`,
+          tips: ["Avaliar aumento de volume para diluir custos fixos."],
+        });
+      }
+
+      if (prices.finalMargin >= 25) {
+        list.push({
+          type: "success",
+          title: "Margem para Campanhas",
+          body: "Sua margem atual permite realizar campanhas promocionais com segurança.",
+          tips: ["Investir em marketing.", "Criar promoções sazonais."],
+        });
+      }
+
+      if (labor === 0) {
+        list.push({
+          type: "info",
+          title: "Mão de Obra não Informada",
+          body: "Você não informou mão de obra. Lembre-se de valorizar o seu tempo de produção.",
+          tips: ["Calcular horas gastas na produção.", "Atribuir um valor justo à sua hora de trabalho."],
+        });
+      }
+
+      if (useFixedCosts && fixedCostsData && totalCostInput > 0) {
+        const costPct = (prices.fixedCostRateio / effectiveCost) * 100;
+        if (costPct > 40) {
+          list.push({
+            type: "warning",
+            title: "Custos Fixos Elevados",
+            body: "Seus custos fixos estão pesando muito no preço. Considere aumentar o volume de vendas para diluí-los.",
+            tips: ["Aumentar volume de vendas.", "Revisar gastos fixos.", "Negociar contratos."],
+          });
+        }
+      }
     }
 
     return list;
-  }, [prices.netMargin, totalTaxRate, marginNum, totalCost]);
+  }, [prices.netMargin, prices.totalTaxRate, prices.finalMargin, prices.fixedCostRateio, prices.paymentFeeAmount, prices.healthyPrice, marginNum, totalCostInput, labor, packaging, paymentMethod, useFixedCosts, fixedCostsData, effectiveCost]);
 
   if (loading) {
     return (
@@ -442,15 +580,22 @@ export default function PricingPage() {
           )}
         </div>
 
+        <ProductionModeSelector
+          mode={productionMode}
+          onChange={setProductionMode}
+          lotQuantity={lotQuantity}
+          onLotQuantityChange={setLotQuantity}
+        />
+
         <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Package className="h-4 w-4 text-muted-foreground" />
                 Dados do Produto
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex-1 flex flex-col space-y-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Nome do Produto *</label>
                 <Input placeholder="Ex: Bolo de Chocolate" value={name} onChange={(e) => setName(e.target.value)} />
@@ -470,48 +615,71 @@ export default function PricingPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-emerald-400" />
                 Custos Diretos
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <MonetaryInput label="Matéria-prima" value={rawMaterial} onChange={setRawMaterial} />
-              <MonetaryInput label="Embalagem" value={packaging} onChange={setPackaging} />
-              <MonetaryInput label="Mão de obra" value={labor} onChange={setLabor} />
-              <MonetaryInput label="Frete" value={freight} onChange={setFreight} />
-              <MonetaryInput label="Outros custos" value={otherCosts} onChange={setOtherCosts} />
-              <Separator />
-              <div className="flex justify-between items-center pt-1">
-                <span className="text-sm font-semibold">TOTAL DE CUSTOS DIRETOS</span>
-                <span className="text-lg font-bold text-emerald-400">{formatCurrency(totalCost)}</span>
+            <CardContent className="flex-1 grid grid-rows-[1fr_auto]">
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <MonetaryInput label="Matéria-prima" value={rawMaterial} onChange={setRawMaterial} />
+                  </div>
+                  <TechnicalSheetModal onApply={(total) => setRawMaterial(total)} />
+                </div>
+                <MonetaryInput label="Embalagem" value={packaging} onChange={setPackaging} />
+                <MonetaryInput label="Mão de obra" value={labor} onChange={setLabor} />
+                <MonetaryInput label="Frete" value={freight} onChange={setFreight} />
+                <MonetaryInput label="Outros custos" value={otherCosts} onChange={setOtherCosts} />
+              </div>
+              <div>
+                <Separator />
+                <div className="flex justify-between items-center pt-3">
+                  <span className="text-sm font-semibold">TOTAL DE CUSTOS DIRETOS</span>
+                  <span className="text-lg font-bold text-emerald-400">{formatCurrency(totalCostInput)}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="flex flex-col">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Percent className="h-4 w-4 text-orange-400" />
                 Taxas e Encargos
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <PercentInput label="Impostos (%)" value={taxes} onChange={setTaxes} />
-              <PercentInput label="Taxa da maquininha (%)" value={cardFee} onChange={setCardFee} />
-              <PercentInput label="Taxa marketplace (%)" value={marketplaceFee} onChange={setMarketplaceFee} />
-              <PercentInput label="Comissão vendedor (%)" value={commission} onChange={setCommission} />
-              <PercentInput label="Outros encargos (%)" value={otherFees} onChange={setOtherFees} />
-              <Separator />
-              <div className="flex justify-between items-center pt-1">
-                <span className="text-sm font-semibold">TOTAL DE TAXAS</span>
-                <span className="text-lg font-bold text-orange-400">{totalTaxRate.toFixed(1)}%</span>
+            <CardContent className="flex-1 grid grid-rows-[1fr_auto]">
+              <div className="flex flex-col space-y-3">
+                <PercentInput label="Impostos (%)" value={taxes} onChange={setTaxes} />
+                <PercentInput label="Taxa marketplace (%)" value={marketplaceFee} onChange={setMarketplaceFee} />
+                <PercentInput label="Taxa de Plataformas (%)" value={platformFee} onChange={setPlatformFee} />
+                <PercentInput label="Comissão vendedor (%)" value={commission} onChange={setCommission} />
+                <PercentInput label="Outros encargos (%)" value={otherFees} onChange={setOtherFees} />
+              </div>
+              <div>
+                <Separator />
+                <div className="flex justify-between items-center pt-3">
+                  <span className="text-sm font-semibold">TOTAL DE TAXAS</span>
+                  <span className="text-lg font-bold text-orange-400">{prices.totalTaxRate.toFixed(1)}%</span>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        <FixedCostsCheckbox
+          checked={useFixedCosts}
+          onCheckedChange={setUseFixedCosts}
+          fixedCostTotal={fixedCostsData?.total ?? 0}
+          hasFixedCosts={fixedCostsData !== null}
+          fixedCostRateio={prices.fixedCostRateio}
+          estimatedUnits={estimatedUnitsPerMonth}
+          onEstimatedUnitsChange={setEstimatedUnitsPerMonth}
+        />
 
         <Card>
           <CardHeader>
@@ -525,9 +693,9 @@ export default function PricingPage() {
               {marginPresets.map((m) => (
                 <button
                   key={m}
-                  onClick={() => { setLastWasPreset(true); setMarginStr(String(m)); }}
+                  onClick={() => setMarginStr(String(m))}
                   className={`px-4 py-1.5 text-sm rounded-lg transition-colors ${
-                    lastWasPreset && marginStr === String(m)
+                    marginStr === String(m)
                       ? "bg-primary text-primary-foreground font-medium"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted border border-border"
                   }`}
@@ -535,18 +703,6 @@ export default function PricingPage() {
                   {m}%
                 </button>
               ))}
-              <div className="flex items-center gap-2 ml-2">
-                <span className="text-xs text-muted-foreground">ou</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={marginStr}
-                  onChange={(e) => { setLastWasPreset(false); setMarginStr(e.target.value.replace(/\D/g, "")); }}
-                  placeholder=""
-                  className="flex h-9 w-20 rounded-lg border border-input bg-background px-3 py-2 text-center text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                <span className="text-sm text-muted-foreground">%</span>
-              </div>
             </div>
             {!prices.healthyValid && marginNum > 0 && (
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
@@ -555,7 +711,7 @@ export default function PricingPage() {
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-amber-400">Margem acima do limite matemático</p>
                     <p className="text-xs text-muted-foreground">
-                      Com as taxas atuais de {totalTaxRate.toFixed(1).replace('.', ',')}%, a maior margem líquida possível é de {Math.floor(100 - totalTaxRate)}%.
+                      Com as taxas atuais de {prices.totalTaxRate.toFixed(1).replace('.', ',')}%, a maior margem líquida possível é de {Math.floor(100 - prices.totalTaxRate)}%.
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Isso acontece porque impostos, taxas e comissões já consomem parte do valor da venda.
@@ -576,7 +732,20 @@ export default function PricingPage() {
           </CardContent>
         </Card>
 
-        {totalCost > 0 && (
+        <PaymentMethodSelector
+          paymentMethod={paymentMethod}
+          onChange={setPaymentMethod}
+          creditCardRate={creditCardRate}
+          onCreditCardRateChange={setCreditCardRate}
+          debitCardRate={debitCardRate}
+          onDebitCardRateChange={setDebitCardRate}
+          installmentCount={installmentCount}
+          onInstallmentCountChange={setInstallmentCount}
+          installmentRate={installmentRate}
+          onInstallmentRateChange={setInstallmentRate}
+        />
+
+        {totalCostInput > 0 && (
           <>
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="border-red-500/30">
@@ -639,6 +808,26 @@ export default function PricingPage() {
               </Card>
             </div>
 
+            <FinancialSummaryCard
+              scenarios={prices.scenarios}
+              selectedScenario={selectedScenario}
+              onScenarioChange={setSelectedScenario}
+            />
+
+            <BreakEvenCard
+              breakEvenUnits={prices.breakEvenUnits}
+              useFixedCosts={useFixedCosts}
+              effectiveCost={prices.effectiveCost}
+              healthyPrice={prices.healthyPrice}
+            />
+
+            <ProLaboreSection
+              value={proLaboreValue}
+              onChange={setProLaboreValue}
+              calculatedUnits={unitsForProLabore}
+              useFixedCosts={useFixedCosts}
+            />
+
             {insights.length > 0 && prices.healthyValid && (
               <Card>
                 <CardHeader>
@@ -672,19 +861,59 @@ export default function PricingPage() {
                 </CardContent>
               </Card>
             )}
+
+            <DiscountSimulation
+              result={discountResult}
+              simulatedPrice={simulatedPrice}
+              onSimulatedPriceChange={setSimulatedPrice}
+              finalMargin={prices.finalMargin}
+              healthyPrice={prices.healthyPrice}
+            />
           </>
         )}
 
         <div className="flex justify-end">
           <Button
             onClick={handleSave}
-            disabled={!name.trim() || !category.trim() || totalCost <= 0}
+            disabled={!name.trim() || !category.trim() || totalCostInput <= 0}
             className="gap-2"
           >
             <Save className="h-4 w-4" />
             {editingId ? "Atualizar" : "Salvar Produto"}
           </Button>
         </div>
+
+        <Dialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-400" />
+                Confirmar Exclusão
+              </DialogTitle>
+              <DialogDescription className="pt-3">
+                <p className="text-sm text-foreground mb-2">
+                  Tem certeza que deseja excluir este produto?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Esta ação não poderá ser desfeita.
+                </p>
+                {deleteConfirm && (
+                  <p className="text-sm font-medium mt-2 text-foreground">
+                    {deleteConfirm.name}
+                  </p>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="ghost" onClick={() => setDeleteConfirm(null)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteConfirm}>
+                <Trash2 className="h-4 w-4 mr-1" /> Excluir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Separator />
 
@@ -744,7 +973,7 @@ export default function PricingPage() {
                                 <Copy className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(p.id)}
+                                onClick={() => setDeleteConfirm(p)}
                                 className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors"
                                 title="Excluir"
                               >

@@ -43,7 +43,6 @@ const SelectContent = React.forwardRef<
       side="bottom"
       align="start"
       sideOffset={4}
-      avoidCollisions={false}
       {...props}
     >
       <div className="max-h-48 overflow-y-auto p-1">

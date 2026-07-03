@@ -33,6 +33,7 @@ const cadastroSchema = z
       .regex(/[!@#$%&*()\-_+=?/]/, "Deve conter pelo menos 1 caractere especial (! @ # $ % & * ( ) - _ + = ? /)"),
     confirmarSenha: z.string().min(6, "Confirme sua senha"),
     empresa: z.string().min(2, "Nome da empresa é obrigatório"),
+    cargo: z.string().optional(),
     porte: z.string().min(1, "Selecione o porte da empresa"),
     faturamento: z.string().min(1, "Selecione a faixa de faturamento"),
   })
@@ -73,6 +74,7 @@ export function CadastroForm({ origem }: CadastroFormProps) {
       senha: "",
       confirmarSenha: "",
       empresa: "",
+      cargo: "",
       porte: "",
       faturamento: "",
     },
@@ -129,6 +131,7 @@ export function CadastroForm({ origem }: CadastroFormProps) {
         telefone: telefoneLimpo,
         senha: data.senha,
         empresa: data.empresa,
+        cargo: data.cargo || "",
         porte: data.porte as PorteEmpresa,
         faturamento: data.faturamento,
         origem,

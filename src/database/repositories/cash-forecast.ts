@@ -4,7 +4,7 @@ import { db } from "../dexie";
 import { TransactionRepository } from "./transactions";
 import { AuditRepository } from "./audit";
 import type { CashForecast } from "@/types";
-import { generateId, getNextDisplayId, validateForecastDate, parseLocalDate } from "@/lib/utils";
+import { generateId, getNextDisplayId, validateForecastDate, parseLocalDate, todayStr } from "@/lib/utils";
 
 export const CashForecastRepository = {
   async getAll(company: string): Promise<CashForecast[]> {
@@ -147,7 +147,7 @@ export const CashForecastRepository = {
       updatedAt: new Date().toISOString(),
     });
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayStr();
     await TransactionRepository.create(
       {
         type: "income",
@@ -182,7 +182,7 @@ export const CashForecastRepository = {
       updatedAt: new Date().toISOString(),
     });
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayStr();
     await TransactionRepository.create(
       {
         type: "expense",

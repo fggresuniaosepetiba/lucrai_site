@@ -15,6 +15,7 @@ import {
   Tags,
   Users,
   FileText,
+  Receipt,
   Settings,
   LogOut,
   ChevronLeft,
@@ -24,19 +25,23 @@ import {
   Calculator,
   ChevronDown,
   ChevronRight as ChevronRightIcon,
+  Building2,
+  Package,
+  BrainCircuit,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
 import { useRouter } from "next/navigation";
 import { useAlertsCount } from "@/hooks/useAlertsCount";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const menuItems = [
   { icon: ArrowUpDown, label: "Financeiro", href: "/financial" },
   { icon: CalendarCheck, label: "Previsão de Caixa", href: "/cash-forecast" },
   { icon: Tags, label: "Categorias", href: "/categories" },
+  // { icon: ScanSearch, label: "Central de Documentos", href: "/documentos" },
   { icon: FileText, label: "Relatórios", href: "/reports" },
-  { icon: Calculator, label: "Calculadora de Precificação", href: "/pricing" },
+  { icon: Receipt, label: "Central de Recibos", href: "/recibos" },
   { icon: Trash2, label: "Lixeira", href: "/trash" },
   { icon: Users, label: "Usuários", href: "/users" },
   { icon: Settings, label: "Configurações", href: "/settings" },
@@ -49,17 +54,44 @@ const dashItems = [
   { icon: TrendingUp, label: "Projeções", href: "/dashboard/projecoes" },
 ];
 
+const pricingItems = [
+  { icon: Calculator, label: "Calculadora de Precificação", href: "/pricing" },
+  { icon: Building2, label: "Custos Fixos", href: "/pricing/fixed-costs" },
+  { icon: Package, label: "Insumos", href: "/pricing/insumos" },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { collapsed, toggle } = useSidebarStore();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const { theme } = useThemeStore();
   const alertsCount = useAlertsCount();
-  const [dashExpanded, setDashExpanded] = useState(true);
+  const [dashExpanded, setDashExpanded] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = localStorage.getItem("lucrai-dashboard-expanded");
+    return stored !== null ? stored === "true" : true;
+  });
+
+  const [pricingExpanded, setPricingExpanded] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const stored = localStorage.getItem("lucrai-pricing-expanded");
+    return stored !== null ? stored === "true" : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("lucrai-dashboard-expanded", String(dashExpanded));
+  }, [dashExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem("lucrai-pricing-expanded", String(pricingExpanded));
+  }, [pricingExpanded]);
 
   const isDashboardRoute = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   const isDashActive = isDashboardRoute;
+
+  const isPricingRoute = pathname === "/pricing" || pathname.startsWith("/pricing/");
+  const isPricingActive = isPricingRoute;
 
   const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/icon-normal.png" : "/images/icon-oficial.png";
   const logoSrc = theme === "clean" ? "/images/light-oficial-sidebar.png" : "/images/lucrai/logo-lucrai-sidebar.png";
@@ -176,7 +208,101 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* Collapsed mode: just show Dashboard icon */}
+        {/* Regular menu items (top) */}
+        {menuItems.slice(0, 2).map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                collapsed && "justify-center px-2",
+                isActive
+                  ? "bg-sidebar-primary/10 text-sidebar-primary"
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              )}
+              title={collapsed ? item.label : undefined}
+            >
+              <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
+              {!collapsed && (
+                <span className="flex-1">{item.label}</span>
+              )}
+            </Link>
+          );
+        })}
+
+        {/* Pricing group */}
+        {!collapsed && (
+          <div>
+            <button
+              onClick={() => setPricingExpanded(!pricingExpanded)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                isPricingActive
+                  ? "bg-sidebar-primary/10 text-sidebar-primary"
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              )}
+            >
+              <BrainCircuit className="h-5 w-5 shrink-0" />
+              <span className="flex-1 text-left">Inteligência de Precificação</span>
+              {pricingExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRightIcon className="h-4 w-4" />
+              )}
+            </button>
+
+            {pricingExpanded && (
+              <div className="ml-2 mt-1 space-y-0.5 border-l border-border/30 pl-2">
+                {pricingItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "group flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-200",
+                        isActive
+                          ? "bg-sidebar-primary/10 text-sidebar-primary"
+                          : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Regular menu items (bottom) */}
+        {menuItems.slice(2).map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                collapsed && "justify-center px-2",
+                isActive
+                  ? "bg-sidebar-primary/10 text-sidebar-primary"
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              )}
+              title={collapsed ? item.label : undefined}
+            >
+              <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
+              {!collapsed && (
+                <span className="flex-1">{item.label}</span>
+              )}
+            </Link>
+          );
+        })}
+
+        {/* Collapsed mode: Dashboard icon */}
         {collapsed && (
           <div className="relative">
             <Link
@@ -206,27 +332,23 @@ export function Sidebar() {
           </div>
         )}
 
-        {/* Regular menu items */}
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
+        {/* Collapsed mode: Pricing icon */}
+        {collapsed && (
+          <div className="relative">
             <Link
-              key={item.href}
-              href={item.href}
+              href="/pricing"
               className={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                collapsed && "justify-center px-2",
-                isActive
+                "group flex items-center justify-center rounded-lg px-2 py-2 text-sm font-medium transition-all duration-200",
+                isPricingActive
                   ? "bg-sidebar-primary/10 text-sidebar-primary"
                   : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
-              title={collapsed ? item.label : undefined}
+              title="Inteligência de Precificação"
             >
-              <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
-              {!collapsed && <span>{item.label}</span>}
+              <BrainCircuit className="h-5 w-5 shrink-0" />
             </Link>
-          );
-        })}
+          </div>
+        )}
       </nav>
 
       <div className="border-t border-border/50 p-3">
