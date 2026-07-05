@@ -72,6 +72,13 @@
 - [x] `appsettings.json` — ConnectionString, JWT config, Refresh Token config, CORS origins
 - [ ] `appsettings.Development.json` — config para ambiente local
 
+### 1.10 Neon (Produção)
+- [x] `appsettings.Production.json` — connection string Neon (key-value), JWT key
+- [x] `.gitignore` — excluído do versionamento
+- [x] Migration `Initial` recriada e aplicada no Neon
+- [x] Seed rodou (3 usuários + 36 categorias)
+- [x] API responde em Production (login retorna JWT, categories retorna dados)
+
 ---
 
 ## Fase 2: Controllers (API REST)
@@ -302,7 +309,7 @@
 
 | Fase | Itens | Concluídos | Pendentes |
 |------|-------|-----------|-----------|
-| 1 — Fundação | ~36 itens | 35 | 1 |
+| 1 — Fundação | ~41 itens | 40 | 1 |
 | 2 — Controllers | ~50 endpoints | 50 | 0 |
 | 3 — Repositories | ~8 arquivos | 8 | 0 |
 | 4 — Middleware/Infra | ~5 itens | 4 | 1 |
@@ -311,4 +318,4 @@
 | 7 — CI/CD | ~2 workflows | 1 | 1 |
 | 8 — Testes | ~15 itens | 5 | 10 |
 | 9 — Integração Front | ~6 itens | 0 | 6 |
-| **Total** | **~127 itens** | **106** | **21** |
+| **Total** | **~132 itens** | **111** | **21** |

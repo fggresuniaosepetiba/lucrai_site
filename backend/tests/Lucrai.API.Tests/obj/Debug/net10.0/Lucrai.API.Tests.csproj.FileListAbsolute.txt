@@ -436,3 +436,4 @@ C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\tests\Lucrai.API.Tests
 C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\tests\Lucrai.API.Tests\obj\Debug\net10.0\Lucrai.API.Tests.pdb
 C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\tests\Lucrai.API.Tests\obj\Debug\net10.0\Lucrai.API.Tests.genruntimeconfig.cache
 C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\tests\Lucrai.API.Tests\obj\Debug\net10.0\ref\Lucrai.API.Tests.dll
+C:\Users\User\Documents\Projetos\SaaS\lucrai_site\backend\tests\Lucrai.API.Tests\bin\Debug\net10.0\appsettings.Production.json
