@@ -19,6 +19,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
     public DbSet<CompanySettings> CompanySettings => Set<CompanySettings>();
     public DbSet<CompanyRegistration> CompanyRegistrations => Set<CompanyRegistration>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<DismissedAlert> DismissedAlerts => Set<DismissedAlert>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -198,6 +199,18 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
 
             entity.HasIndex(rt => rt.Token).IsUnique();
             entity.HasIndex(rt => rt.UserId);
+        });
+
+        builder.Entity<DismissedAlert>(entity =>
+        {
+            entity.HasKey(d => d.Id);
+            entity.Property(d => d.AlertType).HasMaxLength(100).IsRequired();
+            entity.Property(d => d.EntityId).HasMaxLength(100);
+            entity.Property(d => d.Company).HasMaxLength(200).IsRequired();
+            entity.Property(d => d.DismissedBy).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(d => new { d.Company, d.AlertType, d.EntityId });
+            entity.HasIndex(d => d.Company);
         });
     }
 }

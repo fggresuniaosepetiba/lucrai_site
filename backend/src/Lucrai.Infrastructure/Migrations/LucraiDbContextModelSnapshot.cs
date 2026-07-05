@@ -413,6 +413,43 @@ namespace Lucrai.Infrastructure.Migrations
                     b.ToTable("DeletedItems");
                 });
 
+            modelBuilder.Entity("Lucrai.Core.Entities.DismissedAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AlertType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("DismissedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DismissedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Company");
+
+                    b.HasIndex("Company", "AlertType", "EntityId");
+
+                    b.ToTable("DismissedAlerts");
+                });
+
             modelBuilder.Entity("Lucrai.Core.Entities.PricingProduct", b =>
                 {
                     b.Property<Guid>("Id")

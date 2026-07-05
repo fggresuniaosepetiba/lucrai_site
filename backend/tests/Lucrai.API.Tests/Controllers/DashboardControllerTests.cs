@@ -75,4 +75,54 @@ public class DashboardControllerTests : IClassFixture<CustomWebApplicationFactor
         var result = await response.Content.ReadFromJsonAsync<ProjectionResponse>();
         Assert.NotNull(result);
     }
+
+    [Fact]
+    public async Task GetSparkline_ReturnsOk()
+    {
+        var response = await _client.GetAsync("/api/dashboard/sparkline?months=6");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<List<SparklinePoint>>();
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task GetNotaCFO_ReturnsOk()
+    {
+        var response = await _client.GetAsync("/api/dashboard/nota-cfo");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<NotaCFOResponse>();
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task GetRecommendedActions_ReturnsOk()
+    {
+        var response = await _client.GetAsync("/api/dashboard/recommended-actions");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<List<AcaoRecomendada>>();
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task DismissAlert_ReturnsOk()
+    {
+        var alertsResponse = await _client.GetAsync("/api/dashboard/alerts");
+        var alerts = await alertsResponse.Content.ReadFromJsonAsync<List<AlertResponse>>();
+        if (alerts != null && alerts.Count > 0)
+        {
+            var alertId = alerts[0].Id;
+            var response = await _client.PostAsync($"/api/dashboard/alerts/{alertId}/dismiss", null);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+    }
+
+    [Fact]
+    public async Task RestoreAlert_ReturnsOk()
+    {
+        var response = await _client.PostAsync($"/api/dashboard/alerts/some-alert-id/restore", null);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
 }

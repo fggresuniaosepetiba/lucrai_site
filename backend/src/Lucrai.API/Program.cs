@@ -2,6 +2,7 @@ using System.Text;
 using Lucrai.API.Middleware;
 using Lucrai.Core.Entities;
 using Lucrai.Core.Interfaces;
+using Lucrai.Core.Services;
 using Lucrai.Infrastructure.Data;
 using Lucrai.Infrastructure.Repositories;
 using Lucrai.Infrastructure.Seed;
@@ -22,6 +23,10 @@ builder.Services.AddScoped<ITrashRepository, TrashRepository>();
 builder.Services.AddScoped<IAuditRepository, AuditRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 builder.Services.AddScoped<IPricingRepository, PricingRepository>();
+builder.Services.AddScoped<IDismissedAlertRepository, DismissedAlertRepository>();
+
+builder.Services.AddScoped<IDashboardIntelligenceService, DashboardIntelligenceService>();
+builder.Services.AddScoped<IAlertasService, AlertasService>();
 
 var dbProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
 builder.Services.AddDbContext<LucraiDbContext>(options =>

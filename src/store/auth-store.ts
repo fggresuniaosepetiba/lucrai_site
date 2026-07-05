@@ -1,70 +1,107 @@
 "use client";
 
 import { create } from "zustand";
-
-interface AuthUser {
-  email: string;
-  name: string;
-  company: string;
-  role: string;
-}
+import { api } from "@/services/api";
+import type { LoginResponse, AuthUserResponse, UserInfo } from "@/types/api";
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: AuthUser | null;
+  user: UserInfo | null;
+  isLoading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  initialize: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => {
-  const stored = typeof window !== "undefined" ? localStorage.getItem("lucrai-auth") : null;
-  const initialAuth = stored ? JSON.parse(stored) : { isAuthenticated: false, user: null };
+function getStoredUser(): UserInfo | null {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("lucrai-auth");
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
 
-  return {
-    isAuthenticated: initialAuth.isAuthenticated,
-    user: initialAuth.user,
-    login: async (username: string, password: string) => {
-      const { UserRepository } = await import("@/database/repositories/users");
-      const user = await UserRepository.findByEmail(username);
-      if (user && user.active !== false && user.password === password) {
-        const session = {
-          isAuthenticated: true,
-          user: {
-            email: user.email,
-            name: user.name,
-            company: user.company,
-            role: user.role,
-          },
-        };
-        localStorage.setItem("lucrai-auth", JSON.stringify(session));
-        set(session);
-        return true;
-      }
+function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("lucrai-access-token");
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  isAuthenticated: !!getStoredToken() && !!getStoredUser(),
+  user: getStoredUser(),
+  isLoading: true,
+
+  login: async (username: string, password: string) => {
+    try {
+      const data = await api.post<LoginResponse>("/api/auth/login", { email: username, password });
+      localStorage.setItem("lucrai-access-token", data.accessToken);
+      localStorage.setItem("lucrai-refresh-token", data.refreshToken);
+      localStorage.setItem("lucrai-auth", JSON.stringify(data.user));
+      set({ isAuthenticated: true, user: data.user, isLoading: false });
+      return true;
+    } catch {
+      set({ isAuthenticated: false, user: null, isLoading: false });
       return false;
-    },
-    logout: () => {
+    }
+  },
+
+  logout: async () => {
+    try {
+      await api.post("/api/auth/logout");
+    } catch {
+      // Ignore logout errors
+    }
+    localStorage.removeItem("lucrai-access-token");
+    localStorage.removeItem("lucrai-refresh-token");
+    localStorage.removeItem("lucrai-auth");
+    set({ isAuthenticated: false, user: null, isLoading: false });
+  },
+
+  refreshUser: async () => {
+    const token = getStoredToken();
+    if (!token) return;
+    try {
+      const user = await api.get<AuthUserResponse>("/api/auth/me");
+      const userInfo: UserInfo = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        company: user.company,
+      };
+      localStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
+      set({ user: userInfo });
+    } catch {
+      // silently fail
+    }
+  },
+
+  initialize: async () => {
+    const token = getStoredToken();
+    if (!token) {
+      set({ isAuthenticated: false, user: null, isLoading: false });
+      return;
+    }
+    try {
+      const user = await api.get<AuthUserResponse>("/api/auth/me");
+      const userInfo: UserInfo = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        company: user.company,
+      };
+      localStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
+      set({ isAuthenticated: true, user: userInfo, isLoading: false });
+    } catch {
+      localStorage.removeItem("lucrai-access-token");
+      localStorage.removeItem("lucrai-refresh-token");
       localStorage.removeItem("lucrai-auth");
-      set({ isAuthenticated: false, user: null });
-    },
-    refreshUser: async () => {
-      const state = useAuthStore.getState();
-      if (!state.isAuthenticated || !state.user) return;
-      const { UserRepository } = await import("@/database/repositories/users");
-      const fresh = await UserRepository.findByEmail(state.user.email);
-      if (fresh && fresh.active !== false) {
-        const session = {
-          isAuthenticated: true,
-          user: {
-            email: fresh.email,
-            name: fresh.name,
-            company: fresh.company,
-            role: fresh.role,
-          },
-        };
-        localStorage.setItem("lucrai-auth", JSON.stringify(session));
-        set(session);
-      }
-    },
-  };
-});
+      set({ isAuthenticated: false, user: null, isLoading: false });
+    }
+  },
+}));

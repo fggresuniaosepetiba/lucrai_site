@@ -66,3 +66,9 @@ public record AlertResponse(
 );
 
 public record ContextData(string Label, string Valor);
+
+public record SparklinePoint(string Mes, decimal Valor);
+
+public record NotaCFOResponse(string Resumo, string Nota, List<string> PontosForca, List<string> PontosAtencao);
+
+public record AcaoRecomendada(string Titulo, string Descricao, string Prioridade, string Categoria, string? Link);

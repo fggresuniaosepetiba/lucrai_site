@@ -218,24 +218,24 @@
 
 ## Fase 5: Serviços de Domínio (Inteligência)
 
-- [ ] `Lucrai.Core/Services/IDashboardIntelligenceService.cs`
-- [ ] `Lucrai.Core/Services/DashboardIntelligenceService.cs`
-  - [ ] `CalcularProjecao()` — projeção financeira com cenários
-  - [ ] `CalcularRunway()` — quanto tempo a empresa sobrevive
-  - [ ] `CalcularBreakEven()` — ponto de equilíbrio
-  - [ ] `CalcularSaude()` — score 0-100 com subindicadores
-  - [ ] `CalcularSparkline()` — dados para gráficos
-  - [ ] `GerarNotaCFO()` — resumo em linguagem natural
-  - [ ] `GerarAcoesRecomendadas()` — recomendações priorizadas
-- [ ] `Lucrai.Core/Services/IAlertasService.cs`
-- [ ] `Lucrai.Core/Services/AlertasService.cs`
-  - [ ] Alertas de fluxo de caixa negativo
-  - [ ] Alertas de queda de margem
-  - [ ] Alertas de custos acima da receita
-  - [ ] Alertas de pico anômalo de despesas
-  - [ ] Alertas de inadimplência (>7/15 dias)
-  - [ ] Insights positivos (melhor período, margem expandindo)
-  - [ ] Dispensar/restaurar alertas
+- [x] `Lucrai.Core/Services/IDashboardIntelligenceService.cs`
+- [x] `Lucrai.Core/Services/DashboardIntelligenceService.cs`
+  - [x] `CalcularProjecao()` — projeção financeira com cenários
+  - [x] `CalcularRunway()` — quanto tempo a empresa sobrevive
+  - [x] `CalcularBreakEven()` — ponto de equilíbrio
+  - [x] `CalcularSaude()` — score 0-100 com subindicadores
+  - [x] `CalcularSparkline()` — dados para gráficos
+  - [x] `GerarNotaCFO()` — resumo em linguagem natural
+  - [x] `GerarAcoesRecomendadas()` — recomendações priorizadas
+- [x] `Lucrai.Core/Services/IAlertasService.cs`
+- [x] `Lucrai.Core/Services/AlertasService.cs`
+  - [x] Alertas de fluxo de caixa negativo
+  - [x] Alertas de queda de margem
+  - [x] Alertas de custos acima da receita
+  - [x] Alertas de pico anômalo de despesas
+  - [x] Alertas de inadimplência (>7/15 dias)
+  - [x] Insights positivos (melhor período, margem expandindo)
+  - [x] Dispensar/restaurar alertas (via `DismissedAlert` + migration)
 
 ---
 
@@ -313,7 +313,7 @@
 | 2 — Controllers | ~50 endpoints | 50 | 0 |
 | 3 — Repositories | ~8 arquivos | 8 | 0 |
 | 4 — Middleware/Infra | ~5 itens | 4 | 1 |
-| 5 — Serviços | ~2 serviços | 0 | 2 |
+| 5 — Serviços | ~2 serviços | 2 | 0 |
 | 6 — Docker | ~3 itens | 3 | 0 |
 | 7 — CI/CD | ~2 workflows | 1 | 1 |
 | 8 — Testes | ~15 itens | 5 | 10 |

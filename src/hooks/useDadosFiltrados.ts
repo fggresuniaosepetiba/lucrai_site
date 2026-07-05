@@ -3,27 +3,26 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuthStore } from "@/store/auth-store";
 import { usePeriodoStore } from "@/store/periodo-store";
-import { TransactionRepository } from "@/database/repositories/transactions";
-import { CashForecastRepository } from "@/database/repositories/cash-forecast";
+import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
+import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
 import { parseLocalDate } from "@/lib/utils";
 import type { Transaction } from "@/types";
 import type { DadosFiltradosResult } from "@/types/dashboard";
 
 export function useDadosFiltrados(): DadosFiltradosResult {
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { ano, mes } = usePeriodoStore();
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [forecastIncomes, setForecastIncomes] = useState(0);
   const [forecastExpenses, setForecastExpenses] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const company = user?.company ?? "";
 
   useEffect(() => {
-    if (!isAuthenticated || !company) return;
+    if (!isAuthenticated) return;
     setIsLoading(true);
     Promise.all([
-      TransactionRepository.getAll(company),
-      CashForecastRepository.getTotals(company),
+      TransactionRepositoryApi.getAll(),
+      CashForecastRepositoryApi.getTotals(),
     ])
       .then(([txs, forecastTotals]) => {
         setAllTransactions(txs);
@@ -32,7 +31,7 @@ export function useDadosFiltrados(): DadosFiltradosResult {
       })
       .catch((err) => console.error("useDadosFiltrados error:", err))
       .finally(() => setIsLoading(false));
-  }, [isAuthenticated, company]);
+  }, [isAuthenticated]);
 
   const lancamentosFiltrados = useMemo(() => {
     return allTransactions.filter((t) => {

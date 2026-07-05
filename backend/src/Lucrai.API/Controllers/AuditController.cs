@@ -43,10 +43,10 @@ public class AuditController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("action/{action}")]
-    public async Task<IActionResult> GetByAction(string action)
+    [HttpGet("action/{actionName}")]
+    public async Task<IActionResult> GetByAction(string actionName)
     {
-        if (!Enum.TryParse<Core.Enums.AuditAction>(action, true, out var aAction))
+        if (!Enum.TryParse<Core.Enums.AuditAction>(actionName, true, out var aAction))
             return BadRequest(new { error = "Ação inválida" });
 
         var logs = await _repo.GetByActionAsync(aAction, Company);
