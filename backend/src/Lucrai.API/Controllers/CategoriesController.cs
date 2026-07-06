@@ -19,11 +19,13 @@ public class CategoriesController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
+    private bool IsSuperAdmin => HttpContext.Items["UserPlan"]?.ToString() == "SuperAdmin";
+    private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var categories = await _repo.GetAllAsync(Company);
+        var categories = await _repo.GetAllAsync(QueryCompany);
         var result = categories.Select(c => new CategoryResponse(
             c.Id, c.Name, c.Color, c.Icon, c.Type.ToString(),
             c.Company, c.CreatedAt, 0
@@ -35,7 +37,7 @@ public class CategoriesController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var c = await _repo.GetByIdAsync(id);
-        if (c == null || c.Company != Company)
+        if (c == null || (!IsSuperAdmin && c.Company != Company))
             return NotFound(new { error = "Categoria não encontrada" });
 
         var count = await _repo.GetTransactionCountAsync(id);
@@ -51,7 +53,7 @@ public class CategoriesController : ControllerBase
         if (!Enum.TryParse<Core.Enums.TransactionType>(type, true, out var tType))
             return BadRequest(new { error = "Tipo inválido. Use 'Income' ou 'Expense'" });
 
-        var categories = await _repo.GetByTypeAsync(tType, Company);
+        var categories = await _repo.GetByTypeAsync(tType, QueryCompany);
         var result = categories.Select(c => new CategoryResponse(
             c.Id, c.Name, c.Color, c.Icon, c.Type.ToString(),
             c.Company, c.CreatedAt, 0
@@ -85,7 +87,7 @@ public class CategoriesController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryRequest request)
     {
         var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Categoria não encontrada" });
 
         if (request.Name != null) existing.Name = request.Name;
@@ -106,7 +108,7 @@ public class CategoriesController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Categoria não encontrada" });
 
         var hasTransactions = await _repo.HasTransactionsAsync(id);
@@ -120,7 +122,7 @@ public class CategoriesController : ControllerBase
     [HttpPost("remove-duplicates")]
     public async Task<IActionResult> RemoveDuplicates()
     {
-        var removed = await _repo.RemoveDuplicatesAsync(Company);
+        var removed = await _repo.RemoveDuplicatesAsync(QueryCompany);
         return Ok(new RemoveDuplicatesResponse(removed));
     }
 }

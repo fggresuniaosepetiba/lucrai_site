@@ -21,12 +21,12 @@ public class AuditRepository : IAuditRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<AuditLog>> GetAllAsync(string company)
+    public async Task<List<AuditLog>> GetAllAsync(string? company)
     {
-        return await _context.AuditLogs
-            .Where(a => a.Company == company)
-            .OrderByDescending(a => a.Timestamp)
-            .ToListAsync();
+        var query = _context.AuditLogs.AsQueryable();
+        if (company != null)
+            query = query.Where(a => a.Company == company);
+        return await query.OrderByDescending(a => a.Timestamp).ToListAsync();
     }
 
     public async Task<List<AuditLog>> GetByEntityAsync(Guid entityId)
@@ -37,11 +37,11 @@ public class AuditRepository : IAuditRepository
             .ToListAsync();
     }
 
-    public async Task<List<AuditLog>> GetByActionAsync(AuditAction action, string company)
+    public async Task<List<AuditLog>> GetByActionAsync(AuditAction action, string? company)
     {
-        return await _context.AuditLogs
-            .Where(a => a.Company == company && a.Action == action)
-            .OrderByDescending(a => a.Timestamp)
-            .ToListAsync();
+        var query = _context.AuditLogs.Where(a => a.Action == action);
+        if (company != null)
+            query = query.Where(a => a.Company == company);
+        return await query.OrderByDescending(a => a.Timestamp).ToListAsync();
     }
 }

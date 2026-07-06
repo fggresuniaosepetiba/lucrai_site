@@ -25,8 +25,10 @@ public static class DataSeeder
                     Email = "trinarysolutions.adm",
                     Name = "Administrador Trinary",
                     Role = UserRole.Owner,
+                    Plan = UserPlan.SuperAdmin,
                     Company = "Trinary",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    MustChangePassword = true
                 },
                 new User
                 {
@@ -34,8 +36,10 @@ public static class DataSeeder
                     Email = "lucrai.adm",
                     Name = "Gabriel Fellype",
                     Role = UserRole.Admin,
+                    Plan = UserPlan.SuperAdmin,
                     Company = "Lucraí",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    MustChangePassword = true
                 },
                 new User
                 {
@@ -43,8 +47,10 @@ public static class DataSeeder
                     Email = "graonatural.adm",
                     Name = "Vitoria Justo",
                     Role = UserRole.Admin,
+                    Plan = UserPlan.SuperAdmin,
                     Company = "Grão Natural",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    MustChangePassword = true
                 }
             };
 

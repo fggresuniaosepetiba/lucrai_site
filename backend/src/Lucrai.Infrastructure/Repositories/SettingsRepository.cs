@@ -14,8 +14,9 @@ public class SettingsRepository : ISettingsRepository
         _context = context;
     }
 
-    public async Task<CompanySettings?> GetAsync(string company)
+    public async Task<CompanySettings?> GetAsync(string? company)
     {
+        if (company == null) return null;
         return await _context.CompanySettings
             .FirstOrDefaultAsync(s => s.Company == company);
     }
@@ -38,8 +39,9 @@ public class SettingsRepository : ISettingsRepository
         return settings;
     }
 
-    public async Task<CompanySettings> UpdateAsync(string company, CompanySettings settings)
+    public async Task<CompanySettings> UpdateAsync(string? company, CompanySettings settings)
     {
+        if (company == null) return settings;
         var existing = await GetAsync(company);
         if (existing == null)
         {

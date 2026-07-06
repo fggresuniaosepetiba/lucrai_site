@@ -25,6 +25,10 @@ public class TenantContextMiddleware
         if (!string.IsNullOrEmpty(userId))
             context.Items["UserId"] = userId;
 
+        var plan = context.User?.FindFirst("plan")?.Value;
+        if (!string.IsNullOrEmpty(plan))
+            context.Items["UserPlan"] = plan;
+
         await _next(context);
     }
 }

@@ -8,7 +8,9 @@ interface AuthState {
   isAuthenticated: boolean;
   user: UserInfo | null;
   isLoading: boolean;
+  mustChangePassword: boolean;
   login: (username: string, password: string) => Promise<boolean>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   logout: () => Promise<void>;
   initialize: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: !!getStoredToken() && !!getStoredUser(),
   user: getStoredUser(),
   isLoading: true,
+  mustChangePassword: getStoredUser()?.mustChangePassword ?? false,
 
   login: async (username: string, password: string) => {
     try {
@@ -41,10 +44,30 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem("lucrai-access-token", data.accessToken);
       localStorage.setItem("lucrai-refresh-token", data.refreshToken);
       localStorage.setItem("lucrai-auth", JSON.stringify(data.user));
-      set({ isAuthenticated: true, user: data.user, isLoading: false });
+      set({
+        isAuthenticated: true,
+        user: data.user,
+        isLoading: false,
+        mustChangePassword: data.user.mustChangePassword,
+      });
       return true;
     } catch {
-      set({ isAuthenticated: false, user: null, isLoading: false });
+      set({ isAuthenticated: false, user: null, isLoading: false, mustChangePassword: false });
+      return false;
+    }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    try {
+      await api.post("/api/auth/change-password", { currentPassword, newPassword });
+      const stored = getStoredUser();
+      if (stored) {
+        stored.mustChangePassword = false;
+        localStorage.setItem("lucrai-auth", JSON.stringify(stored));
+      }
+      set({ mustChangePassword: false, user: stored });
+      return true;
+    } catch {
       return false;
     }
   },
@@ -58,7 +81,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem("lucrai-access-token");
     localStorage.removeItem("lucrai-refresh-token");
     localStorage.removeItem("lucrai-auth");
-    set({ isAuthenticated: false, user: null, isLoading: false });
+    set({ isAuthenticated: false, user: null, isLoading: false, mustChangePassword: false });
   },
 
   refreshUser: async () => {
@@ -72,9 +95,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         name: user.name,
         role: user.role,
         company: user.company,
+        plan: user.plan,
+        mustChangePassword: user.mustChangePassword,
       };
       localStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
-      set({ user: userInfo });
+      set({ user: userInfo, mustChangePassword: user.mustChangePassword });
     } catch {
       // silently fail
     }
@@ -94,14 +119,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         name: user.name,
         role: user.role,
         company: user.company,
+        plan: user.plan,
+        mustChangePassword: user.mustChangePassword,
       };
       localStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
-      set({ isAuthenticated: true, user: userInfo, isLoading: false });
+      set({ isAuthenticated: true, user: userInfo, isLoading: false, mustChangePassword: user.mustChangePassword });
     } catch {
       localStorage.removeItem("lucrai-access-token");
       localStorage.removeItem("lucrai-refresh-token");
       localStorage.removeItem("lucrai-auth");
-      set({ isAuthenticated: false, user: null, isLoading: false });
+      set({ isAuthenticated: false, user: null, isLoading: false, mustChangePassword: false });
     }
   },
 }));

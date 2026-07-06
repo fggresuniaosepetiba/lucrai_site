@@ -19,11 +19,13 @@ public class SettingsController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
+    private bool IsSuperAdmin => HttpContext.Items["UserPlan"]?.ToString() == "SuperAdmin";
+    private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var settings = await _repo.GetAsync(Company);
+        var settings = await _repo.GetAsync(QueryCompany);
         if (settings == null)
             return NotFound(new { error = "Configurações não encontradas" });
 
@@ -48,7 +50,7 @@ public class SettingsController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Update([FromBody] SettingsRequest request)
     {
-        var existing = await _repo.GetAsync(Company);
+        var existing = await _repo.GetAsync(QueryCompany);
         if (existing == null)
             return NotFound(new { error = "Configurações não encontradas" });
 
@@ -56,7 +58,7 @@ public class SettingsController : ControllerBase
         existing.LogoUrl = request.LogoUrl;
         existing.PrimaryColor = request.PrimaryColor;
 
-        var updated = await _repo.UpdateAsync(Company, existing);
+        var updated = await _repo.UpdateAsync(QueryCompany, existing);
         return Ok(new SettingsResponse(updated.Id, updated.CompanyName, updated.LogoUrl, updated.PrimaryColor, updated.Company));
     }
 }

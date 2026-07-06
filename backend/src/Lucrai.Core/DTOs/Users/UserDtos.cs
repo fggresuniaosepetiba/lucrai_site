@@ -21,6 +21,8 @@ public record UserResponse(
     string Email,
     string Role,
     string Company,
+    string Plan,
+    bool MustChangePassword,
     string? Avatar,
     bool Active,
     DateTime CreatedAt

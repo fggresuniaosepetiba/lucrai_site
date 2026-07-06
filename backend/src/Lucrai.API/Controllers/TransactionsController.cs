@@ -20,11 +20,13 @@ public class TransactionsController : ControllerBase
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
     private string UserName => HttpContext.Items["UserName"] as string ?? "";
+    private bool IsSuperAdmin => HttpContext.Items["UserPlan"]?.ToString() == "SuperAdmin";
+    private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var transactions = await _repo.GetAllAsync(Company);
+        var transactions = await _repo.GetAllAsync(QueryCompany);
         var result = transactions.Select(t => new TransactionResponse(
             t.Id, t.DisplayId, t.Type.ToString(), t.Value,
             t.CategoryId, t.CategoryName, t.Description, t.Date,
@@ -37,7 +39,7 @@ public class TransactionsController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var t = await _repo.GetByIdAsync(id);
-        if (t == null || t.Company != Company)
+        if (t == null || (!IsSuperAdmin && t.Company != Company))
             return NotFound(new { error = "Transação não encontrada" });
 
         return Ok(new TransactionResponse(
@@ -53,7 +55,7 @@ public class TransactionsController : ControllerBase
         if (!Enum.TryParse<Core.Enums.TransactionType>(type, true, out var tType))
             return BadRequest(new { error = "Tipo inválido. Use 'Income' ou 'Expense'" });
 
-        var transactions = await _repo.GetByTypeAsync(tType, Company);
+        var transactions = await _repo.GetByTypeAsync(tType, QueryCompany);
         var result = transactions.Select(t => new TransactionResponse(
             t.Id, t.DisplayId, t.Type.ToString(), t.Value,
             t.CategoryId, t.CategoryName, t.Description, t.Date,
@@ -65,7 +67,7 @@ public class TransactionsController : ControllerBase
     [HttpGet("month/{year}")]
     public async Task<IActionResult> GetByMonth(int year, [FromQuery] int? month)
     {
-        var transactions = await _repo.GetByMonthAsync(year, month, Company);
+        var transactions = await _repo.GetByMonthAsync(year, month, QueryCompany);
         var result = transactions.Select(t => new TransactionResponse(
             t.Id, t.DisplayId, t.Type.ToString(), t.Value,
             t.CategoryId, t.CategoryName, t.Description, t.Date,
@@ -104,7 +106,7 @@ public class TransactionsController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTransactionRequest request)
     {
         var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Transação não encontrada" });
 
         if (!Enum.TryParse<Core.Enums.TransactionType>(request.Type, true, out var tType))
@@ -130,7 +132,7 @@ public class TransactionsController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Transação não encontrada" });
 
         await _repo.DeleteAsync(id);
@@ -140,22 +142,22 @@ public class TransactionsController : ControllerBase
     [HttpGet("summary/{year}")]
     public async Task<IActionResult> GetSummary(int year, [FromQuery] int? month)
     {
-        var (incomes, expenses, balance) = await _repo.GetSummaryAsync(year, month, Company);
-        var count = (await _repo.GetByMonthAsync(year, month, Company)).Count;
+        var (incomes, expenses, balance) = await _repo.GetSummaryAsync(year, month, QueryCompany);
+        var count = (await _repo.GetByMonthAsync(year, month, QueryCompany)).Count;
         return Ok(new TransactionSummaryResponse(incomes, expenses, balance, count));
     }
 
     [HttpGet("summary/yearly/{year}")]
     public async Task<IActionResult> GetYearlySummary(int year)
     {
-        var (incomes, expenses, balance, total) = await _repo.GetYearlySummaryAsync(year, Company);
+        var (incomes, expenses, balance, total) = await _repo.GetYearlySummaryAsync(year, QueryCompany);
         return Ok(new YearlySummaryResponse(year, incomes, expenses, balance, total));
     }
 
     [HttpGet("balance")]
     public async Task<IActionResult> GetBalance()
     {
-        var (incomes, expenses, balance) = await _repo.GetAllBalanceAsync(Company);
+        var (incomes, expenses, balance) = await _repo.GetAllBalanceAsync(QueryCompany);
         return Ok(new BalanceResponse(incomes, expenses, balance));
     }
 }

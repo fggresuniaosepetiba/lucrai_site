@@ -15,13 +15,13 @@ public class TrashRepository : ITrashRepository
         _context = context;
     }
 
-    public async Task<List<DeletedItem>> GetAllAsync(string company)
+    public async Task<List<DeletedItem>> GetAllAsync(string? company)
     {
         var now = DateTime.UtcNow;
-        return await _context.DeletedItems
-            .Where(d => d.Company == company && d.RestoreUntil > now)
-            .OrderByDescending(d => d.DeletedAt)
-            .ToListAsync();
+        var query = _context.DeletedItems.Where(d => d.RestoreUntil > now);
+        if (company != null)
+            query = query.Where(d => d.Company == company);
+        return await query.OrderByDescending(d => d.DeletedAt).ToListAsync();
     }
 
     public async Task<List<DeletedItem>> GetAllExpiredAsync()

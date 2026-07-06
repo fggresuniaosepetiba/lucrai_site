@@ -108,7 +108,14 @@ export function Header() {
 
         <div className="flex items-center gap-2 border-l border-border/50 pl-3">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium">{user?.name || "Usuário"}</p>
+            <p className="text-sm font-medium flex items-center gap-1.5">
+              {user?.name || "Usuário"}
+              {user?.plan === "SuperAdmin" && (
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                  SUPER
+                </span>
+              )}
+            </p>
             <p className="text-xs text-muted-foreground">{user?.company || user?.email}</p>
           </div>
           <div className="relative h-8 w-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xs font-bold text-white">

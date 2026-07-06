@@ -17,7 +17,7 @@ public class DashboardIntelligenceService : IDashboardIntelligenceService
         _forecastRepo = forecastRepo;
     }
 
-    public async Task<ProjectionResponse> CalcularProjecaoAsync(ProjectionRequest request, string company)
+    public async Task<ProjectionResponse> CalcularProjecaoAsync(ProjectionRequest request, string? company)
     {
         var transactions = await _transactionRepo.GetAllAsync(company);
         var forecasts = await _forecastRepo.GetAllAsync(company);
@@ -79,7 +79,7 @@ public class DashboardIntelligenceService : IDashboardIntelligenceService
         );
     }
 
-    public async Task<RunwayResponse> CalcularRunwayAsync(string company)
+    public async Task<RunwayResponse> CalcularRunwayAsync(string? company)
     {
         var (incomes, expenses, balance) = await _transactionRepo.GetAllBalanceAsync(company);
 
@@ -105,7 +105,7 @@ public class DashboardIntelligenceService : IDashboardIntelligenceService
         return new RunwayResponse(meses, dias, status, label);
     }
 
-    public async Task<BreakEvenResponse> CalcularBreakEvenAsync(string company)
+    public async Task<BreakEvenResponse> CalcularBreakEvenAsync(string? company)
     {
         var transactions = await _transactionRepo.GetAllAsync(company);
         var receita = transactions.Where(t => t.Type == TransactionType.Income).Sum(t => t.Value);
@@ -118,7 +118,7 @@ public class DashboardIntelligenceService : IDashboardIntelligenceService
         return new BreakEvenResponse(receita - custos, percentual, receita > custos);
     }
 
-    public async Task<HealthResponse> CalcularSaudeAsync(string company)
+    public async Task<HealthResponse> CalcularSaudeAsync(string? company)
     {
         var transactions = await _transactionRepo.GetAllAsync(company);
         var receita = transactions.Where(t => t.Type == TransactionType.Income).Sum(t => t.Value);
@@ -151,7 +151,7 @@ public class DashboardIntelligenceService : IDashboardIntelligenceService
         );
     }
 
-    public async Task<List<SparklinePoint>> CalcularSparklineAsync(int months, string company)
+    public async Task<List<SparklinePoint>> CalcularSparklineAsync(int months, string? company)
     {
         var transactions = await _transactionRepo.GetAllAsync(company);
         var now = DateTime.UtcNow;
@@ -179,7 +179,7 @@ public class DashboardIntelligenceService : IDashboardIntelligenceService
         return points;
     }
 
-    public async Task<NotaCFOResponse> GerarNotaCFOAsync(string company)
+    public async Task<NotaCFOResponse> GerarNotaCFOAsync(string? company)
     {
         var (incomes, expenses, balance) = await _transactionRepo.GetAllBalanceAsync(company);
         var health = await CalcularSaudeAsync(company);
@@ -218,7 +218,7 @@ public class DashboardIntelligenceService : IDashboardIntelligenceService
         return new NotaCFOResponse(resumo, nota, forca, atencao);
     }
 
-    public async Task<List<AcaoRecomendada>> GerarAcoesRecomendadasAsync(string company)
+    public async Task<List<AcaoRecomendada>> GerarAcoesRecomendadasAsync(string? company)
     {
         var (incomes, expenses, balance) = await _transactionRepo.GetAllBalanceAsync(company);
         var runway = await CalcularRunwayAsync(company);

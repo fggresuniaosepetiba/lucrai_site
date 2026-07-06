@@ -20,11 +20,13 @@ public class PricingController : ControllerBase
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
     private string UserName => HttpContext.Items["UserName"] as string ?? "";
+    private bool IsSuperAdmin => HttpContext.Items["UserPlan"]?.ToString() == "SuperAdmin";
+    private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var products = await _repo.GetAllAsync(Company);
+        var products = await _repo.GetAllAsync(QueryCompany);
         var result = products.Select(ToResponse);
         return Ok(result);
     }
@@ -33,7 +35,7 @@ public class PricingController : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         var p = await _repo.GetByIdAsync(id);
-        if (p == null || p.Company != Company)
+        if (p == null || (!IsSuperAdmin && p.Company != Company))
             return NotFound(new { error = "Produto não encontrado" });
 
         return Ok(ToResponse(p));
@@ -79,7 +81,7 @@ public class PricingController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePricingRequest request)
     {
         var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Produto não encontrado" });
 
         if (request.Name != null) existing.Name = request.Name;
@@ -115,7 +117,7 @@ public class PricingController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Produto não encontrado" });
 
         await _repo.DeleteAsync(id);

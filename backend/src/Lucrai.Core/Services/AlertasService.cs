@@ -20,7 +20,7 @@ public class AlertasService : IAlertasService
         _dismissedRepo = dismissedRepo;
     }
 
-    public async Task<List<AlertResponse>> GetAlertsAsync(string company)
+    public async Task<List<AlertResponse>> GetAlertsAsync(string? company)
     {
         var transactions = await _transactionRepo.GetAllAsync(company);
         var forecasts = await _forecastRepo.GetAllAsync(company);
@@ -253,7 +253,7 @@ public class AlertasService : IAlertasService
         return alerts.Where(a => !dismissed.Contains(a.Id)).ToList();
     }
 
-    public async Task DismissAlertAsync(string alertId, string company, string? userName)
+    public async Task DismissAlertAsync(string alertId, string? company, string? userName)
     {
         var parts = alertId.Split('-');
         var alertType = parts[0];
@@ -263,7 +263,7 @@ public class AlertasService : IAlertasService
             await _dismissedRepo.DismissAsync(alertType, entityId, company, userName ?? "system");
     }
 
-    public async Task RestoreAlertAsync(string alertId, string company)
+    public async Task RestoreAlertAsync(string alertId, string? company)
     {
         var parts = alertId.Split('-');
         var alertType = parts[0];

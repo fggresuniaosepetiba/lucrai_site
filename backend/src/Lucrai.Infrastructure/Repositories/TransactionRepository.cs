@@ -15,12 +15,12 @@ public class TransactionRepository : ITransactionRepository
         _context = context;
     }
 
-    public async Task<List<Transaction>> GetAllAsync(string company)
+    public async Task<List<Transaction>> GetAllAsync(string? company)
     {
-        return await _context.Transactions
-            .Where(t => t.Company == company)
-            .OrderByDescending(t => t.Date)
-            .ToListAsync();
+        var query = _context.Transactions.AsQueryable();
+        if (company != null)
+            query = query.Where(t => t.Company == company);
+        return await query.OrderByDescending(t => t.Date).ToListAsync();
     }
 
     public async Task<Transaction?> GetByIdAsync(Guid id)
@@ -28,18 +28,19 @@ public class TransactionRepository : ITransactionRepository
         return await _context.Transactions.FindAsync(id);
     }
 
-    public async Task<List<Transaction>> GetByTypeAsync(TransactionType type, string company)
+    public async Task<List<Transaction>> GetByTypeAsync(TransactionType type, string? company)
     {
-        return await _context.Transactions
-            .Where(t => t.Company == company && t.Type == type)
-            .OrderByDescending(t => t.Date)
-            .ToListAsync();
+        var query = _context.Transactions.Where(t => t.Type == type);
+        if (company != null)
+            query = query.Where(t => t.Company == company);
+        return await query.OrderByDescending(t => t.Date).ToListAsync();
     }
 
-    public async Task<List<Transaction>> GetByMonthAsync(int year, int? month, string company)
+    public async Task<List<Transaction>> GetByMonthAsync(int year, int? month, string? company)
     {
-        var query = _context.Transactions
-            .Where(t => t.Company == company && t.Date.Year == year);
+        var query = _context.Transactions.Where(t => t.Date.Year == year);
+        if (company != null)
+            query = query.Where(t => t.Company == company);
 
         if (month.HasValue)
             query = query.Where(t => t.Date.Month == month.Value);
@@ -100,9 +101,11 @@ public class TransactionRepository : ITransactionRepository
         }
     }
 
-    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetSummaryAsync(int year, int? month, string company)
+    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetSummaryAsync(int year, int? month, string? company)
     {
-        var query = _context.Transactions.Where(t => t.Company == company && t.Date.Year == year);
+        var query = _context.Transactions.Where(t => t.Date.Year == year);
+        if (company != null)
+            query = query.Where(t => t.Company == company);
 
         if (month.HasValue)
             query = query.Where(t => t.Date.Month == month.Value);
@@ -113,9 +116,11 @@ public class TransactionRepository : ITransactionRepository
         return (incomes, expenses, incomes - expenses);
     }
 
-    public async Task<(decimal Incomes, decimal Expenses, decimal Balance, decimal Total)> GetYearlySummaryAsync(int year, string company)
+    public async Task<(decimal Incomes, decimal Expenses, decimal Balance, decimal Total)> GetYearlySummaryAsync(int year, string? company)
     {
-        var query = _context.Transactions.Where(t => t.Company == company && t.Date.Year == year);
+        var query = _context.Transactions.Where(t => t.Date.Year == year);
+        if (company != null)
+            query = query.Where(t => t.Company == company);
 
         var incomes = await query.Where(t => t.Type == TransactionType.Income).SumAsync(t => t.Value);
         var expenses = await query.Where(t => t.Type == TransactionType.Expense).SumAsync(t => t.Value);
@@ -123,25 +128,29 @@ public class TransactionRepository : ITransactionRepository
         return (incomes, expenses, incomes - expenses, incomes + expenses);
     }
 
-    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetAllBalanceAsync(string company)
+    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetAllBalanceAsync(string? company)
     {
-        var incomes = await _context.Transactions
-            .Where(t => t.Company == company && t.Type == TransactionType.Income)
-            .SumAsync(t => t.Value);
+        var incomesQuery = _context.Transactions.Where(t => t.Type == TransactionType.Income);
+        var expensesQuery = _context.Transactions.Where(t => t.Type == TransactionType.Expense);
+        if (company != null)
+        {
+            incomesQuery = incomesQuery.Where(t => t.Company == company);
+            expensesQuery = expensesQuery.Where(t => t.Company == company);
+        }
 
-        var expenses = await _context.Transactions
-            .Where(t => t.Company == company && t.Type == TransactionType.Expense)
-            .SumAsync(t => t.Value);
+        var incomes = await incomesQuery.SumAsync(t => t.Value);
+        var expenses = await expensesQuery.SumAsync(t => t.Value);
 
         return (incomes, expenses, incomes - expenses);
     }
 
-    public async Task<string> GetNextDisplayIdAsync(string company)
+    public async Task<string> GetNextDisplayIdAsync(string? company)
     {
-        var count = await _context.Transactions
-            .Where(t => t.Company == company)
-            .CountAsync();
+        var query = _context.Transactions.AsQueryable();
+        if (company != null)
+            query = query.Where(t => t.Company == company);
 
+        var count = await query.CountAsync();
         return $"#{(count + 1):D3}";
     }
 }

@@ -15,21 +15,20 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
 
-    public async Task<List<Category>> GetAllAsync(string company)
+    public async Task<List<Category>> GetAllAsync(string? company)
     {
-        return await _context.Categories
-            .Where(c => c.Company == company)
-            .OrderBy(c => c.Type)
-            .ThenBy(c => c.Name)
-            .ToListAsync();
+        var query = _context.Categories.AsQueryable();
+        if (company != null)
+            query = query.Where(c => c.Company == company);
+        return await query.OrderBy(c => c.Type).ThenBy(c => c.Name).ToListAsync();
     }
 
-    public async Task<List<Category>> GetByTypeAsync(TransactionType type, string company)
+    public async Task<List<Category>> GetByTypeAsync(TransactionType type, string? company)
     {
-        return await _context.Categories
-            .Where(c => c.Company == company && c.Type == type)
-            .OrderBy(c => c.Name)
-            .ToListAsync();
+        var query = _context.Categories.Where(c => c.Type == type);
+        if (company != null)
+            query = query.Where(c => c.Company == company);
+        return await query.OrderBy(c => c.Name).ToListAsync();
     }
 
     public async Task<Category?> GetByIdAsync(Guid id)
@@ -72,11 +71,12 @@ public class CategoryRepository : ICategoryRepository
         return await _context.Transactions.CountAsync(t => t.CategoryId == categoryId);
     }
 
-    public async Task<List<IGrouping<string, Category>>> FindDuplicatesAsync(string company)
+    public async Task<List<IGrouping<string, Category>>> FindDuplicatesAsync(string? company)
     {
-        var categories = await _context.Categories
-            .Where(c => c.Company == company)
-            .ToListAsync();
+        var query = _context.Categories.AsQueryable();
+        if (company != null)
+            query = query.Where(c => c.Company == company);
+        var categories = await query.ToListAsync();
 
         var normalized = categories
             .GroupBy(c => $"{c.Name.Trim().ToLowerInvariant()}|{c.Type}")
@@ -86,7 +86,7 @@ public class CategoryRepository : ICategoryRepository
         return normalized;
     }
 
-    public async Task<int> RemoveDuplicatesAsync(string company)
+    public async Task<int> RemoveDuplicatesAsync(string? company)
     {
         var duplicates = await FindDuplicatesAsync(company);
         var removedCount = 0;

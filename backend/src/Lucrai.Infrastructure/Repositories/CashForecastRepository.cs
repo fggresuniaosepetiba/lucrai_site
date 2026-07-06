@@ -15,12 +15,12 @@ public class CashForecastRepository : ICashForecastRepository
         _context = context;
     }
 
-    public async Task<List<CashForecast>> GetAllAsync(string company)
+    public async Task<List<CashForecast>> GetAllAsync(string? company)
     {
-        return await _context.CashForecasts
-            .Where(f => f.Company == company)
-            .OrderBy(f => f.ExpectedDate)
-            .ToListAsync();
+        var query = _context.CashForecasts.AsQueryable();
+        if (company != null)
+            query = query.Where(f => f.Company == company);
+        return await query.OrderBy(f => f.ExpectedDate).ToListAsync();
     }
 
     public async Task<CashForecast?> GetByIdAsync(Guid id)
@@ -28,12 +28,12 @@ public class CashForecastRepository : ICashForecastRepository
         return await _context.CashForecasts.FindAsync(id);
     }
 
-    public async Task<List<CashForecast>> GetByStatusAsync(ForecastStatus status, string company)
+    public async Task<List<CashForecast>> GetByStatusAsync(ForecastStatus status, string? company)
     {
-        return await _context.CashForecasts
-            .Where(f => f.Company == company && f.Status == status)
-            .OrderBy(f => f.ExpectedDate)
-            .ToListAsync();
+        var query = _context.CashForecasts.Where(f => f.Status == status);
+        if (company != null)
+            query = query.Where(f => f.Company == company);
+        return await query.OrderBy(f => f.ExpectedDate).ToListAsync();
     }
 
     public async Task<CashForecast> CreateAsync(CashForecast forecast, string? userName)
@@ -192,33 +192,36 @@ public class CashForecastRepository : ICashForecastRepository
         return forecast;
     }
 
-    public async Task<(decimal PredictedIncomes, decimal PredictedExpenses, decimal AllIncomes, decimal AllExpenses)> GetTotalsAsync(string company)
+    public async Task<(decimal PredictedIncomes, decimal PredictedExpenses, decimal AllIncomes, decimal AllExpenses)> GetTotalsAsync(string? company)
     {
-        var predictedIncomes = await _context.CashForecasts
-            .Where(f => f.Company == company && f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Income)
-            .SumAsync(f => f.Amount);
+        var predictedIncomesQuery = _context.CashForecasts.Where(f => f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Income);
+        var predictedExpensesQuery = _context.CashForecasts.Where(f => f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Expense);
+        var allIncomesQuery = _context.CashForecasts.Where(f => f.Type == TransactionType.Income);
+        var allExpensesQuery = _context.CashForecasts.Where(f => f.Type == TransactionType.Expense);
 
-        var predictedExpenses = await _context.CashForecasts
-            .Where(f => f.Company == company && f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Expense)
-            .SumAsync(f => f.Amount);
+        if (company != null)
+        {
+            predictedIncomesQuery = predictedIncomesQuery.Where(f => f.Company == company);
+            predictedExpensesQuery = predictedExpensesQuery.Where(f => f.Company == company);
+            allIncomesQuery = allIncomesQuery.Where(f => f.Company == company);
+            allExpensesQuery = allExpensesQuery.Where(f => f.Company == company);
+        }
 
-        var allIncomes = await _context.CashForecasts
-            .Where(f => f.Company == company && f.Type == TransactionType.Income)
-            .SumAsync(f => f.Amount);
-
-        var allExpenses = await _context.CashForecasts
-            .Where(f => f.Company == company && f.Type == TransactionType.Expense)
-            .SumAsync(f => f.Amount);
+        var predictedIncomes = await predictedIncomesQuery.SumAsync(f => f.Amount);
+        var predictedExpenses = await predictedExpensesQuery.SumAsync(f => f.Amount);
+        var allIncomes = await allIncomesQuery.SumAsync(f => f.Amount);
+        var allExpenses = await allExpensesQuery.SumAsync(f => f.Amount);
 
         return (predictedIncomes, predictedExpenses, allIncomes, allExpenses);
     }
 
-    public async Task<string> GetNextDisplayIdAsync(string company)
+    public async Task<string> GetNextDisplayIdAsync(string? company)
     {
-        var count = await _context.CashForecasts
-            .Where(f => f.Company == company)
-            .CountAsync();
+        var query = _context.CashForecasts.AsQueryable();
+        if (company != null)
+            query = query.Where(f => f.Company == company);
 
+        var count = await query.CountAsync();
         return $"#{(count + 1):D3}";
     }
 }

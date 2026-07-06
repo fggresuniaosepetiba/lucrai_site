@@ -23,7 +23,8 @@ public class UsersController : ControllerBase
         var users = await _repo.GetAllAsync();
         var result = users.Select(u => new UserResponse(
             u.Id, u.Name, u.Email ?? "", u.Role.ToString(),
-            u.Company, u.Avatar, u.Active, u.CreatedAt
+            u.Company, u.Plan.ToString(), u.MustChangePassword,
+            u.Avatar, u.Active, u.CreatedAt
         ));
         return Ok(result);
     }
@@ -34,7 +35,8 @@ public class UsersController : ControllerBase
         var users = await _repo.GetActiveAsync();
         var result = users.Select(u => new UserResponse(
             u.Id, u.Name, u.Email ?? "", u.Role.ToString(),
-            u.Company, u.Avatar, u.Active, u.CreatedAt
+            u.Company, u.Plan.ToString(), u.MustChangePassword,
+            u.Avatar, u.Active, u.CreatedAt
         ));
         return Ok(result);
     }
@@ -48,7 +50,8 @@ public class UsersController : ControllerBase
 
         return Ok(new UserResponse(
             user.Id, user.Name, user.Email ?? "", user.Role.ToString(),
-            user.Company, user.Avatar, user.Active, user.CreatedAt
+            user.Company, user.Plan.ToString(), user.MustChangePassword,
+            user.Avatar, user.Active, user.CreatedAt
         ));
     }
 
@@ -59,19 +62,23 @@ public class UsersController : ControllerBase
         if (existing != null)
             return BadRequest(new { error = "Email já cadastrado" });
 
+        var company = HttpContext.Items["Company"] as string ?? "";
         var user = new Core.Entities.User
         {
             Name = request.Name,
             Email = request.Email,
             UserName = request.Email,
             Role = Enum.TryParse<Core.Enums.UserRole>(request.Role, true, out var role) ? role : Core.Enums.UserRole.Viewer,
-            Avatar = request.Avatar
+            Company = company,
+            Avatar = request.Avatar,
+            MustChangePassword = true
         };
 
         var created = await _repo.CreateAsync(user, request.Password);
         return Ok(new UserResponse(
             created.Id, created.Name, created.Email ?? "", created.Role.ToString(),
-            created.Company, created.Avatar, created.Active, created.CreatedAt
+            created.Company, created.Plan.ToString(), created.MustChangePassword,
+            created.Avatar, created.Active, created.CreatedAt
         ));
     }
 
@@ -91,7 +98,8 @@ public class UsersController : ControllerBase
         var updated = await _repo.UpdateAsync(existing);
         return Ok(new UserResponse(
             updated.Id, updated.Name, updated.Email ?? "", updated.Role.ToString(),
-            updated.Company, updated.Avatar, updated.Active, updated.CreatedAt
+            updated.Company, updated.Plan.ToString(), updated.MustChangePassword,
+            updated.Avatar, updated.Active, updated.CreatedAt
         ));
     }
 

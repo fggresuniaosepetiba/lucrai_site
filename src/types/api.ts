@@ -17,6 +17,8 @@ export interface UserInfo {
   name: string;
   role: string;
   company: string;
+  plan: string;
+  mustChangePassword: boolean;
 }
 
 export interface AuthUserResponse {
@@ -25,6 +27,8 @@ export interface AuthUserResponse {
   name: string;
   role: string;
   company: string;
+  plan: string;
+  mustChangePassword: boolean;
   avatar: string | null;
   active: boolean;
   createdAt: string;

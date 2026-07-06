@@ -4,6 +4,8 @@ public record LoginRequest(string Email, string Password);
 
 public record RegisterRequest(string Name, string Email, string Password, string Company);
 
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+
 public record RefreshTokenRequest(string RefreshToken);
 
 public record LoginResponse(
@@ -18,7 +20,9 @@ public record UserInfo(
     string Email,
     string Name,
     string Role,
-    string Company
+    string Company,
+    string Plan,
+    bool MustChangePassword
 );
 
 public record AuthUserResponse(
@@ -27,6 +31,8 @@ public record AuthUserResponse(
     string Name,
     string Role,
     string Company,
+    string Plan,
+    bool MustChangePassword,
     string? Avatar,
     bool Active,
     DateTime CreatedAt

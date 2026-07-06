@@ -52,8 +52,30 @@ public class AuthController : ControllerBase
             accessToken,
             refreshToken,
             expiresIn,
-            new UserInfo(user.Id, user.Email!, user.Name, user.Role.ToString(), user.Company)
+            new UserInfo(
+                user.Id, user.Email!, user.Name, user.Role.ToString(),
+                user.Company, user.Plan.ToString(), user.MustChangePassword
+            )
         ));
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var user = await _userManager.FindByIdAsync(userId!);
+        if (user == null)
+            return NotFound(new { error = "Usuário não encontrado" });
+
+        var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { error = string.Join("; ", result.Errors.Select(e => e.Description)) });
+
+        user.MustChangePassword = false;
+        await _userManager.UpdateAsync(user);
+
+        return Ok(new { message = "Senha alterada com sucesso" });
     }
 
     [HttpPost("register")]
@@ -71,7 +93,8 @@ public class AuthController : ControllerBase
             Role = Core.Enums.UserRole.Admin,
             Company = request.Company,
             EmailConfirmed = true,
-            Active = true
+            Active = true,
+            MustChangePassword = true
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -85,7 +108,10 @@ public class AuthController : ControllerBase
             accessToken,
             refreshToken,
             expiresIn,
-            new UserInfo(user.Id, user.Email!, user.Name, user.Role.ToString(), user.Company)
+            new UserInfo(
+                user.Id, user.Email!, user.Name, user.Role.ToString(),
+                user.Company, user.Plan.ToString(), user.MustChangePassword
+            )
         ));
     }
 
@@ -114,7 +140,10 @@ public class AuthController : ControllerBase
             accessToken,
             newRefreshToken,
             expiresIn,
-            new UserInfo(user.Id, user.Email!, user.Name, user.Role.ToString(), user.Company)
+            new UserInfo(
+                user.Id, user.Email!, user.Name, user.Role.ToString(),
+                user.Company, user.Plan.ToString(), user.MustChangePassword
+            )
         ));
     }
 
@@ -153,7 +182,8 @@ public class AuthController : ControllerBase
 
         return Ok(new AuthUserResponse(
             user.Id, user.Email!, user.Name, user.Role.ToString(),
-            user.Company, user.Avatar, user.Active, user.CreatedAt
+            user.Company, user.Plan.ToString(), user.MustChangePassword,
+            user.Avatar, user.Active, user.CreatedAt
         ));
     }
 
@@ -170,7 +200,8 @@ public class AuthController : ControllerBase
             new(ClaimTypes.Name, user.Name),
             new(ClaimTypes.Email, user.Email ?? ""),
             new(ClaimTypes.Role, user.Role.ToString()),
-            new("company", user.Company)
+            new("company", user.Company),
+            new("plan", user.Plan.ToString())
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));

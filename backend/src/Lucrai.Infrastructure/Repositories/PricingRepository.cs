@@ -14,12 +14,12 @@ public class PricingRepository : IPricingRepository
         _context = context;
     }
 
-    public async Task<List<PricingProduct>> GetAllAsync(string company)
+    public async Task<List<PricingProduct>> GetAllAsync(string? company)
     {
-        return await _context.PricingProducts
-            .Where(p => p.Company == company)
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
+        var query = _context.PricingProducts.AsQueryable();
+        if (company != null)
+            query = query.Where(p => p.Company == company);
+        return await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
     }
 
     public async Task<PricingProduct?> GetByIdAsync(Guid id)
