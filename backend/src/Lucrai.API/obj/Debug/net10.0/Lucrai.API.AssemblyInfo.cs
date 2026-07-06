@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Lucrai.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+01e1a85c3a5dff8fabd24e5d11d87306e4585bf5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+577e8af1d5fa8533ba2318c934be8b4f5d607e39")]
 [assembly: System.Reflection.AssemblyProductAttribute("Lucrai.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Lucrai.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
