@@ -1,5 +1,6 @@
 using Lucrai.Core.DTOs.Forecasts;
 using Lucrai.Core.Entities;
+using Lucrai.Core.Enums;
 using Lucrai.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,12 @@ namespace Lucrai.API.Controllers;
 public class CashForecastsController : ControllerBase
 {
     private readonly ICashForecastRepository _repo;
+    private readonly ITrashRepository _trashRepo;
 
-    public CashForecastsController(ICashForecastRepository repo)
+    public CashForecastsController(ICashForecastRepository repo, ITrashRepository trashRepo)
     {
         _repo = repo;
+        _trashRepo = trashRepo;
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
@@ -106,11 +109,29 @@ public class CashForecastsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, [FromQuery] string? reason = null)
     {
         var existing = await _repo.GetByIdAsync(id);
         if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Previsão não encontrada" });
+
+        await _trashRepo.MoveToTrashAsync(new DeletedItem
+        {
+            OriginalId = existing.Id,
+            DisplayId = existing.DisplayId,
+            EntryType = EntryType.Forecast,
+            Type = existing.Type,
+            Description = existing.Description,
+            Amount = existing.Amount,
+            Category = existing.Category,
+            ExpectedDate = existing.ExpectedDate,
+            Status = existing.Status,
+            Notes = existing.Notes,
+            Company = existing.Company,
+            Reason = reason ?? "Excluído pelo usuário",
+            DeletedAt = DateTime.UtcNow,
+            RestoreUntil = DateTime.UtcNow.AddDays(30),
+        }, UserName);
 
         await _repo.DeleteAsync(id);
         return Ok(new { message = "Previsão excluída com sucesso" });

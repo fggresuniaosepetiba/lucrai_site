@@ -100,14 +100,15 @@ public static class DataSeeder
 
             foreach (var user in users)
             {
-                await userManager.CreateAsync(user);
                 var password = user.UserName switch
                 {
                     "lucrai.adm" => "Lucrai@1",
-                    _ => "123"
+                    _ => "Admin@123"
                 };
-                user.PasswordHash = userManager.PasswordHasher.HashPassword(user, password);
-                await userManager.UpdateAsync(user);
+                var result = await userManager.CreateAsync(user, password);
+                if (!result.Succeeded)
+                    throw new InvalidOperationException(
+                        $"Failed to seed user {user.UserName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             }
         }
 

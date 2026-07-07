@@ -4,9 +4,9 @@ import { Suspense, useEffect, useState, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { CashForecastRepository } from "@/database/repositories/cash-forecast";
-import { TransactionRepository } from "@/database/repositories/transactions";
-import { CategoryRepository } from "@/database/repositories/categories";
+import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
+import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
+import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
 
 import type { CashForecast, ForecastStatus, TransactionType, Category } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,7 +73,6 @@ function CashForecastContent() {
   const [editingItem, setEditingItem] = useState<CashForecast | null>(null);
   const [activeTab, setActiveTab] = useState("active");
   const company = user?.company ?? "";
-  const userName = user?.name ?? "Sistema";
 
   const [formType, setFormType] = useState<TransactionType>("income");
   const [formDescription, setFormDescription] = useState("");
@@ -146,9 +145,9 @@ function CashForecastContent() {
   const loadData = async () => {
     try {
       const [forecasts, balanceData, cats] = await Promise.all([
-        CashForecastRepository.getAll(company),
-        TransactionRepository.getAllBalance(company),
-        CategoryRepository.getAll(company),
+        CashForecastRepositoryApi.getAll(),
+        TransactionRepositoryApi.getAllBalance(),
+        CategoryRepositoryApi.getAll(),
       ]);
       setItems(forecasts);
       setCurrentBalance(balanceData.balance);
@@ -305,9 +304,8 @@ function CashForecastContent() {
     setCreatingCategory(true);
     try {
       const color = formType === "income" ? "#22c55e" : "#ef4444";
-      const created = await CategoryRepository.create(
-        { name, type: formType, color, icon: "tag" },
-        company
+      const created = await CategoryRepositoryApi.create(
+        { name, type: formType, color, icon: "tag" }
       );
       setCategories((prev) => [...prev, created]);
       setFormCategory(created.name);
@@ -324,7 +322,7 @@ function CashForecastContent() {
     const amount = formAmountValue;
     try {
       if (editingItem) {
-        await CashForecastRepository.update(editingItem.id, {
+        await CashForecastRepositoryApi.update(editingItem.id, {
           type: formType,
           description: formDescription.trim(),
           amount,
@@ -334,7 +332,7 @@ function CashForecastContent() {
           isRecurring: formRecurring || undefined,
           recurrenceType: formRecurring ? (formRecurrenceType as CashForecast["recurrenceType"]) : undefined,
           recurrenceEndDate: formRecurring && formRecurrenceEndType === "date" ? formRecurrenceEndDate : undefined,
-        }, userName);
+        });
         toast("Previsão atualizada", "", "success");
       } else if (formRecurring) {
         const defaultEnd = new Date(parseLocalDate(formDate));
@@ -345,30 +343,24 @@ function CashForecastContent() {
         const dates = generateRecurrenceDates(formDate, formRecurrenceType, endDate);
         for (const dt of dates) {
           const dateStr = dt.toISOString().slice(0, 10);
-          await CashForecastRepository.create(
-            {
-              type: formType,
-              description: formDescription.trim(),
-              amount,
-              category: formCategory.trim(),
-              expectedDate: dateStr,
-              notes: formNotes.trim(),
-              status: "predicted",
-              isRecurring: true,
-              recurrenceType: formRecurrenceType as CashForecast["recurrenceType"],
-              recurrenceEndDate: formRecurrenceEndDate || undefined,
-            },
-            company,
-            userName
-          );
+          await CashForecastRepositoryApi.create({
+            type: formType,
+            description: formDescription.trim(),
+            amount,
+            category: formCategory.trim(),
+            expectedDate: dateStr,
+            notes: formNotes.trim(),
+            status: "predicted",
+            isRecurring: true,
+            recurrenceType: formRecurrenceType as CashForecast["recurrenceType"],
+            recurrenceEndDate: formRecurrenceEndDate || undefined,
+          });
         }
         toast("Previsões geradas", `${dates.length} lançamentos recorrentes criados`, "success");
       } else {
-        await CashForecastRepository.create(
-          { type: formType, description: formDescription.trim(), amount, category: formCategory.trim(), expectedDate: formDate, notes: formNotes.trim(), status: "predicted" },
-          company,
-          userName
-        );
+        await CashForecastRepositoryApi.create({
+          type: formType, description: formDescription.trim(), amount, category: formCategory.trim(), expectedDate: formDate, notes: formNotes.trim(), status: "predicted",
+        });
         toast("Previsão criada", "Lançamento previsto registrado", "success");
       }
       setShowForm(false);
@@ -476,16 +468,16 @@ function CashForecastContent() {
 
     try {
       if (type === "cancelled") {
-        await CashForecastRepository.markAsCancelled(item.id, cancelReason.trim(), userName);
+        await CashForecastRepositoryApi.markAsCancelled(item.id, cancelReason.trim());
         toast("Previsão cancelada", "", "success");
       } else if (type === "received") {
-        await CashForecastRepository.markAsReceived(item.id, company, userName);
+        await CashForecastRepositoryApi.markAsReceived(item.id);
         toast("Previsão marcada como recebida", "", "success");
       } else if (type === "paid") {
-        await CashForecastRepository.markAsPaid(item.id, company, userName);
+        await CashForecastRepositoryApi.markAsPaid(item.id);
         toast("Previsão marcada como paga", "", "success");
       } else if (type === "delete") {
-        await CashForecastRepository.softDelete(item.id, "Excluído pelo usuário", userName);
+        await CashForecastRepositoryApi.delete(item.id, "Excluído pelo usuário");
         toast("Previsão movida para lixeira", "Ela ficará disponível por 30 dias", "success");
       }
       await loadData();
@@ -497,7 +489,7 @@ function CashForecastContent() {
     try {
       const toDelete = items.filter((i) => i.status !== "predicted");
       for (const item of toDelete) {
-        await CashForecastRepository.delete(item.id);
+        await CashForecastRepositoryApi.delete(item.id);
       }
       toast("Histórico limpo", `${toDelete.length} registro(s) removido(s) permanentemente`, "success");
       await loadData();

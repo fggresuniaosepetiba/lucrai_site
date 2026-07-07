@@ -71,8 +71,9 @@ export const TransactionRepositoryApi = {
     });
   },
 
-  async delete(id: string): Promise<void> {
-    await api.delete(`/api/transactions/${id}`);
+  async delete(id: string, reason?: string): Promise<void> {
+    const params = reason ? `?reason=${encodeURIComponent(reason)}` : "";
+    await api.delete(`/api/transactions/${id}${params}`);
   },
 
   async getAllBalance(): Promise<{ incomes: number; expenses: number; balance: number }> {

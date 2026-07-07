@@ -1,5 +1,6 @@
 using Lucrai.Core.DTOs.Transactions;
 using Lucrai.Core.Entities;
+using Lucrai.Core.Enums;
 using Lucrai.Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +13,12 @@ namespace Lucrai.API.Controllers;
 public class TransactionsController : ControllerBase
 {
     private readonly ITransactionRepository _repo;
+    private readonly ITrashRepository _trashRepo;
 
-    public TransactionsController(ITransactionRepository repo)
+    public TransactionsController(ITransactionRepository repo, ITrashRepository trashRepo)
     {
         _repo = repo;
+        _trashRepo = trashRepo;
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
@@ -129,11 +132,29 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id, [FromQuery] string? reason = null)
     {
         var existing = await _repo.GetByIdAsync(id);
         if (existing == null || (!IsSuperAdmin && existing.Company != Company))
             return NotFound(new { error = "Transação não encontrada" });
+
+        await _trashRepo.MoveToTrashAsync(new DeletedItem
+        {
+            OriginalId = existing.Id,
+            DisplayId = existing.DisplayId,
+            EntryType = EntryType.Transaction,
+            Type = existing.Type,
+            Value = existing.Value,
+            CategoryId = existing.CategoryId,
+            CategoryName = existing.CategoryName,
+            Description = existing.Description,
+            Date = existing.Date,
+            Observation = existing.Observation,
+            Company = existing.Company,
+            Reason = reason ?? "Excluído pelo usuário",
+            DeletedAt = DateTime.UtcNow,
+            RestoreUntil = DateTime.UtcNow.AddDays(30),
+        }, UserName);
 
         await _repo.DeleteAsync(id);
         return Ok(new { message = "Transação excluída com sucesso" });

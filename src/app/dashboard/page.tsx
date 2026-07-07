@@ -11,10 +11,9 @@ import { ChartCategories } from "@/components/dashboard/chart-categories";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { FinancialHealth } from "@/components/dashboard/financial-health";
 import { FiltroAtivoIndicator } from "@/components/shared/FiltroAtivoIndicator";
-import { TransactionRepository } from "@/database/repositories/transactions";
-import { CashForecastRepository } from "@/database/repositories/cash-forecast";
+import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
+import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
 import { PricingRepositoryApi } from "@/services/api-repositories/pricing";
-import { seedDefaultCategories } from "@/database/seed";
 
 import type { Transaction, PricingProduct } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,15 +49,14 @@ export default function DashboardPage() {
 
   const runStartup = async () => {
     try { await useAuthStore.getState().refreshUser(); } catch { /* ignore */ }
-    try { await seedDefaultCategories(company); } catch { /* ignore */ }
     loadData();
   };
 
   const loadData = async () => {
     try {
       const [txs, forecastTotals, pricing] = await Promise.all([
-        TransactionRepository.getAll(company),
-        CashForecastRepository.getTotals(company),
+        TransactionRepositoryApi.getAll(),
+        CashForecastRepositoryApi.getTotals(),
         PricingRepositoryApi.getAll(),
       ]);
       setTransactions(txs);

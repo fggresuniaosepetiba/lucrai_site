@@ -49,7 +49,7 @@ export default function LoginPage() {
 
       <div className="relative z-10 m-auto flex w-full max-w-[420px] flex-col items-center px-4">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="relative h-12 w-48">
+          <div className="relative h-20 w-80">
             <Image
               src="/images/lucrai/logo-lucrai-sem-fundo.png"
               alt="LUCRAÍ"

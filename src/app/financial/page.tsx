@@ -6,10 +6,8 @@ import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { TransactionList } from "@/components/financial/transaction-list";
 import { TransactionForm } from "@/components/financial/transaction-form";
-import { TransactionRepository } from "@/database/repositories/transactions";
-import { CategoryRepository } from "@/database/repositories/categories";
-import { TrashRepository } from "@/database/repositories/trash";
-import { seedDefaultCategories } from "@/database/seed";
+import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
+import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
 
 import type { Transaction, Category } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -35,7 +33,6 @@ export default function FinancialPage() {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const initialized = useRef(false);
   const company = user?.company ?? "";
-  const userName = user?.name ?? "Sistema";
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -61,15 +58,14 @@ export default function FinancialPage() {
 
   const runStartup = async () => {
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
-    try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
     loadData();
   };
 
   const loadData = async () => {
     try {
       const [txs, cats] = await Promise.all([
-        TransactionRepository.getAll(company),
-        CategoryRepository.getAll(company),
+        TransactionRepositoryApi.getAll(),
+        CategoryRepositoryApi.getAll(),
       ]);
       setTransactions(txs);
       setCategories(cats);
@@ -80,9 +76,9 @@ export default function FinancialPage() {
     }
   };
 
-  const handleCreate = async (data: Parameters<typeof TransactionRepository.create>[0]) => {
+  const handleCreate = async (data: Parameters<typeof TransactionRepositoryApi.create>[0]) => {
     try {
-      await TransactionRepository.create(data, company, userName);
+      await TransactionRepositoryApi.create(data);
       toast("Lançamento criado", "Registrado com sucesso", "success");
       setShowForm(false);
       await loadData();
@@ -94,29 +90,24 @@ export default function FinancialPage() {
 
   const handleCreateCategory = async (data: { name: string; type: "income" | "expense" }) => {
     const color = data.type === "income" ? "#22c55e" : "#ef4444";
-    const created = await CategoryRepository.create(
-      {
-        name: data.name.trim(),
-        type: data.type,
-        color,
-        icon: "tag",
-      },
-      company
-    );
+    const created = await CategoryRepositoryApi.create({
+      name: data.name.trim(),
+      type: data.type,
+      color,
+      icon: "tag",
+    });
     setCategories((prev) => [...prev, created]);
     return created;
   };
   const handleUpdate = async (id: string, data: Partial<Transaction>) => {
-    await TransactionRepository.update(id, data, userName);
+    await TransactionRepositoryApi.update(id, data);
     setEditingTransaction(null);
     setShowForm(false);
     await loadData();
   };
 
   const handleDelete = async (id: string, reason: string) => {
-    const tx = transactions.find((t) => t.id === id);
-    if (!tx) return;
-    await TrashRepository.moveToTrash(tx, reason, userName);
+    await TransactionRepositoryApi.delete(id, reason);
     await loadData();
   };
 
