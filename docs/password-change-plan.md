@@ -1,43 +1,111 @@
-# Plano: Troca de Senha Obrigatória + Planos + SuperAdmin
+# Guia de Teste: Troca de Senha Obrigatória + Planos + SuperAdmin
 
-## Backend
-- [ ] Adicionar campo `MustChangePassword` (bool, default true) em `User.cs`
-- [ ] Criar enum `UserPlan` (SuperAdmin, Basic, Pro, Enterprise)
-- [ ] Adicionar campo `Plan` (UserPlan, default Basic) em `User.cs`
-- [ ] Migration `AddUserPlanAndMustChangePassword`
-- [ ] Atualizar password policy em `Program.cs` (6+ chars, upper, lower, digit, special)
-- [ ] Adicionar `MustChangePassword` + `Plan` nos DTOs (`LoginResponse`, `UserInfo`, `AuthUserResponse`)
-- [ ] Criar endpoint `POST /api/auth/change-password` (currentPassword, newPassword)
-- [ ] No login, retornar `mustChangePassword` para front-end redirecionar
-- [ ] Opcional: middleware/filtro que bloqueia rotas se `MustChangePassword == true`
-- [ ] `TenantContextMiddleware`: se Plan == SuperAdmin, não filtrar por Company
-- [ ] Repositórios: pular filtro `Company` se SuperAdmin
-- [ ] `DataSeeder`: setar `Plan = SuperAdmin`, `MustChangePassword = true` nos 4 usuários seed
+## Pré-requisitos
 
-## Front-end
-- [ ] Atualizar `UserInfo` em `src/types/api.ts` com `mustChangePassword` + `plan`
-- [ ] `auth-store.ts`: guardar `mustChangePassword`, redirecionar p/ `/trocar-senha` se true
-- [ ] Criar página `/trocar-senha` com formulário e validação client-side
-- [ ] `api.ts`: garantir que `change-password` funcione com token atual (não requer refresh)
-- [ ] Badge "Super Admin" no sidebar/header pra usuários SuperAdmin
-- [ ] Seletor de empresa no topo para SuperAdmin navegar entre dados de qualquer company
+- Docker Desktop (ou Docker Engine)
+- .NET 10 SDK
+- Node.js 22
+- Git
 
+## Setup do Banco de Dados
 
-#### O que é para fazer: 
+O PostgreSQL roda em container Docker. Execute:
 
-•	João Ribeiro:
-o	Login: joao.ribeiro
-o	Senha: 123
-•	Vitória Justo:
-o	Login: vitoria.justo
-o	Senha: 123
-•	Fellype Gabriel: Cria um login e senha pra ti
-•	Eduardo Contador:
-o	Login: eduardo.contador
-o	Senha: 123
-Todos os usuários quando entrarem tem que ser obrigado a trocar a senha e a senha precisa ser segura com:
-•	Pelo menos 6 caracteres
-•	Uma letra maiúscula
-•	Uma letra minúscula
-•	Um número
-•	Um caractere especial (! @ # $ % & *)
+```bash
+docker run -d --name lucrai-postgres ^
+  -e POSTGRES_USER=lucrai ^
+  -e POSTGRES_PASSWORD=lucrai123 ^
+  -e POSTGRES_DB=lucrai ^
+  -p 5432:5432 ^
+  postgres:18
+```
+
+Para parar/iniciar depois:
+
+```bash
+docker stop lucrai-postgres
+docker start lucrai-postgres
+```
+
+## Executar o Backend
+
+```bash
+cd backend
+dotnet run --project src/Lucrai.API --launch-profile http
+```
+
+O backend inicia em `http://localhost:5099`.
+
+Na primeira execução, as migrations são aplicadas e os seed users são criados automaticamente.
+
+## Executar o Frontend
+
+Em outro terminal:
+
+```bash
+npm run dev
+```
+
+O frontend inicia em `http://localhost:3000`.
+
+> **Importante**: limpe o IndexedDB/localStorage do navegador antes de testar
+> (F12 → Application → IndexedDB → botão direito → Delete, e também limpe localStorage).
+
+## Usuários para Teste
+
+| Login | Senha | Nome | Cargo | Plano |
+|---|---|---|---|---|
+| `joao.ribeiro` | `123` | João Ribeiro | Owner | SuperAdmin |
+| `vitoria.justo` | `123` | Vitória Justo | Admin | SuperAdmin |
+| `fellype.gabriel` | `123` | Fellype Gabriel | Admin | SuperAdmin |
+| `eduardo.contador` | `123` | Eduardo Contador | Admin | SuperAdmin |
+| `lucrai.adm` | `Lucrai@1` | Gabriel Fellype | Admin | SuperAdmin |
+
+> O usuário `lucrai.adm` é mantido para compatibilidade com testes automatizados.
+
+## O que Testar
+
+### 1. Primeiro Login (Troca de Senha Obrigatória)
+
+1. Acesse `http://localhost:3000`
+2. Faça login com qualquer um dos usuários acima
+3. O sistema deve redirecionar para `/trocar-senha`
+4. A nova senha deve atender à política:
+   - Mínimo 6 caracteres
+   - Pelo menos 1 letra maiúscula
+   - Pelo menos 1 letra minúscula
+   - Pelo menos 1 número
+   - Pelo menos 1 caractere especial (`! @ # $ % & *`)
+5. Após trocar a senha, o usuário é redirecionado para o dashboard
+6. Logout e login novamente com a nova senha devem funcionar
+
+### 2. SuperAdmin (Visão Cross-Company)
+
+- Todos os seed users têm `Plan = SuperAdmin` e `Company = "Lucraí"`
+- SuperAdmins veem dados de todas as empresas
+- SuperAdmins são gratuitos (sem cobrança)
+- No frontend, aparece um badge "Super Admin" no header/sidebar
+
+### 3. Migrations
+
+As seguintes migrations foram aplicadas ao banco:
+
+- `AddUserPlanAndMustChangePassword` — adiciona campos `Plan` e `MustChangePassword`
+- `FixUserPlanAndMustChangePasswordDefaults` — corrige defaults dos campos
+
+## Executar Testes Automatizados
+
+```bash
+dotnet test backend/tests/Lucrai.API.Tests
+```
+
+Todos os 83 testes devem passar.
+
+## Estrutura dos Commits
+
+1. `feat: forced password change on first login + strong password policy + SuperAdmin plan with cross-company visibility`
+2. `fix: SuperAdmin settings lookup returning NotFound due to null company filter`
+3. `fix: set Plan default to Basic in migration and force MustChangePassword=true for existing users`
+4. `fix: seed 4 new SuperAdmin users (Lucraí), comment old seeds, fix connection string`
+5. `fix: restore lucrai.adm seed user with conditional password to fix CI tests`
+6. `chore: add .NET artifacts to .gitignore and untrack bin/obj`
