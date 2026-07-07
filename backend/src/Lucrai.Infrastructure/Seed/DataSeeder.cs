@@ -30,17 +30,17 @@ public static class DataSeeder
                 //    EmailConfirmed = true,
                 //    MustChangePassword = true
                 //},
-                //new User
-                //{
-                //    UserName = "lucrai.adm",
-                //    Email = "lucrai.adm",
-                //    Name = "Gabriel Fellype",
-                //    Role = UserRole.Admin,
-                //    Plan = UserPlan.SuperAdmin,
-                //    Company = "Lucraí",
-                //    EmailConfirmed = true,
-                //    MustChangePassword = true
-                //},
+                new User
+                {
+                    UserName = "lucrai.adm",
+                    Email = "lucrai.adm",
+                    Name = "Gabriel Fellype",
+                    Role = UserRole.Admin,
+                    Plan = UserPlan.SuperAdmin,
+                    Company = "Lucraí",
+                    EmailConfirmed = true,
+                    MustChangePassword = true
+                },
                 //new User
                 //{
                 //    UserName = "graonatural.adm",
@@ -101,7 +101,12 @@ public static class DataSeeder
             foreach (var user in users)
             {
                 await userManager.CreateAsync(user);
-                user.PasswordHash = userManager.PasswordHasher.HashPassword(user, "123");
+                var password = user.UserName switch
+                {
+                    "lucrai.adm" => "Lucrai@1",
+                    _ => "123"
+                };
+                user.PasswordHash = userManager.PasswordHasher.HashPassword(user, password);
                 await userManager.UpdateAsync(user);
             }
         }
