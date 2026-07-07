@@ -10,7 +10,7 @@ import { TransactionRepository } from "@/database/repositories/transactions";
 import { CategoryRepository } from "@/database/repositories/categories";
 import { TrashRepository } from "@/database/repositories/trash";
 import { seedDefaultCategories } from "@/database/seed";
-import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
+
 import type { Transaction, Category } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,8 +60,6 @@ export default function FinancialPage() {
   }, [isAuthenticated, router, company]);
 
   const runStartup = async () => {
-    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
-    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
     try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
     loadData();

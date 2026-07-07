@@ -4,9 +4,8 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { PricingRepository } from "@/database/repositories/pricing";
+import { PricingRepositoryApi } from "@/services/api-repositories/pricing";
 import { FixedCostsRepository } from "@/database/repositories/fixed-costs";
-import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
 import { seedDefaultCategories } from "@/database/seed";
 import type { PricingProduct, ProductionMode, PaymentMethod, FixedCost } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -207,8 +206,6 @@ export default function PricingPage() {
   }, [isAuthenticated, router, company]);
 
   const runStartup = async () => {
-    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
-    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
     try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
     loadFixedCosts();
@@ -226,7 +223,7 @@ export default function PricingPage() {
 
   const loadProducts = async () => {
     try {
-      const all = await PricingRepository.getAll(company);
+      const all = await PricingRepositoryApi.getAll();
       setProducts(all);
     } catch (err) {
       console.error("Error loading pricing products:", err);
@@ -288,9 +285,9 @@ export default function PricingPage() {
     };
 
     if (editingId) {
-      await PricingRepository.update(editingId, data);
+      await PricingRepositoryApi.update(editingId, data);
     } else {
-      await PricingRepository.create(data, company, userName);
+      await PricingRepositoryApi.create(data);
     }
 
     resetForm();
@@ -331,13 +328,13 @@ export default function PricingPage() {
       minPrice: p.minPrice, healthyPrice: p.healthyPrice,
       premiumPrice: p.premiumPrice, netMargin: p.netMargin,
     };
-    await PricingRepository.create(data, company, userName);
+    await PricingRepositoryApi.create(data);
     loadProducts();
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm) return;
-    await PricingRepository.delete(deleteConfirm.id);
+    await PricingRepositoryApi.delete(deleteConfirm.id);
     setDeleteConfirm(null);
     loadProducts();
   };

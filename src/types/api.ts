@@ -153,3 +153,114 @@ export interface ApiAcaoRecomendada {
   categoria: string;
   link: string | null;
 }
+
+// ============ PRICING ============
+export interface ApiPricingProduct {
+  id: string;
+  name: string;
+  category: string;
+  sku: string | null;
+  description: string | null;
+  rawMaterial: number;
+  packaging: number;
+  labor: number;
+  freight: number;
+  otherCosts: number;
+  totalCost: number;
+  taxes: number;
+  cardFee: number;
+  marketplaceFee: number;
+  commission: number;
+  otherFees: number;
+  totalFees: number;
+  desiredMargin: number;
+  minPrice: number;
+  healthyPrice: number;
+  premiumPrice: number;
+  netMargin: number;
+  company: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============ SETTINGS ============
+export interface ApiSettings {
+  id: string;
+  companyName: string;
+  logoUrl: string | null;
+  primaryColor: string;
+  company: string;
+}
+
+// ============ USERS ============
+export interface ApiUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  company: string;
+  plan: string;
+  mustChangePassword: boolean;
+  avatar: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+// ============ TRASH ============
+export interface ApiTrashItem {
+  id: string;
+  originalId: string;
+  displayId: string;
+  entryType: string;
+  type: string;
+  value: number | null;
+  categoryName: string | null;
+  description: string;
+  date: string | null;
+  amount: number | null;
+  category: string | null;
+  expectedDate: string | null;
+  status: string | null;
+  company: string;
+  deletedAt: string;
+  reason: string;
+  restoreUntil: string;
+}
+
+export interface ApiRestoreResponse {
+  id: string;
+  message: string;
+}
+
+export interface ApiCleanupResponse {
+  removedCount: number;
+}
+
+// ============ AUDIT ============
+export interface ApiAuditLog {
+  id: string;
+  entityId: string;
+  entityType: string;
+  displayId: string;
+  action: string;
+  description: string;
+  user: string;
+  company: string;
+  timestamp: string;
+  details: string | null;
+}
+
+// ============ CONTAS (Company Registration) ============
+export interface ApiConta {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  empresa: string;
+  porte: string;
+  faturamento: string;
+  origem: string;
+  plano: string;
+  createdAt: string;
+}

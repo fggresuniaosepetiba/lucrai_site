@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
-import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
+
 import type { Transaction, CashForecast } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,8 +40,6 @@ export default function ReportsPage() {
   }, [isAuthenticated, router, company]);
 
   const runStartup = async () => {
-    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
-    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
     loadData();
   };

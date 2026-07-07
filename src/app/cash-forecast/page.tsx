@@ -7,7 +7,7 @@ import { Shell } from "@/components/layout/shell";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { CategoryRepository } from "@/database/repositories/categories";
-import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
+
 import type { CashForecast, ForecastStatus, TransactionType, Category } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -139,8 +139,6 @@ function CashForecastContent() {
   }, [searchParams]);
 
   const runStartup = async () => {
-    try { await migrateDisplayIds(); } catch (e) { console.error("migrateDisplayIds:", e); }
-    try { await fixCompanyName(); } catch (e) { console.error("fixCompanyName:", e); }
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
     loadData();
   };

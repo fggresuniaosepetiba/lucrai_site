@@ -13,9 +13,9 @@ import { FinancialHealth } from "@/components/dashboard/financial-health";
 import { FiltroAtivoIndicator } from "@/components/shared/FiltroAtivoIndicator";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
-import { PricingRepository } from "@/database/repositories/pricing";
+import { PricingRepositoryApi } from "@/services/api-repositories/pricing";
 import { seedDefaultCategories } from "@/database/seed";
-import { migrateDisplayIds, fixCompanyName } from "@/database/dexie";
+
 import type { Transaction, PricingProduct } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,8 +49,6 @@ export default function DashboardPage() {
   }, [isAuthenticated, router, company]);
 
   const runStartup = async () => {
-    try { await migrateDisplayIds(); } catch { /* ignore */ }
-    try { await fixCompanyName(); } catch { /* ignore */ }
     try { await useAuthStore.getState().refreshUser(); } catch { /* ignore */ }
     try { await seedDefaultCategories(company); } catch { /* ignore */ }
     loadData();
@@ -61,7 +59,7 @@ export default function DashboardPage() {
       const [txs, forecastTotals, pricing] = await Promise.all([
         TransactionRepository.getAll(company),
         CashForecastRepository.getTotals(company),
-        PricingRepository.getAll(company),
+        PricingRepositoryApi.getAll(),
       ]);
       setTransactions(txs);
       setForecastIncomes(forecastTotals.predictedIncomes);

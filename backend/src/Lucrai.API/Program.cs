@@ -1,4 +1,5 @@
 using System.Text;
+using FluentValidation;
 using Lucrai.API.Middleware;
 using Lucrai.Core.Entities;
 using Lucrai.Core.Interfaces;
@@ -14,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();

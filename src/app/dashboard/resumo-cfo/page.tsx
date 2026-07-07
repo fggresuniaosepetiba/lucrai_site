@@ -15,7 +15,7 @@ import { calcularAlertasAtivos } from "@/services/alertasService";
 import {
   gerarNotaCFO, gerarAcoesRecomendadas, calcularSaude, calcularSparkline,
 } from "@/services/dashboardIntelligenceService";
-import { db } from "@/database/dexie";
+
 import {
   TrendingUp, TrendingDown, ShieldCheck, BarChart3, DollarSign,
   Activity, Target, Bell, Heart, ChevronRight
@@ -87,11 +87,10 @@ export default function ResumoCFOPage() {
     setAcoes(acoesGeradas);
 
     // Load saved checkbox states
-    db.settings.get("acoes-concluidas").then((stored) => {
-      if (stored && stored.company) {
-        try { setAcoesConcluidas(new Set(JSON.parse(stored.company))); } catch {}
-      }
-    });
+    try {
+      const stored = localStorage.getItem("acoes-concluidas");
+      if (stored) setAcoesConcluidas(new Set(JSON.parse(stored)));
+    } catch {}
   }, [isLoading, lancamentos, entradas, saidas, saldoAtual, saldoProjetado, margemLiquida, dados.recebimentosPrevistos, dados.pagamentosPrevistos]);
 
   const toggleAcao = async (id: string) => {
@@ -99,12 +98,7 @@ export default function ResumoCFOPage() {
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setAcoesConcluidas(next);
-    await db.settings.put({
-      id: "acoes-concluidas",
-      company: JSON.stringify(Array.from(next)),
-      companyName: "",
-      primaryColor: "",
-    });
+    localStorage.setItem("acoes-concluidas", JSON.stringify(Array.from(next)));
   };
 
   const sparklineReceita: SparklinePoint[] = useMemo(() => calcularSparkline(lancamentos, "income", 6), [lancamentos]);

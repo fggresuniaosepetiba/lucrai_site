@@ -14,7 +14,7 @@ import { calcularTrial } from "@/utils/trial"
 import { generateId } from "@/lib/utils"
 import { DESTINO_POS_CADASTRO } from "@/lib/constants"
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react"
-import { db } from "@/database/dexie"
+import { ContasRepositoryApi } from "@/services/api-repositories/contas"
 
 const cadastroSchema = z
   .object({
@@ -152,12 +152,21 @@ export function CadastroForm({ origem }: CadastroFormProps) {
         createdAt: new Date().toISOString(),
       }
 
-      await db.contas.add(conta)
-      await db.users.add(usuario)
+      await ContasRepositoryApi.create({
+        nome: conta.nome,
+        email: conta.email,
+        telefone: conta.telefone,
+        senha: conta.senha,
+        empresa: conta.empresa,
+        porte: conta.porte,
+        faturamento: conta.faturamento,
+        origem: conta.origem,
+        plano: conta.plano,
+      })
 
       const sessao = {
         contaId: conta.id,
-        userId: usuario.id,
+        userId: "",
         nome: conta.nome,
         email: conta.email,
         empresa: conta.empresa,
