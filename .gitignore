@@ -42,3 +42,27 @@ appsettings.Production.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.csproj.user
+
+# NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nupkg
+*.nuget.props
+*.nuget.targets
+
+# VS
+.vs/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
