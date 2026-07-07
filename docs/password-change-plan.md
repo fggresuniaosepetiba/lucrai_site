@@ -30,8 +30,10 @@ docker start lucrai-postgres
 ## Executar o Backend
 
 ```bash
-cd backend
-dotnet run --project src/Lucrai.API --launch-profile http
+cd backend/src/Lucrai.API
+dotnet run 
+ou
+dotnet run --launch-profile http
 ```
 
 O backend inicia em `http://localhost:5099`.
@@ -101,11 +103,4 @@ dotnet test backend/tests/Lucrai.API.Tests
 
 Todos os 83 testes devem passar.
 
-## Estrutura dos Commits
 
-1. `feat: forced password change on first login + strong password policy + SuperAdmin plan with cross-company visibility`
-2. `fix: SuperAdmin settings lookup returning NotFound due to null company filter`
-3. `fix: set Plan default to Basic in migration and force MustChangePassword=true for existing users`
-4. `fix: seed 4 new SuperAdmin users (Lucraí), comment old seeds, fix connection string`
-5. `fix: restore lucrai.adm seed user with conditional password to fix CI tests`
-6. `chore: add .NET artifacts to .gitignore and untrack bin/obj`
