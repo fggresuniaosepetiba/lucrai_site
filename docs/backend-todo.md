@@ -259,10 +259,10 @@
 - [x] `.github/workflows/ci.yml`
   - [x] Job `backend`: dotnet restore → build → test
   - [x] Job `frontend`: npm ci → lint → build
-- [ ] `.github/workflows/deploy.yml`
-  - [ ] Build Docker images
-  - [ ] Push para container registry
-  - [ ] Deploy para produção
+- [x] `backend/railway.json` — config Railway (DOCKERFILE builder, restart policy)
+- [x] `backend/src/Lucrai.API/Dockerfile` — porta dinâmica via `$PORT` (Railway compatível)
+- [x] `docs/deploy-guide.md` — guia completo de deploy (Railway + Vercel)
+> **Nota:** Railway conecta diretamente ao GitHub e faz auto-deploy no `main`. Não é necessário `deploy.yml`.
 
 ---
 
@@ -295,8 +295,8 @@
 | 4 — Middleware/Infra | ~5 itens | 4 | 1 |
 | 5 — Serviços | ~2 serviços | 2 | 0 |
 | 6 — Docker | ~3 itens | 3 | 0 |
-| 7 — CI/CD | ~2 workflows | 1 | 1 |
+| 7 — CI/CD | ~4 itens | 4 | 0 |
 | 8 — Testes (Back-end) | ~13 itens | 13 | 0 |
-| **Total** | **~128 itens** | **126** | **2** |
+| **Total** | **~130 itens** | **129** | **1** |
 
 > **Nota:** Itens de frontend (testes unitários, E2E, integração de API) foram movidos para `docs/frontend-todo.md`.
