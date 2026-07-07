@@ -36,7 +36,8 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
                 .HasConversion<string>()
                 .HasMaxLength(20)
                 .IsRequired();
-            entity.Property(u => u.MustChangePassword).IsRequired();
+            entity.Property(u => u.MustChangePassword)
+                .IsRequired();
             entity.Property(u => u.Company).HasMaxLength(200).IsRequired();
             entity.Property(u => u.Avatar).HasMaxLength(500);
             entity.HasIndex(u => u.Email);

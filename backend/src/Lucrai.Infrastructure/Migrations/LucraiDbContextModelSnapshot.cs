@@ -76,7 +76,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Company", "Timestamp");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.CashForecast", b =>
@@ -158,7 +158,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Company", "Status");
 
-                    b.ToTable("CashForecasts");
+                    b.ToTable("CashForecasts", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.Category", b =>
@@ -201,7 +201,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Company", "Type");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.CompanyRegistration", b =>
@@ -271,7 +271,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Email");
 
-                    b.ToTable("CompanyRegistrations");
+                    b.ToTable("CompanyRegistrations", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.CompanySettings", b =>
@@ -304,7 +304,7 @@ namespace Lucrai.Infrastructure.Migrations
                     b.HasIndex("Company")
                         .IsUnique();
 
-                    b.ToTable("CompanySettings");
+                    b.ToTable("CompanySettings", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.DeletedItem", b =>
@@ -410,7 +410,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Company", "RestoreUntil");
 
-                    b.ToTable("DeletedItems");
+                    b.ToTable("DeletedItems", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.DismissedAlert", b =>
@@ -447,7 +447,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Company", "AlertType", "EntityId");
 
-                    b.ToTable("DismissedAlerts");
+                    b.ToTable("DismissedAlerts", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.PricingProduct", b =>
@@ -541,7 +541,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Company", "Name");
 
-                    b.ToTable("PricingProducts");
+                    b.ToTable("PricingProducts", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.RefreshToken", b =>
@@ -581,7 +581,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.Transaction", b =>
@@ -644,7 +644,7 @@ namespace Lucrai.Infrastructure.Migrations
 
                     b.HasIndex("Company", "Type");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("Lucrai.Core.Entities.User", b =>

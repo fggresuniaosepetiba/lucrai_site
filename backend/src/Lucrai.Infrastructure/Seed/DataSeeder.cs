@@ -19,22 +19,55 @@ public static class DataSeeder
         {
             var users = new[]
             {
+                //new User
+                //{
+                //    UserName = "trinarysolutions.adm",
+                //    Email = "trinarysolutions.adm",
+                //    Name = "Administrador Trinary",
+                //    Role = UserRole.Owner,
+                //    Plan = UserPlan.SuperAdmin,
+                //    Company = "Trinary",
+                //    EmailConfirmed = true,
+                //    MustChangePassword = true
+                //},
+                //new User
+                //{
+                //    UserName = "lucrai.adm",
+                //    Email = "lucrai.adm",
+                //    Name = "Gabriel Fellype",
+                //    Role = UserRole.Admin,
+                //    Plan = UserPlan.SuperAdmin,
+                //    Company = "Lucraí",
+                //    EmailConfirmed = true,
+                //    MustChangePassword = true
+                //},
+                //new User
+                //{
+                //    UserName = "graonatural.adm",
+                //    Email = "graonatural.adm",
+                //    Name = "Vitoria Justo",
+                //    Role = UserRole.Admin,
+                //    Plan = UserPlan.SuperAdmin,
+                //    Company = "Grão Natural",
+                //    EmailConfirmed = true,
+                //    MustChangePassword = true
+                //},
                 new User
                 {
-                    UserName = "trinarysolutions.adm",
-                    Email = "trinarysolutions.adm",
-                    Name = "Administrador Trinary",
+                    UserName = "joao.ribeiro",
+                    Email = "joao.ribeiro",
+                    Name = "João Ribeiro",
                     Role = UserRole.Owner,
                     Plan = UserPlan.SuperAdmin,
-                    Company = "Trinary",
+                    Company = "Lucraí",
                     EmailConfirmed = true,
                     MustChangePassword = true
                 },
                 new User
                 {
-                    UserName = "lucrai.adm",
-                    Email = "lucrai.adm",
-                    Name = "Gabriel Fellype",
+                    UserName = "vitoria.justo",
+                    Email = "vitoria.justo",
+                    Name = "Vitória Justo",
                     Role = UserRole.Admin,
                     Plan = UserPlan.SuperAdmin,
                     Company = "Lucraí",
@@ -43,12 +76,23 @@ public static class DataSeeder
                 },
                 new User
                 {
-                    UserName = "graonatural.adm",
-                    Email = "graonatural.adm",
-                    Name = "Vitoria Justo",
+                    UserName = "fellype.gabriel",
+                    Email = "fellype.gabriel",
+                    Name = "Fellype Gabriel",
                     Role = UserRole.Admin,
                     Plan = UserPlan.SuperAdmin,
-                    Company = "Grão Natural",
+                    Company = "Lucraí",
+                    EmailConfirmed = true,
+                    MustChangePassword = true
+                },
+                new User
+                {
+                    UserName = "eduardo.contador",
+                    Email = "eduardo.contador",
+                    Name = "Eduardo Contador",
+                    Role = UserRole.Admin,
+                    Plan = UserPlan.SuperAdmin,
+                    Company = "Lucraí",
                     EmailConfirmed = true,
                     MustChangePassword = true
                 }
@@ -56,9 +100,9 @@ public static class DataSeeder
 
             foreach (var user in users)
             {
-                var result = await userManager.CreateAsync(user, "Lucrai@1");
-                if (!result.Succeeded)
-                    throw new Exception($"Failed to seed user {user.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                await userManager.CreateAsync(user);
+                user.PasswordHash = userManager.PasswordHasher.HashPassword(user, "123");
+                await userManager.UpdateAsync(user);
             }
         }
 

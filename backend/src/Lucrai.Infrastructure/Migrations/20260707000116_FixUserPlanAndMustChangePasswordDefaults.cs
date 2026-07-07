@@ -15,11 +15,41 @@ namespace Lucrai.Infrastructure.Migrations
 
             migrationBuilder.Sql(
                 "UPDATE \"AspNetUsers\" SET \"MustChangePassword\" = true WHERE NOT \"MustChangePassword\"");
+
+            migrationBuilder.AlterColumn<string>(
+                name: "Plan",
+                table: "AspNetUsers",
+                type: "character varying(20)",
+                maxLength: 20,
+                nullable: false,
+                defaultValue: "Basic");
+
+            migrationBuilder.AlterColumn<bool>(
+                name: "MustChangePassword",
+                table: "AspNetUsers",
+                type: "boolean",
+                nullable: false,
+                defaultValue: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterColumn<string>(
+                name: "Plan",
+                table: "AspNetUsers",
+                type: "character varying(20)",
+                maxLength: 20,
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.AlterColumn<bool>(
+                name: "MustChangePassword",
+                table: "AspNetUsers",
+                type: "boolean",
+                nullable: false,
+                defaultValue: false);
+
             migrationBuilder.Sql(
                 "UPDATE \"AspNetUsers\" SET \"Plan\" = '' WHERE \"Plan\" = 'Basic'");
 

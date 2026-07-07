@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (username: string, password: string) => {
     try {
-      const data = await api.post<LoginResponse>("/api/auth/login", { email: username, password });
+      const data = await api.post<LoginResponse>("/api/auth/login", { email: username, password }, true);
       localStorage.setItem("lucrai-access-token", data.accessToken);
       localStorage.setItem("lucrai-refresh-token", data.refreshToken);
       localStorage.setItem("lucrai-auth", JSON.stringify(data.user));

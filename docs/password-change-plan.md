@@ -21,3 +21,23 @@
 - [ ] `api.ts`: garantir que `change-password` funcione com token atual (não requer refresh)
 - [ ] Badge "Super Admin" no sidebar/header pra usuários SuperAdmin
 - [ ] Seletor de empresa no topo para SuperAdmin navegar entre dados de qualquer company
+
+
+#### O que é para fazer: 
+
+•	João Ribeiro:
+o	Login: joao.ribeiro
+o	Senha: 123
+•	Vitória Justo:
+o	Login: vitoria.justo
+o	Senha: 123
+•	Fellype Gabriel: Cria um login e senha pra ti
+•	Eduardo Contador:
+o	Login: eduardo.contador
+o	Senha: 123
+Todos os usuários quando entrarem tem que ser obrigado a trocar a senha e a senha precisa ser segura com:
+•	Pelo menos 6 caracteres
+•	Uma letra maiúscula
+•	Uma letra minúscula
+•	Um número
+•	Um caractere especial (! @ # $ % & *)

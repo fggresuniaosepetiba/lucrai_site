@@ -4,33 +4,54 @@ import { db } from "./dexie";
 import { generateId } from "@/lib/utils";
 
 const defaultUsers = [
-  {
-    name: "Administrador Trinary",
-    email: "trinarysolutions.adm",
-    password: "TrinarySolutions@@",
-    role: "owner" as const,
-    company: "Trinary",
-  },
-  {
-    name: "Gabriel Fellype",
-    email: "lucrai.adm",
-    password: "Lucrai@@",
-    role: "admin" as const,
-    company: "Lucraí",
-  },
-  {
-    name: "Vitória Justo",
-    email: "graonatural.adm",
-    password: "GraoNatural@@",
-    role: "admin" as const,
-    company: "Grão Natural",
-  },
+  // {
+  //   name: "Administrador Trinary",
+  //   email: "trinarysolutions.adm",
+  //   password: "TrinarySolutions@@",
+  //   role: "owner" as const,
+  //   company: "Trinary",
+  // },
+  // {
+  //   name: "Gabriel Fellype",
+  //   email: "lucrai.adm",
+  //   password: "Lucrai@@",
+  //   role: "admin" as const,
+  //   company: "Lucraí",
+  // },
+  // {
+  //   name: "Vitória Justo",
+  //   email: "graonatural.adm",
+  //   password: "GraoNatural@@",
+  //   role: "admin" as const,
+  //   company: "Grão Natural",
+  // },
   {
     name: "João Ribeiro",
     email: "joao.ribeiro",
     password: "123",
     role: "owner" as const,
-    company: "João Ribeiro",
+    company: "Lucraí",
+  },
+  {
+    name: "Vitória Justo",
+    email: "vitoria.justo",
+    password: "123",
+    role: "admin" as const,
+    company: "Lucraí",
+  },
+  {
+    name: "Fellype Gabriel",
+    email: "fellype.gabriel",
+    password: "123",
+    role: "admin" as const,
+    company: "Lucraí",
+  },
+  {
+    name: "Eduardo Contador",
+    email: "eduardo.contador",
+    password: "123",
+    role: "admin" as const,
+    company: "Lucraí",
   },
 ];
 
