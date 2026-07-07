@@ -33,9 +33,10 @@
 - [x] `EntryType.cs` — Transaction, Forecast
 - [x] `RecurrenceType.cs` — Daily, Weekly, Biweekly, Monthly, Quarterly, Semiannual, Annual
 - [x] `PorteEmpresa.cs` — MEI, ME, EPP, Medio, Grande
+- [x] `UserPlan.cs` — Free, Basic, Premium, SuperAdmin
 
 ### 1.5 Entidades (`Lucrai.Core/Entities/`)
-- [x] `User.cs` — estende IdentityUser, campos: Name, Role, Company, Avatar, Active, CreatedAt
+- [x] `User.cs` — estende IdentityUser, campos: Name, Role, Company, Avatar, Active, CreatedAt, Plan, MustChangePassword
 - [x] `Transaction.cs` — Id, DisplayId, Type, Value, CategoryId, CategoryName, Description, Date, Observation, Company, CreatedAt, UpdatedAt
 - [x] `Category.cs` — Id, Name, Color, Icon, Type, Company, CreatedAt (relacionamento 1:N com Transaction)
 - [x] `CashForecast.cs` — Id, DisplayId, Type, Description, Amount, Category, ExpectedDate, Status, Notes, Company + campos de cancelamento e recorrência
@@ -63,14 +64,16 @@
 - [x] Índices: compostos por Company + campo de busca em todas as tabelas
 
 ### 1.8 Seed (`Lucrai.Infrastructure/Seed/`)
-- [x] `DataSeeder.cs` — 3 usuários padrão (Trinary, Lucraí, Grão Natural) com senha via UserManager
+- [x] `DataSeeder.cs` — 5 usuários SuperAdmin (Lucraí): lucrai.adm, joao.ribeiro, vitoria.justo, fellype.gabriel, eduardo.contador
+- [x] Senhas condicionais: `lucrai.adm → Lucrai@1`, demais → `123` (forçam troca de senha no 1º login)
+- [x] Todos os seed users com `MustChangePassword = true`, `Plan = SuperAdmin`, `Company = "Lucraí"`
 - [x] 12 categorias padrão (4 de receita + 8 de despesa) por empresa
 - [x] Executa migrations automaticamente (com fallback EnsureCreated para InMemory)
 
 ### 1.9 API Setup (`Lucrai.API/`)
-- [x] `Program.cs` — DI completo: DbContext (Npgsql/InMemory configurável), Identity, JWT Bearer, CORS, autorização
+- [x] `Program.cs` — DI completo: DbContext (Npgsql/InMemory configurável), Identity, JWT Bearer, CORS, autorização, password policy
 - [x] `appsettings.json` — ConnectionString, JWT config, Refresh Token config, CORS origins
-- [ ] `appsettings.Development.json` — config para ambiente local
+- [x] `appsettings.Development.json` — config para ambiente local
 
 ### 1.10 Neon (Produção)
 - [x] `appsettings.Production.json` — connection string Neon (key-value), JWT key
@@ -265,43 +268,20 @@
 
 ## Fase 8: Testes
 
-### 8.1 Back-end (xUnit) — 22 testes passando
+### 8.1 Back-end (xUnit) — 83 testes passando
 - [x] `AuthControllerTests.cs` — register, login, refresh, logout, me, duplicate email
 - [x] `TransactionsControllerTests.cs` — CRUD, list, balance, summary
 - [x] `CategoriesControllerTests.cs` — CRUD, list, get by type
 - [x] `DashboardControllerTests.cs` — projection, runway, breakeven, health, alerts
 - [x] `PricingControllerTests.cs` — create (com cálculo de preços), list
-- [ ] `Services/DashboardIntelligenceServiceTests.cs` — projeção, runway, break-even, saúde
-- [ ] `Services/AlertasServiceTests.cs` — geração de alertas, dispensar/restaurar
-- [ ] `CashForecastsControllerTests.cs` — CRUD, markAs*
-- [ ] `UsersControllerTests.cs` — CRUD, soft delete
-- [ ] `TrashControllerTests.cs` — restore, cleanup
-- [ ] `AuditControllerTests.cs` — list, filter
-- [ ] `SettingsControllerTests.cs` — CRUD
-- [ ] `ContasControllerTests.cs` — create registration
-
-### 8.2 Front-end (Vitest + RTL)
-- [ ] Adaptar testes existentes para mockar API (substituir Dexie)
-- [ ] Testar hooks (useDadosFiltrados, useAlertsCount)
-- [ ] Testar utils (mascaras, formatação)
-
-### 8.3 E2E (Playwright)
-- [ ] Fluxo: Login → Dashboard → ver indicadores
-- [ ] Fluxo: Criar transação → ver no financeiro
-- [ ] Fluxo: Criar previsão → marcar como recebida
-- [ ] Fluxo: Excluir → restaurar da lixeira
-- [ ] Fluxo: Gerenciar categorias
-
----
-
-## Fase 9: Integração Front-end
-
-- [ ] `src/services/api.ts` — cliente HTTP com Bearer token automático
-- [ ] Atualizar `auth-store.ts` — login via API, JWT armazenado
-- [ ] Atualizar `useDadosFiltrados.ts` — chamar API ao invés de Dexie
-- [ ] Substituir chamadas Dexie nos pages por chamadas API
-- [ ] Tratar erros da API (toast, redirect se 401)
-- [ ] Refresh token automático (interceptor 401 → refresh → retry)
+- [x] `Services/DashboardIntelligenceServiceTests.cs` — projeção, runway, break-even, saúde
+- [x] `Services/AlertasServiceTests.cs` — geração de alertas, dispensar/restaurar
+- [x] `CashForecastsControllerTests.cs` — CRUD, markAs*
+- [x] `UsersControllerTests.cs` — CRUD, soft delete
+- [x] `TrashControllerTests.cs` — restore, cleanup
+- [x] `AuditControllerTests.cs` — list, filter
+- [x] `SettingsControllerTests.cs` — CRUD
+- [x] `ContasControllerTests.cs` — create registration
 
 ---
 
@@ -309,13 +289,14 @@
 
 | Fase | Itens | Concluídos | Pendentes |
 |------|-------|-----------|-----------|
-| 1 — Fundação | ~41 itens | 40 | 1 |
+| 1 — Fundação | ~45 itens | 45 | 0 |
 | 2 — Controllers | ~50 endpoints | 50 | 0 |
 | 3 — Repositories | ~8 arquivos | 8 | 0 |
 | 4 — Middleware/Infra | ~5 itens | 4 | 1 |
 | 5 — Serviços | ~2 serviços | 2 | 0 |
 | 6 — Docker | ~3 itens | 3 | 0 |
 | 7 — CI/CD | ~2 workflows | 1 | 1 |
-| 8 — Testes | ~15 itens | 5 | 10 |
-| 9 — Integração Front | ~6 itens | 0 | 6 |
-| **Total** | **~132 itens** | **111** | **21** |
+| 8 — Testes (Back-end) | ~13 itens | 13 | 0 |
+| **Total** | **~128 itens** | **126** | **2** |
+
+> **Nota:** Itens de frontend (testes unitários, E2E, integração de API) foram movidos para `docs/frontend-todo.md`.
