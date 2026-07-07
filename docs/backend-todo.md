@@ -215,7 +215,7 @@
 - [x] `Lucrai.API/Middleware/TenantContextMiddleware.cs`
   - [x] Extrai Company/UserName/UserId do JWT e disponibiliza no HttpContext
 - [x] DTOs de request/response para todos os endpoints (11 arquivos)
-- [ ] Validação com FluentValidation ou DataAnnotations
+- [x] Validação com FluentValidation (17 validators para todos os request DTOs)
 
 ---
 
@@ -292,11 +292,11 @@
 | 1 — Fundação | ~45 itens | 45 | 0 |
 | 2 — Controllers | ~50 endpoints | 50 | 0 |
 | 3 — Repositories | ~8 arquivos | 8 | 0 |
-| 4 — Middleware/Infra | ~5 itens | 4 | 1 |
+| 4 — Middleware/Infra | ~5 itens | 5 | 0 |
 | 5 — Serviços | ~2 serviços | 2 | 0 |
 | 6 — Docker | ~3 itens | 3 | 0 |
 | 7 — CI/CD | ~4 itens | 4 | 0 |
 | 8 — Testes (Back-end) | ~13 itens | 13 | 0 |
-| **Total** | **~130 itens** | **129** | **1** |
+| **Total** | **~130 itens** | **130** | **0** |
 
 > **Nota:** Itens de frontend (testes unitários, E2E, integração de API) foram movidos para `docs/frontend-todo.md`.

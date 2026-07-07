@@ -144,7 +144,7 @@
 - [x] api.ts — refresh token automático (interceptor 401 → refresh → retry)
 - [x] api.ts — tratamento de erro da API (classe `ApiError`, redirect 401)
 - [x] `api-repositories/` — repositórios API para transactions, cash-forecast, dashboard
-- [ ] Substituir chamadas Dexie restantes nos pages (pricing, financial, cash-forecast, dashboard, reports, resumo-cfo)
+- [x] Substituir chamadas Dexie restantes nos pages (pricing, financial, cash-forecast, dashboard, reports, resumo-cfo, cadastro)
 - [ ] `useDocumentos.ts` — migrar de Dexie para API
 
 ## Testes
