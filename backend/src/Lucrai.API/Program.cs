@@ -36,7 +36,7 @@ builder.Services.AddDbContext<LucraiDbContext>(options =>
     if (dbProvider == "InMemory")
         options.UseInMemoryDatabase(builder.Configuration.GetValue<string>("InMemoryDbName") ?? "LucraiTestDb");
     else
-        options.UseNpgsql(builder.Configuration.GetConnectionString("Default"));
+        options.UseNpgsql(builder.Configuration.GetConnectionString("Default")?.Trim('"'));
 });
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -50,7 +50,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 .AddEntityFrameworkStores<LucraiDbContext>()
 .AddDefaultTokenProviders();
 
-var jwtKey = builder.Configuration["Jwt:Key"]
+var jwtKey = builder.Configuration["Jwt:Key"]?.Trim('"')
     ?? throw new InvalidOperationException("JWT Key is not configured");
 
 builder.Services.AddAuthentication(options =>
@@ -66,8 +66,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidIssuer = builder.Configuration["Jwt:Issuer"]?.Trim('"'),
+        ValidAudience = builder.Configuration["Jwt:Audience"]?.Trim('"'),
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
     };
