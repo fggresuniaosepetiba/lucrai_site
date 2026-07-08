@@ -79,12 +79,27 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
-            ?? [builder.Configuration.GetValue<string>("Cors:Origins")?.Trim('"') ?? "http://localhost:3000"];
-        policy.WithOrigins(origins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>();
+        if (origins is null)
+        {
+            var single = builder.Configuration.GetValue<string>("Cors:Origins")?.Trim('"');
+            if (single is not null)
+                origins = [single];
+        }
+
+        if (origins is { Length: > 0 })
+        {
+            policy.WithOrigins(origins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
     });
 });
 
