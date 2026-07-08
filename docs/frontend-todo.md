@@ -180,11 +180,11 @@
 
 #### 10.5 — Páginas
 
-- [ ] 10.5.1 `[id]/page.tsx` — substituir `DocumentoRepository.getById()` por `DocumentoRepositoryApi`
-- [ ] 10.5.2 `[id]/page.tsx` — substituir logs por `DocumentoRepositoryApi.getLogs()`
-- [ ] 10.5.3 `[id]/page.tsx` — ações (reprocessar/excluir) passam a usar service migrado
-- [ ] 10.5.4 `[id]/conferencia/page.tsx` — substituir `DocumentoRepository` por `DocumentoRepositoryApi`
-- [ ] 10.5.5 `[id]/conferencia/page.tsx` — `confirmar`/`rejeitar` passam a usar service migrado
+- [x] 10.5.1 `[id]/page.tsx` — substituir `DocumentoRepository.getById()` por `DocumentoRepositoryApi`
+- [x] 10.5.2 `[id]/page.tsx` — substituir logs por `DocumentoRepositoryApi.getLogs()`
+- [x] 10.5.3 `[id]/page.tsx` — ações (reprocessar/excluir) passam a usar service migrado
+- [x] 10.5.4 `[id]/conferencia/page.tsx` — substituir `DocumentoRepository` por `DocumentoRepositoryApi`
+- [x] 10.5.5 `[id]/conferencia/page.tsx` — `confirmar`/`rejeitar` passam a usar service migrado
 
 ## Testes
 
@@ -228,7 +228,7 @@
 | Configurações | 4 | 0 |
 | Auditoria | 6 | 0 |
 | Tema e Interface | 6 | 0 |
-| Integração com API | 25 | 5 |
+| Integração com API | 30 | 0 |
 | Testes Unitários | 0 | 3 |
 | Testes E2E | 0 | 5 |
 | Pendências Gerais | 0 | 5 |

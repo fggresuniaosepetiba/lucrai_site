@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { DocumentoRepository, DocumentoLogRepository } from "@/database/repositories/documentos";
-import { DocumentoStorageService } from "@/services/documentos/documentos-storage.service";
+import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import { DocumentoService } from "@/services/documentos/documentos.service";
 import type { DocumentoFinanceiro, DocumentoLog } from "@/types";
 import type { DadosDocumento } from "@/services/documentos/parser";
@@ -62,16 +61,14 @@ export default function DetalheDocumentoPage() {
   const loadData = async () => {
     try {
       const [d, l] = await Promise.all([
-        DocumentoRepository.getById(documentoId),
-        DocumentoLogRepository.getByDocumento(documentoId),
+        DocumentoRepositoryApi.getById(documentoId),
+        DocumentoRepositoryApi.getLogs(documentoId),
       ]);
       if (!d) { toast("Documento não encontrado", "", "destructive"); router.push("/documentos"); return; }
       setDoc(d);
-      setLogs(l.sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()));
+      setLogs(l.sort((a: DocumentoLog, b: DocumentoLog) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()));
 
-      if (d.arquivo_data) {
-        setFileUrl(DocumentoStorageService.getFileUrl(d.arquivo_data, d.tipo_arquivo));
-      }
+      DocumentoRepositoryApi.getDownloadUrl(documentoId).then(setFileUrl).catch(() => {});
     } catch (err) {
       console.error(err);
     } finally {
@@ -111,7 +108,6 @@ export default function DetalheDocumentoPage() {
 
   if (!doc) return null;
 
-  const rawData = doc.dados_extraidos_raw ? JSON.parse(doc.dados_extraidos_raw) : null;
   let dados: DadosDocumento | null = null;
   if (doc.dados_estruturados) {
     try { dados = JSON.parse(doc.dados_estruturados); } catch { dados = null; }

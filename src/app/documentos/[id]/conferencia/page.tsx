@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { DocumentoRepository } from "@/database/repositories/documentos";
-import { CategoryRepository } from "@/database/repositories/categories";
-import { DocumentoStorageService } from "@/services/documentos/documentos-storage.service";
+import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
+import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
 import { useConferencia } from "@/hooks/useConferencia";
 import { DocumentoAprendizadoService } from "@/services/documentos/documentos-aprendizado.service";
 import type { DocumentoFinanceiro, Category, TipoMovimentacao } from "@/types";
@@ -120,9 +119,9 @@ export default function ConferenciaPage() {
   const loadData = async () => {
     try {
       const [d, cats, allDocs] = await Promise.all([
-        DocumentoRepository.getById(documentoId),
-        CategoryRepository.getAll(empresa_id),
-        DocumentoRepository.getByStatus(empresa_id, "AGUARDANDO_CONFERENCIA"),
+        DocumentoRepositoryApi.getById(documentoId),
+        CategoryRepositoryApi.getAll(),
+        DocumentoRepositoryApi.getAll("AGUARDANDO_CONFERENCIA"),
       ]);
       if (!d) { toast("Documento não encontrado", "", "destructive"); router.push("/documentos"); return; }
 
@@ -138,14 +137,11 @@ export default function ConferenciaPage() {
         }
       }
 
-      const idx = allDocs.findIndex((x) => x.id === documentoId);
-      setNavDocs(allDocs.map((x) => ({ id: x.id, nome: x.nome_arquivo_original })));
+      const idx = allDocs.findIndex((x: DocumentoFinanceiro) => x.id === documentoId);
+      setNavDocs(allDocs.map((x: DocumentoFinanceiro) => ({ id: x.id, nome: x.nome_arquivo_original })));
       setCurrentIndex(idx);
 
-      if (d.arquivo_data) {
-        const url = DocumentoStorageService.getFileUrl(d.arquivo_data, d.tipo_arquivo);
-        setFileUrl(url);
-      }
+      DocumentoRepositoryApi.getDownloadUrl(documentoId).then(setFileUrl).catch(() => {});
 
       setFormData({
         tipo_movimentacao: d.tipo_movimentacao_sugerido || dados?.interpretacao_financeira?.tipo_movimentacao || "",
@@ -178,9 +174,8 @@ export default function ConferenciaPage() {
     try {
       const tipo = formData.tipo_movimentacao === "RECEITA" ? "income" as const : "expense" as const;
       const color = tipo === "income" ? "#22c55e" : "#ef4444";
-      const created = await CategoryRepository.create(
-        { name, type: tipo, color, icon: "tag" },
-        empresa_id
+      const created = await CategoryRepositoryApi.create(
+        { name, type: tipo, color, icon: "tag" }
       );
       setCategorias((prev) => [...prev, created]);
       setFormData((prev) => ({ ...prev, categoria_id: created.id }));

@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5099";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5099";
 
 export class ApiError extends Error {
   constructor(

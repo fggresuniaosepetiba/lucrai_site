@@ -1,4 +1,4 @@
-import { api } from "@/services/api";
+import { api, API_URL } from "@/services/api";
 import type {
   DocumentoFinanceiro, DocumentoStats, DocumentoLog, DocumentoTrashItem,
   DocumentoAprendizado, DocumentoConfiguracao,
@@ -9,6 +9,8 @@ interface ApiDocumento {
   company: string;
   userUploadId: string;
   nomeArquivoOriginal: string;
+  nomeArquivoStorage: string;
+  pathStorage: string;
   tipoArquivo: string;
   tamanhoBytes: number;
   status: string;
@@ -21,8 +23,16 @@ interface ApiDocumento {
   tipoMovimentacaoSugerido: string | null;
   categoriaSugeridaId: string | null;
   confiancaExtracao: number | null;
+  dadosExtraidosRaw: string | null;
+  dadosEstruturados: string | null;
+  observacoesIa: string | null;
   resumoExecutivo: string | null;
   lancamentoId: string | null;
+  usuarioConferenciaId: string | null;
+  dataConferencia: string | null;
+  motivoRejeicao: string | null;
+  tentativasProcessamento: number;
+  ultimoErro: string | null;
   criadoEm: string;
   atualizadoEm: string;
 }
@@ -113,8 +123,8 @@ function mapDocumento(d: ApiDocumento): DocumentoFinanceiro {
     empresa_id: d.company,
     usuario_upload_id: d.userUploadId,
     nome_arquivo_original: d.nomeArquivoOriginal,
-    nome_arquivo_storage: "",
-    path_storage: "",
+    nome_arquivo_storage: d.nomeArquivoStorage,
+    path_storage: d.pathStorage,
     tipo_arquivo: d.tipoArquivo as DocumentoFinanceiro["tipo_arquivo"],
     tamanho_bytes: d.tamanhoBytes,
     hash_arquivo: "",
@@ -128,20 +138,20 @@ function mapDocumento(d: ApiDocumento): DocumentoFinanceiro {
     tipo_movimentacao_sugerido: d.tipoMovimentacaoSugerido as DocumentoFinanceiro["tipo_movimentacao_sugerido"],
     categoria_sugerida_id: d.categoriaSugeridaId,
     confianca_extracao: d.confiancaExtracao,
-    dados_extraidos_raw: null,
-    dados_estruturados: null,
-    observacoes_ia: null,
+    dados_extraidos_raw: d.dadosExtraidosRaw,
+    dados_estruturados: d.dadosEstruturados,
+    observacoes_ia: d.observacoesIa,
     resumo_executivo: d.resumoExecutivo,
     lancamento_id: d.lancamentoId,
-    usuario_conferencia_id: null,
-    data_conferencia: null,
-    motivo_rejeicao: null,
+    usuario_conferencia_id: d.usuarioConferenciaId,
+    data_conferencia: d.dataConferencia,
+    motivo_rejeicao: d.motivoRejeicao,
     motivo_exclusao: null,
     exclusao_permanente: null,
     excluido_por: null,
     data_exclusao: null,
-    tentativas_processamento: 0,
-    ultimo_erro: null,
+    tentativas_processamento: d.tentativasProcessamento,
+    ultimo_erro: d.ultimoErro,
     arquivo_data: null,
     criado_em: d.criadoEm,
     atualizado_em: d.atualizadoEm,
@@ -209,9 +219,29 @@ function mapConfig(c: ApiDocumentoConfig): DocumentoConfiguracao {
 }
 
 export const DocumentoRepositoryApi = {
-  async getAll(): Promise<DocumentoFinanceiro[]> {
-    const data = await api.get<ApiDocumento[]>("/api/documentos");
+  async getAll(status?: string): Promise<DocumentoFinanceiro[]> {
+    const path = status ? `/api/documentos?status=${encodeURIComponent(status)}` : "/api/documentos";
+    const data = await api.get<ApiDocumento[]>(path);
     return data.map(mapDocumento);
+  },
+
+  async getById(id: string): Promise<DocumentoFinanceiro | null> {
+    try {
+      const data = await api.get<ApiDocumento>(`/api/documentos/${id}`);
+      return mapDocumento(data);
+    } catch {
+      return null;
+    }
+  },
+
+  async getDownloadUrl(id: string): Promise<string> {
+    const token = localStorage.getItem("lucrai-access-token");
+    const res = await fetch(`${API_URL}/api/documentos/${id}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Falha ao baixar arquivo");
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
   },
 
   async getStats(mes: number, ano: number): Promise<DocumentoStats> {

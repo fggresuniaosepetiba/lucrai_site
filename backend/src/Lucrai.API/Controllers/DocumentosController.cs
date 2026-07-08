@@ -27,9 +27,11 @@ public class DocumentosController : ControllerBase
     private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? status = null)
     {
         var docs = await _repo.GetAllAsync(QueryCompany);
+        if (!string.IsNullOrEmpty(status))
+            docs = docs.Where(d => d.Status == status).ToList();
         var result = docs.Select(MapToResponse);
         return Ok(result);
     }
@@ -41,6 +43,28 @@ public class DocumentosController : ControllerBase
         if (doc == null || (!IsSuperAdmin && doc.Company != Company))
             return NotFound(new { error = "Documento não encontrado" });
         return Ok(MapToResponse(doc));
+    }
+
+    [HttpGet("{id:guid}/download")]
+    public async Task<IActionResult> Download(Guid id)
+    {
+        var doc = await _repo.GetByIdAsync(id);
+        if (doc == null || (!IsSuperAdmin && doc.Company != Company))
+            return NotFound(new { error = "Documento não encontrado" });
+
+        if (doc.ArquivoData == null || doc.ArquivoData.Length == 0)
+            return NotFound(new { error = "Arquivo não disponível" });
+
+        var contentType = doc.TipoArquivo switch
+        {
+            "PDF" => "application/pdf",
+            "XML" => "application/xml",
+            "JPG" or "JPEG" => "image/jpeg",
+            "PNG" => "image/png",
+            _ => "application/octet-stream"
+        };
+
+        return File(doc.ArquivoData, contentType, doc.NomeArquivoOriginal);
     }
 
     [HttpGet("stats")]
@@ -329,11 +353,15 @@ public class DocumentosController : ControllerBase
     {
         return new DocumentoResponse(
             d.Id, d.Company, d.UserUploadId, d.NomeArquivoOriginal,
+            d.NomeArquivoStorage, d.PathStorage,
             d.TipoArquivo, d.TamanhoBytes, d.Status,
             d.TipoDocumentoDetectado, d.ValorExtraido, d.DataExtraida,
             d.FavorecidoExtraido, d.EmitenteExtraido, d.DescricaoExtraida,
             d.TipoMovimentacaoSugerido, d.CategoriaSugeridaId,
-            d.ConfiancaExtracao, d.ResumoExecutivo, d.LancamentoId,
+            d.ConfiancaExtracao, d.DadosExtraidosRaw, d.DadosEstruturados,
+            d.ObservacoesIa, d.ResumoExecutivo, d.LancamentoId,
+            d.UsuarioConferenciaId, d.DataConferencia, d.MotivoRejeicao,
+            d.TentativasProcessamento, d.UltimoErro,
             d.CriadoEm, d.AtualizadoEm
         );
     }
