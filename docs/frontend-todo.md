@@ -151,13 +151,13 @@
 
 #### 10.1 — `api-repositories/documents.ts` (adicionar métodos faltantes)
 
-- [ ] 10.1.1 Adicionar interfaces/types: `ApiDocumentoLog`, `ApiDocumentoTrashItem`, `ApiDocumentoAprendizado`, `ApiDocumentoConfig` + funções `mapLog()`, `mapTrashItem()`, `mapAprendizado()`, `mapConfig()`
-- [ ] 10.1.2 Lixeira: `getTrash()`, `excluir(id, motivo)`, `restaurar(id)`, `excluirPermanente(id)`, `cleanupTrash()`
-- [ ] 10.1.3 Conferência: `confirmar(id, data)`, `rejeitar(id, motivo)`
-- [ ] 10.1.4 Ações: `reprocessar(id)`
-- [ ] 10.1.5 Auditoria: `getLogs(documentoId)`
-- [ ] 10.1.6 Aprendizado: `getAprendizado()`, `upsertAprendizado(data)`, `deleteAprendizado(id)`
-- [ ] 10.1.7 Config: `getConfig()`, `updateConfig(data)`
+- [x] 10.1.1 Adicionar interfaces/types: `ApiDocumentoLog`, `ApiDocumentoTrashItem`, `ApiDocumentoAprendizado`, `ApiDocumentoConfig` + funções `mapLog()`, `mapTrashItem()`, `mapAprendizado()`, `mapConfig()`
+- [x] 10.1.2 Lixeira: `getTrash()`, `excluir(id, motivo)`, `restaurar(id)`, `excluirPermanente(id)`, `cleanupTrash()`
+- [x] 10.1.3 Conferência: `confirmar(id, data)`, `rejeitar(id, motivo)`
+- [x] 10.1.4 Ações: `reprocessar(id)`
+- [x] 10.1.5 Auditoria: `getLogs(documentoId)`
+- [x] 10.1.6 Aprendizado: `getAprendizado()`, `upsertAprendizado(data)`, `deleteAprendizado(id)`
+- [x] 10.1.7 Config: `getConfig()`, `updateConfig(data)`
 
 #### 10.2 — `useDocumentoConfig` (hook + página config)
 
