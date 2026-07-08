@@ -188,7 +188,7 @@ describe("Segurança - Isolamento por Empresa", () => {
       { id: "3", empresa_id: "Empresa B" },
     ];
 
-    const filtrarPorEmpresa = (docs: { empresa_id: string }[], empresaId: string) =>
+    const filtrarPorEmpresa = (docs: { id: string; empresa_id: string }[], empresaId: string) =>
       docs.filter((d) => d.empresa_id === empresaId);
 
     const resultA = filtrarPorEmpresa(

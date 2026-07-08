@@ -20,6 +20,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
     public DbSet<CompanyRegistration> CompanyRegistrations => Set<CompanyRegistration>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<DismissedAlert> DismissedAlerts => Set<DismissedAlert>();
+    public DbSet<DocumentoFinanceiro> Documentos => Set<DocumentoFinanceiro>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -217,6 +218,40 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
 
             entity.HasIndex(d => new { d.Company, d.AlertType, d.EntityId });
             entity.HasIndex(d => d.Company);
+        });
+
+        builder.Entity<DocumentoFinanceiro>(entity =>
+        {
+            entity.HasKey(d => d.Id);
+            entity.Property(d => d.Company).HasMaxLength(200).IsRequired();
+            entity.Property(d => d.UserUploadId).HasMaxLength(200).IsRequired();
+            entity.Property(d => d.NomeArquivoOriginal).HasMaxLength(500).IsRequired();
+            entity.Property(d => d.NomeArquivoStorage).HasMaxLength(500).IsRequired();
+            entity.Property(d => d.PathStorage).HasMaxLength(1000).IsRequired();
+            entity.Property(d => d.TipoArquivo).HasMaxLength(10).IsRequired();
+            entity.Property(d => d.HashArquivo).HasMaxLength(100).IsRequired();
+            entity.Property(d => d.Status).HasMaxLength(30).IsRequired();
+            entity.Property(d => d.TipoDocumentoDetectado).HasMaxLength(100);
+            entity.Property(d => d.ValorExtraido).HasColumnType("decimal(18,2)");
+            entity.Property(d => d.DataExtraida).HasMaxLength(20);
+            entity.Property(d => d.FavorecidoExtraido).HasMaxLength(200);
+            entity.Property(d => d.EmitenteExtraido).HasMaxLength(200);
+            entity.Property(d => d.DescricaoExtraida).HasMaxLength(500);
+            entity.Property(d => d.TipoMovimentacaoSugerido).HasMaxLength(20);
+            entity.Property(d => d.CategoriaSugeridaId).HasMaxLength(100);
+            entity.Property(d => d.ResumoExecutivo).HasMaxLength(2000);
+            entity.Property(d => d.LancamentoId).HasMaxLength(100);
+            entity.Property(d => d.UsuarioConferenciaId).HasMaxLength(200);
+            entity.Property(d => d.DataConferencia).HasMaxLength(30);
+            entity.Property(d => d.MotivoRejeicao).HasMaxLength(500);
+            entity.Property(d => d.MotivoExclusao).HasMaxLength(500);
+            entity.Property(d => d.ExcluidoPor).HasMaxLength(200);
+            entity.Property(d => d.DataExclusao).HasMaxLength(30);
+            entity.Property(d => d.UltimoErro).HasMaxLength(1000);
+
+            entity.HasIndex(d => new { d.Company, d.Status });
+            entity.HasIndex(d => new { d.Company, d.CriadoEm });
+            entity.HasIndex(d => d.HashArquivo);
         });
     }
 }

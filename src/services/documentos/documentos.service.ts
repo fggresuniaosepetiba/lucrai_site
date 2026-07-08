@@ -1,6 +1,7 @@
 "use client";
 
 import { DocumentoRepository, DocumentoLogRepository, DocumentoConfigRepository } from "@/database/repositories/documentos";
+import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { DocumentoStorageService } from "./documentos-storage.service";
@@ -52,6 +53,14 @@ export const DocumentoService = {
     empresa_id: string,
     usuario_id: string
   ): Promise<DocumentoFinanceiro[]> {
+    // Try API first
+    try {
+      const apiDocs = await DocumentoRepositoryApi.upload(files);
+      return apiDocs;
+    } catch {
+      // Fallback: Dexie
+    }
+
     const config = await DocumentoConfigRepository.get(empresa_id);
     const maxSizeMB = config?.limite_tamanho_mb || 10;
 

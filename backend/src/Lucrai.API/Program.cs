@@ -26,6 +26,7 @@ builder.Services.AddScoped<IAuditRepository, AuditRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 builder.Services.AddScoped<IPricingRepository, PricingRepository>();
 builder.Services.AddScoped<IDismissedAlertRepository, DismissedAlertRepository>();
+builder.Services.AddScoped<IDocumentoRepository, DocumentoRepository>();
 
 builder.Services.AddScoped<IDashboardIntelligenceService, DashboardIntelligenceService>();
 builder.Services.AddScoped<IAlertasService, AlertasService>();

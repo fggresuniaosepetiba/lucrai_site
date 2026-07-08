@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { liveQuery } from "dexie";
-import { db } from "@/database/dexie";
 import { DocumentoRepository, DocumentoConfigRepository } from "@/database/repositories/documentos";
+import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import type { DocumentoFinanceiro, DocumentoConfiguracao, DocumentoStats } from "@/types";
 
 export function useDocumentos(empresa_id: string) {
@@ -14,36 +13,28 @@ export function useDocumentos(empresa_id: string) {
   const load = useCallback(async () => {
     if (!empresa_id) return;
     try {
-      const docs = await DocumentoRepository.getAll(empresa_id);
+      const docs = await DocumentoRepositoryApi.getAll();
       setDocumentos(docs);
       const now = new Date();
-      const s = await DocumentoRepository.getStats(empresa_id, now.getMonth() + 1, now.getFullYear());
+      const s = await DocumentoRepositoryApi.getStats(now.getMonth() + 1, now.getFullYear());
       setStats(s);
-    } catch (err) {
-      console.error("Error loading documentos:", err);
+    } catch {
+      try {
+        const docs = await DocumentoRepository.getAll(empresa_id);
+        setDocumentos(docs);
+        const now = new Date();
+        const s = await DocumentoRepository.getStats(empresa_id, now.getMonth() + 1, now.getFullYear());
+        setStats(s);
+      } catch (err) {
+        console.error("Error loading documentos:", err);
+      }
     }
   }, [empresa_id]);
 
   useEffect(() => {
-    if (!empresa_id) return;
     setLoading(true);
     load().finally(() => setLoading(false));
-
-    const observable = liveQuery(() =>
-      db.documentos
-        .where("empresa_id")
-        .equals(empresa_id)
-        .filter((d) => !d.excluido_em)
-        .toArray()
-    );
-
-    const subscription = observable.subscribe({
-      next: () => load(),
-      error: (err) => console.error("liveQuery error:", err),
-    });
-
-    return () => subscription.unsubscribe();
-  }, [empresa_id, load]);
+  }, [load]);
 
   return { documentos, loading, stats, refresh: load };
 }
@@ -55,8 +46,13 @@ export function useAguardandoCount(empresa_id: string) {
     if (!empresa_id) return;
     let cancelled = false;
     const check = async () => {
-      const c = await DocumentoRepository.getAguardandoCount(empresa_id);
-      if (!cancelled) setCount(c);
+      try {
+        const stats = await DocumentoRepositoryApi.getStats(new Date().getMonth() + 1, new Date().getFullYear());
+        if (!cancelled) setCount(stats.aguardando);
+      } catch {
+        const c = await DocumentoRepository.getAguardandoCount(empresa_id);
+        if (!cancelled) setCount(c);
+      }
     };
     check();
     const interval = setInterval(check, 15000);

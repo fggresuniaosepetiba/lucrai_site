@@ -145,7 +145,7 @@
 - [x] api.ts — tratamento de erro da API (classe `ApiError`, redirect 401)
 - [x] `api-repositories/` — repositórios API para transactions, cash-forecast, dashboard
 - [x] Substituir chamadas Dexie restantes nos pages (pricing, financial, cash-forecast, dashboard, reports, resumo-cfo, cadastro)
-- [ ] `useDocumentos.ts` — migrar de Dexie para API
+- [x] `useDocumentos.ts` — migrar de Dexie para API (listagem + stats + upload; conferência/lixeira continua em Dexie)
 
 ## Testes
 
@@ -189,8 +189,8 @@
 | Configurações | 4 | 0 |
 | Auditoria | 6 | 0 |
 | Tema e Interface | 6 | 0 |
-| Integração com API | 6 | 2 |
+| Integração com API | 7 | 1 |
 | Testes Unitários | 0 | 3 |
 | Testes E2E | 0 | 5 |
 | Pendências Gerais | 0 | 5 |
-| **Total** | **98** | **15** |
+| **Total** | **99** | **14** |
