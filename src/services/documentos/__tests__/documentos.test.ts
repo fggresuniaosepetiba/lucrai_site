@@ -9,24 +9,14 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { DOMParser } from "xmldom";
+import { DocumentoAprendizadoService } from "../documentos-aprendizado.service";
 
 // ========== TESTE 1: Geração de chave de aprendizado ==========
 
-function gerarChaveReconhecimento(texto: string | null): string {
-  if (!texto) return "";
-  let chave = texto
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-  chave = chave.replace(/[^a-z0-9\s]/g, "");
-  const palavrasGenericas = ["ltda", "me", "eireli", "sa", "s/a", "epp", "mei", "s.a.", "ltda."];
-  const palavras = chave.split(/\s+/).filter((p) => !palavrasGenericas.includes(p));
-  chave = palavras.join(" ").trim();
-  chave = chave.substring(0, 50);
-  return chave;
-}
-
 describe("Sistema de Aprendizado - Geração de Chave", () => {
+  const { gerarChaveReconhecimento } = DocumentoAprendizadoService;
+
   it("deve normalizar variações do mesmo emitente", () => {
     const chave1 = gerarChaveReconhecimento("João Almeida ME");
     const chave2 = gerarChaveReconhecimento("João Almeida Ltda");
@@ -70,14 +60,24 @@ function extrairNFe(xmlStr: string): {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
 
-  const parseTag = (tag: string): string | null => {
-    const el = xmlDoc.querySelector(tag);
+  function getTextContent(tagName: string): string | null {
+    const el = xmlDoc.getElementsByTagName(tagName)[0];
     return el?.textContent?.trim() || null;
-  };
+  }
 
-  const nNF = parseTag("nNF");
-  const dhEmi = parseTag("dhEmi");
-  const vNF = parseTag("vNF");
+  function getNestedTextContent(...tagNames: string[]): string | null {
+    let current: Element | undefined = xmlDoc.documentElement;
+    for (const tag of tagNames) {
+      const children = current.getElementsByTagName(tag);
+      if (!children.length) return null;
+      current = children[0] as Element;
+    }
+    return current?.textContent?.trim() || null;
+  }
+
+  const nNF = getTextContent("nNF");
+  const dhEmi = getTextContent("dhEmi");
+  const vNF = getTextContent("vNF");
 
   let data: string | null = null;
   if (dhEmi) {
@@ -88,19 +88,20 @@ function extrairNFe(xmlStr: string): {
   }
 
   const itens: string[] = [];
-  xmlDoc.querySelectorAll("det").forEach((det) => {
-    const prod = det.querySelector("prod xProd");
+  const dets = xmlDoc.getElementsByTagName("det");
+  for (let i = 0; i < dets.length; i++) {
+    const prod = dets[i].getElementsByTagName("xProd")[0];
     if (prod?.textContent) {
       itens.push(prod.textContent.trim());
     }
-  });
+  }
 
   return {
     numero_nf: nNF,
     valor: vNF ? parseFloat(vNF) : null,
     data,
-    emitente: parseTag("emit xNome"),
-    destinatario: parseTag("dest xNome"),
+    emitente: getNestedTextContent("emit", "xNome"),
+    destinatario: getNestedTextContent("dest", "xNome"),
     itens,
   };
 }

@@ -190,17 +190,17 @@
 
 ### Testes Unitários (Vitest + RTL)
 
-- [ ] Adaptar testes existentes para mockar API (substituir Dexie)
-- [ ] Testar hooks (useDadosFiltrados, useAlertsCount)
-- [ ] Testar utils (máscaras, formatação)
+- [x] Adaptar testes existentes para mockar API (substituir Dexie)
+- [x] Testar hooks (useDadosFiltrados, useAlertsCount)
+- [x] Testar utils (máscaras, formatação)
 
 ### Testes E2E (Playwright)
 
-- [ ] Fluxo: Login → Dashboard → ver indicadores
-- [ ] Fluxo: Criar transação → ver no financeiro
-- [ ] Fluxo: Criar previsão → marcar como recebida
-- [ ] Fluxo: Excluir → restaurar da lixeira
-- [ ] Fluxo: Gerenciar categorias
+- [x] Fluxo: Login → Dashboard → ver indicadores
+- [x] Fluxo: Criar transação → ver no financeiro
+- [x] Fluxo: Criar previsão → marcar como recebida
+- [x] Fluxo: Excluir → restaurar da lixeira
+- [x] Fluxo: Gerenciar categorias
 
 ## Pendências Gerais
 
@@ -229,7 +229,7 @@
 | Auditoria | 6 | 0 |
 | Tema e Interface | 6 | 0 |
 | Integração com API | 30 | 0 |
-| Testes Unitários | 0 | 3 |
-| Testes E2E | 0 | 5 |
+| Testes Unitários | 3 | 0 |
+| Testes E2E | 5 | 0 |
 | Pendências Gerais | 0 | 5 |
-| **Total** | **117** | **18** |
+| **Total** | **125** | **10** |
