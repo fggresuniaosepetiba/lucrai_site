@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { DocumentoRepository, DocumentoConfigRepository } from "@/database/repositories/documentos";
 import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
+import type { UpdateConfigRequest } from "@/services/api-repositories/documents";
 import type { DocumentoFinanceiro, DocumentoConfiguracao, DocumentoStats } from "@/types";
 
 export function useDocumentos(empresa_id: string) {
@@ -66,13 +67,32 @@ export function useDocumentoConfig(empresa_id: string) {
   const [config, setConfig] = useState<DocumentoConfiguracao | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!empresa_id) return;
-    DocumentoConfigRepository.get(empresa_id).then((c) => {
-      setConfig(c ?? null);
-      setLoading(false);
-    });
+    setLoading(true);
+    try {
+      const c = await DocumentoRepositoryApi.getConfig();
+      setConfig(c);
+    } catch {
+      try {
+        const c = await DocumentoConfigRepository.get(empresa_id);
+        setConfig(c ?? null);
+      } catch (err) {
+        console.error("Error loading documento config:", err);
+      }
+    }
+    setLoading(false);
   }, [empresa_id]);
 
-  return { config, loading };
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const update = useCallback(async (data: UpdateConfigRequest) => {
+    const result = await DocumentoRepositoryApi.updateConfig(data);
+    setConfig(result);
+    return result;
+  }, []);
+
+  return { config, loading, update };
 }

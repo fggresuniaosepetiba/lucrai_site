@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { DocumentoConfigRepository, DocumentoAprendizadoRepository } from "@/database/repositories/documentos";
-import type { DocumentoConfiguracao, DocumentoAprendizado } from "@/types";
+import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
+import type { DocumentoAprendizado } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/toast";
 import {
-  Settings, Brain, Trash2, Download, Shield, Clock,
-  Save, Bell, Tag,
+  Brain, Trash2, Clock,
+  Save, Tag,
 } from "lucide-react";
 
 export default function DocumentoConfigPage() {
@@ -24,7 +24,6 @@ export default function DocumentoConfigPage() {
   const { isAuthenticated, user } = useAuthStore();
   const empresa_id = user?.company ?? "";
 
-  const [config, setConfig] = useState<DocumentoConfiguracao | null>(null);
   const [aprendizados, setAprendizados] = useState<DocumentoAprendizado[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -43,11 +42,10 @@ export default function DocumentoConfigPage() {
   const loadData = async () => {
     try {
       const [c, a] = await Promise.all([
-        DocumentoConfigRepository.get(empresa_id),
-        DocumentoAprendizadoRepository.getByEmpresa(empresa_id),
+        DocumentoRepositoryApi.getConfig().catch(() => null),
+        DocumentoRepositoryApi.getAprendizado(),
       ]);
       if (c) {
-        setConfig(c as DocumentoConfiguracao);
         setRetencao(c.retencao_dias);
         setAutoCategoria(c.auto_sugerir_categoria);
         setNotificarEmail(c.notificar_email);
@@ -65,12 +63,9 @@ export default function DocumentoConfigPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await DocumentoConfigRepository.upsert(empresa_id, {
-        retencao_dias: retencao,
-        auto_sugerir_categoria: autoCategoria,
-        notificar_email: notificarEmail,
-        notificar_sistema: notificarSistema,
-        limite_tamanho_mb: limiteMB,
+      await DocumentoRepositoryApi.updateConfig({
+        categorizacaoAutomatica: autoCategoria,
+        diasRetencaoLixeira: retencao,
       });
       toast("Configurações salvas", "Dados atualizados com sucesso", "success");
       loadData();
@@ -83,7 +78,8 @@ export default function DocumentoConfigPage() {
 
   const handleLimparAprendizado = async () => {
     try {
-      await DocumentoAprendizadoRepository.clearByEmpresa(empresa_id);
+      const rules = await DocumentoRepositoryApi.getAprendizado();
+      await Promise.all(rules.map((r) => DocumentoRepositoryApi.deleteAprendizado(r.id)));
       toast("Histórico limpo", "Todas as regras de aprendizado foram removidas", "success");
       loadData();
     } catch {
@@ -93,7 +89,7 @@ export default function DocumentoConfigPage() {
 
   const handleExcluirRegra = async (id: string) => {
     try {
-      await DocumentoAprendizadoRepository.delete(id);
+      await DocumentoRepositoryApi.deleteAprendizado(id);
       toast("Regra excluída", "", "success");
       loadData();
     } catch {

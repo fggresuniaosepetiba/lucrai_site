@@ -161,22 +161,22 @@
 
 #### 10.2 — `useDocumentoConfig` (hook + página config)
 
-- [ ] 10.2.1 Migrar `useDocumentoConfig` — substituir `DocumentoConfigRepository.get()` por `DocumentoRepositoryApi.getConfig()`
-- [ ] 10.2.2 Adicionar `updateConfig` ao hook (chama `DocumentoRepositoryApi.updateConfig()`)
-- [ ] 10.2.3 Migrar `configuracoes/page.tsx` — substituir `DocumentoConfigRepository` por hook + API repo
-- [ ] 10.2.4 Migrar tabela de Aprendizado na config page — substituir `DocumentoAprendizadoRepository` por `DocumentoRepositoryApi`
+- [x] 10.2.1 Migrar `useDocumentoConfig` — substituir `DocumentoConfigRepository.get()` por `DocumentoRepositoryApi.getConfig()`
+- [x] 10.2.2 Adicionar `updateConfig` ao hook (chama `DocumentoRepositoryApi.updateConfig()`)
+- [x] 10.2.3 Migrar `configuracoes/page.tsx` — substituir `DocumentoConfigRepository` por hook + API repo
+- [x] 10.2.4 Migrar tabela de Aprendizado na config page — substituir `DocumentoAprendizadoRepository` por `DocumentoRepositoryApi`
 
 #### 10.3 — `documentos.service.ts` — Conferência & Ações
 
-- [ ] 10.3.1 Migrar `confirmar()` — chamar `POST /api/documentos/{id}/confirmar` + criar Transaction/Forecast via API + upsert aprendizado via API
-- [ ] 10.3.2 Migrar `rejeitar()` — chamar `POST /api/documentos/{id}/rejeitar`
-- [ ] 10.3.3 Migrar `reprocessar()` — chamar `POST /api/documentos/{id}/reprocessar`
+- [x] 10.3.1 Migrar `confirmar()` — chamar `POST /api/documentos/{id}/confirmar` + criar Transaction/Forecast via API + upsert aprendizado via API
+- [x] 10.3.2 Migrar `rejeitar()` — chamar `POST /api/documentos/{id}/rejeitar`
+- [x] 10.3.3 Migrar `reprocessar()` — chamar `POST /api/documentos/{id}/reprocessar`
 
 #### 10.4 — `documentos.service.ts` — Lixeira (Trash flow)
 
-- [ ] 10.4.1 Migrar `excluir()` — chamar `POST /api/documentos/{id}/excluir`
-- [ ] 10.4.2 Migrar `restaurarDaTrash()` — chamar `POST /api/documentos/{id}/restaurar`
-- [ ] 10.4.3 Migrar `excluirPermanentemente()` — chamar `DELETE /api/documentos/{id}/permanente`
+- [x] 10.4.1 Migrar `excluir()` — chamar `POST /api/documentos/{id}/excluir`
+- [x] 10.4.2 Migrar `restaurarDaTrash()` — chamar `POST /api/documentos/{id}/restaurar`
+- [x] 10.4.3 Migrar `excluirPermanentemente()` — chamar `DELETE /api/documentos/{id}/permanente`
 
 #### 10.5 — Páginas
 
@@ -228,8 +228,8 @@
 | Configurações | 4 | 0 |
 | Auditoria | 6 | 0 |
 | Tema e Interface | 6 | 0 |
-| Integração com API | 8 | 5 |
+| Integração com API | 25 | 5 |
 | Testes Unitários | 0 | 3 |
 | Testes E2E | 0 | 5 |
 | Pendências Gerais | 0 | 5 |
-| **Total** | **100** | **18** |
+| **Total** | **117** | **18** |

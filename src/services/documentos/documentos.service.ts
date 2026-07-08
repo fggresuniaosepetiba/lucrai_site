@@ -2,6 +2,8 @@
 
 import { DocumentoRepository, DocumentoLogRepository, DocumentoConfigRepository } from "@/database/repositories/documentos";
 import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
+import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
+import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { CashForecastRepository } from "@/database/repositories/cash-forecast";
 import { DocumentoStorageService } from "./documentos-storage.service";
@@ -231,92 +233,72 @@ export const DocumentoService = {
     usuario_nome: string,
     empresa_id: string
   ): Promise<{ lancamento_id: string; tipo: "transaction" | "forecast" }> {
-    const doc = await DocumentoRepository.getById(documentoId);
-    if (!doc) throw new Error("Documento não encontrado");
-    if (doc.status !== "AGUARDANDO_CONFERENCIA") throw new Error("Documento não está aguardando conferência");
-
     const hoje = todayStr();
 
     if (data.data_lancamento > hoje) {
       const cats = await (await import("@/database/repositories/categories")).CategoryRepository.getAll(empresa_id);
       const cat = cats.find((c) => c.id === data.categoria_id);
 
-      const forecast = await CashForecastRepository.create(
-        {
-          type: data.tipo_movimentacao === "RECEITA" ? "income" : "expense",
-          description: data.descricao,
-          amount: data.valor,
-          category: cat?.name || "",
-          expectedDate: data.data_lancamento,
-          status: "predicted",
-          notes: data.observacoes || `Originado do documento: ${doc.nome_arquivo_original}`,
-        },
-        empresa_id,
-        usuario_nome
-      );
-
-      await DocumentoRepository.update(documentoId, {
-        status: "CONVERTIDO",
-        lancamento_id: forecast.id,
-        usuario_conferencia_id: usuario_id,
-        data_conferencia: new Date().toISOString(),
+      const forecast = await CashForecastRepositoryApi.create({
+        type: data.tipo_movimentacao === "RECEITA" ? "income" : "expense",
+        description: data.descricao,
+        amount: data.valor,
+        category: cat?.name || "",
+        expectedDate: data.data_lancamento,
+        status: "predicted",
+        notes: data.observacoes || `Originado do documento`,
       });
 
-      await DocumentoLogRepository.log(empresa_id, documentoId, "CONFIRMADO", usuario_id, {
-        lancamento_id: forecast.id,
-        valor: data.valor,
-        tipo_movimentacao: data.tipo_movimentacao,
-        destino: "previsao_caixa",
-      });
-
-      await DocumentoLogRepository.log(empresa_id, documentoId, "CRIADO_PREVISAO", usuario_id, {
-        previsao_id: forecast.id,
-        data_prevista: data.data_lancamento,
+      await DocumentoRepositoryApi.confirmar(documentoId, {
+        valorExtraido: data.valor,
+        dataExtraida: data.data_lancamento,
+        descricaoExtraida: data.descricao,
+        categoriaSugeridaId: data.categoria_id,
+        tipoMovimentacaoSugerido: data.tipo_movimentacao,
+        favorecidoExtraido: data.favorecido,
+        emitenteExtraido: data.emitente,
       });
 
       return { lancamento_id: forecast.id, tipo: "forecast" };
     }
 
-    const transaction = await TransactionRepository.create(
-      {
-        type: data.tipo_movimentacao === "RECEITA" ? "income" : "expense",
-        value: data.valor,
-        categoryId: data.categoria_id,
-        categoryName: "",
-        description: data.descricao,
-        date: data.data_lancamento,
-        observation: data.observacoes || undefined,
-      },
-      empresa_id,
-      usuario_nome
-    );
+    const transaction = await TransactionRepositoryApi.create({
+      type: data.tipo_movimentacao === "RECEITA" ? "income" : "expense",
+      value: data.valor,
+      categoryId: data.categoria_id,
+      categoryName: "",
+      description: data.descricao,
+      date: data.data_lancamento,
+      observation: data.observacoes || undefined,
+    });
 
     const cats = await (await import("@/database/repositories/categories")).CategoryRepository.getAll(empresa_id);
     const cat = cats.find((c) => c.id === data.categoria_id);
     if (cat) {
-      await TransactionRepository.update(transaction.id, { categoryName: cat.name });
+      await TransactionRepositoryApi.update(transaction.id, { categoryName: cat.name });
     }
 
-    await DocumentoRepository.update(documentoId, {
-      status: "CONVERTIDO",
-      lancamento_id: transaction.id,
-      usuario_conferencia_id: usuario_id,
-      data_conferencia: new Date().toISOString(),
+    await DocumentoRepositoryApi.confirmar(documentoId, {
+      valorExtraido: data.valor,
+      dataExtraida: data.data_lancamento,
+      descricaoExtraida: data.descricao,
+      categoriaSugeridaId: data.categoria_id,
+      tipoMovimentacaoSugerido: data.tipo_movimentacao,
+      favorecidoExtraido: data.favorecido,
+      emitenteExtraido: data.emitente,
     });
 
-    await DocumentoLogRepository.log(empresa_id, documentoId, "CONFIRMADO", usuario_id, {
-      lancamento_id: transaction.id,
-      valor: data.valor,
-      tipo_movimentacao: data.tipo_movimentacao,
-    });
-
-    await DocumentoAprendizadoService.registrarAprendizado(
-      empresa_id,
-      data.emitente || doc.emitente_extraido,
-      data.favorecido || doc.favorecido_extraido,
-      data.categoria_id,
-      data.tipo_movimentacao
-    );
+    const nomeParaChave = data.favorecido || data.emitente;
+    if (nomeParaChave) {
+      const chave = DocumentoAprendizadoService.gerarChaveReconhecimento(nomeParaChave);
+      if (chave) {
+        await DocumentoRepositoryApi.upsertAprendizado({
+          chave,
+          categoriaId: data.categoria_id,
+          tipoMovimentacao: data.tipo_movimentacao,
+        });
+      }
+    }
 
     return { lancamento_id: transaction.id, tipo: "transaction" };
   },
@@ -331,17 +313,7 @@ export const DocumentoService = {
       throw new Error("Motivo da rejeição é obrigatório");
     }
 
-    const doc = await DocumentoRepository.getById(documentoId);
-    if (!doc) throw new Error("Documento não encontrado");
-
-    await DocumentoRepository.update(documentoId, {
-      status: "REJEITADO",
-      motivo_rejeicao: motivo.trim(),
-      usuario_conferencia_id: usuario_id,
-      data_conferencia: new Date().toISOString(),
-    });
-
-    await DocumentoLogRepository.log(empresa_id, documentoId, "REJEITADO", usuario_id, { motivo: motivo.trim() });
+    await DocumentoRepositoryApi.rejeitar(documentoId, motivo.trim());
   },
 
   async excluir(
@@ -356,48 +328,15 @@ export const DocumentoService = {
       throw new Error("Motivo da exclusão é obrigatório");
     }
 
-    const doc = await DocumentoRepository.getById(documentoId);
-    if (!doc) throw new Error("Documento não encontrado");
-
     if (permanent) {
-      await DocumentoRepository.permanentDelete(documentoId);
-      await DocumentoLogRepository.log(empresa_id, documentoId, "PERMANENTLY_DELETED", usuario_id, {
-        motivo: motivo.trim(),
-        usuario: usuario_nome,
-      });
+      await DocumentoRepositoryApi.excluirPermanente(documentoId);
     } else {
-      const deleted = await DocumentoRepository.moveToTrash(
-        documentoId,
-        motivo.trim(),
-        usuario_nome
-      );
-
-      await DocumentoLogRepository.log(empresa_id, documentoId, "MOVED_TO_TRASH", usuario_id, {
-        motivo: motivo.trim(),
-        usuario: usuario_nome,
-        data_exclusao: deleted.excluido_em,
-      });
-    }
-
-    if (doc.arquivo_data) {
-      const mimeTypes: Record<string, string> = {
-        PDF: "application/pdf", XML: "application/xml", JPG: "image/jpeg",
-        JPEG: "image/jpeg", PNG: "image/png",
-      };
-      const blob = new Blob([doc.arquivo_data], { type: mimeTypes[doc.tipo_arquivo] || "application/octet-stream" });
-      URL.revokeObjectURL(URL.createObjectURL(blob));
+      await DocumentoRepositoryApi.excluir(documentoId, motivo.trim());
     }
   },
 
   async restaurarDaTrash(documentoId: string, empresa_id: string, usuario_id: string): Promise<void> {
-    const doc = await DocumentoRepository.getFromTrash(documentoId);
-    if (!doc) throw new Error("Documento não encontrado na lixeira");
-
-    await DocumentoRepository.restoreFromTrash(documentoId);
-
-    await DocumentoLogRepository.log(empresa_id, documentoId, "RESTAURADO", usuario_id, {
-      restaurado_em: new Date().toISOString(),
-    });
+    await DocumentoRepositoryApi.restaurar(documentoId);
   },
 
   async excluirPermanentemente(
@@ -411,44 +350,11 @@ export const DocumentoService = {
       throw new Error("Motivo da exclusão permanente é obrigatório");
     }
 
-    const doc = await DocumentoRepository.getFromTrash(documentoId);
-    if (!doc) throw new Error("Documento não encontrado na lixeira");
-
-    await DocumentoRepository.permanentDelete(documentoId);
-
-    await DocumentoLogRepository.log(empresa_id, documentoId, "PERMANENTLY_DELETED", usuario_id, {
-      motivo: motivo.trim(),
-      usuario: usuario_nome,
-    });
+    await DocumentoRepositoryApi.excluirPermanente(documentoId);
   },
 
   async reprocessar(documentoId: string, empresa_id: string): Promise<void> {
-    const doc = await DocumentoRepository.getById(documentoId);
-    if (!doc) throw new Error("Documento não encontrado");
-    if (doc.status !== "ERRO" && doc.status !== "AGUARDANDO_CONFERENCIA") {
-      throw new Error("Só é possível reprocessar documentos com status ERRO ou AGUARDANDO_CONFERENCIA");
-    }
-
-    await DocumentoRepository.update(documentoId, {
-      status: "NOVO",
-      tipo_documento_detectado: null,
-      valor_extraido: null,
-      data_extraida: null,
-      favorecido_extraido: null,
-      emitente_extraido: null,
-      descricao_extraida: null,
-      tipo_movimentacao_sugerido: null,
-      categoria_sugerida_id: null,
-      confianca_extracao: null,
-      dados_extraidos_raw: null,
-      dados_estruturados: null,
-      observacoes_ia: null,
-      resumo_executivo: null,
-      ultimo_erro: null,
-    });
-
-    await DocumentoLogRepository.log(empresa_id, documentoId, "REPROCESSADO", null);
-
+    await DocumentoRepositoryApi.reprocessar(documentoId);
     this.iniciarProcessamento(documentoId);
   },
 };
