@@ -19,7 +19,7 @@ public class SettingsControllerTests : IClassFixture<CustomWebApplicationFactory
     private string GetToken()
     {
         var loginResponse = _client.PostAsJsonAsync("/api/auth/login",
-            new LoginRequest("lucrai.adm", "Lucrai@1")).GetAwaiter().GetResult();
+            new LoginRequest("lucrai.adm", "123")).GetAwaiter().GetResult();
         var loginResult = loginResponse.Content.ReadFromJsonAsync<LoginResponse>().GetAwaiter().GetResult();
         return loginResult!.AccessToken;
     }
@@ -71,7 +71,7 @@ public class SettingsControllerTests : IClassFixture<CustomWebApplicationFactory
     {
         var newUserClient = _client;
         var loginResponse = await _client.PostAsJsonAsync("/api/auth/login",
-            new LoginRequest("lucrai.adm", "Lucrai@1"));
+            new LoginRequest("lucrai.adm", "123"));
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
 
         var registerReq = new Lucrai.Core.DTOs.Auth.RegisterRequest("New User Co", "newco@test.com", "Test@123", "NewCo");

@@ -56,7 +56,7 @@ public class ContasControllerTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetAll_AsAdmin_ReturnsList()
     {
         var loginResponse = await _client.PostAsJsonAsync("/api/auth/login",
-            new LoginRequest("lucrai.adm", "Lucrai@1"));
+            new LoginRequest("lucrai.adm", "123"));
         var loginResult = (await loginResponse.Content.ReadFromJsonAsync<LoginResponse>())!;
 
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/contas");

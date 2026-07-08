@@ -15,100 +15,84 @@ public static class DataSeeder
         else
             await context.Database.EnsureCreatedAsync();
 
-        if (!await context.Users.AnyAsync())
+        var seedUsers = new[]
         {
-            var users = new[]
+            new User
             {
-                //new User
-                //{
-                //    UserName = "trinarysolutions.adm",
-                //    Email = "trinarysolutions.adm",
-                //    Name = "Administrador Trinary",
-                //    Role = UserRole.Owner,
-                //    Plan = UserPlan.SuperAdmin,
-                //    Company = "Trinary",
-                //    EmailConfirmed = true,
-                //    MustChangePassword = true
-                //},
-                new User
-                {
-                    UserName = "lucrai.adm",
-                    Email = "lucrai.adm",
-                    Name = "Gabriel Fellype",
-                    Role = UserRole.Admin,
-                    Plan = UserPlan.SuperAdmin,
-                    Company = "Lucraí",
-                    EmailConfirmed = true,
-                    MustChangePassword = true
-                },
-                //new User
-                //{
-                //    UserName = "graonatural.adm",
-                //    Email = "graonatural.adm",
-                //    Name = "Vitoria Justo",
-                //    Role = UserRole.Admin,
-                //    Plan = UserPlan.SuperAdmin,
-                //    Company = "Grão Natural",
-                //    EmailConfirmed = true,
-                //    MustChangePassword = true
-                //},
-                new User
-                {
-                    UserName = "joao.ribeiro",
-                    Email = "joao.ribeiro",
-                    Name = "João Ribeiro",
-                    Role = UserRole.Owner,
-                    Plan = UserPlan.SuperAdmin,
-                    Company = "Lucraí",
-                    EmailConfirmed = true,
-                    MustChangePassword = true
-                },
-                new User
-                {
-                    UserName = "vitoria.justo",
-                    Email = "vitoria.justo",
-                    Name = "Vitória Justo",
-                    Role = UserRole.Admin,
-                    Plan = UserPlan.SuperAdmin,
-                    Company = "Lucraí",
-                    EmailConfirmed = true,
-                    MustChangePassword = true
-                },
-                new User
-                {
-                    UserName = "fellype.gabriel",
-                    Email = "fellype.gabriel",
-                    Name = "Fellype Gabriel",
-                    Role = UserRole.Admin,
-                    Plan = UserPlan.SuperAdmin,
-                    Company = "Lucraí",
-                    EmailConfirmed = true,
-                    MustChangePassword = true
-                },
-                new User
-                {
-                    UserName = "eduardo.contador",
-                    Email = "eduardo.contador",
-                    Name = "Eduardo Contador",
-                    Role = UserRole.Admin,
-                    Plan = UserPlan.SuperAdmin,
-                    Company = "Lucraí",
-                    EmailConfirmed = true,
-                    MustChangePassword = true
-                }
-            };
+                UserName = "lucrai.adm",
+                Email = "lucrai.adm",
+                Name = "Gabriel Fellype",
+                Role = UserRole.Admin,
+                Plan = UserPlan.SuperAdmin,
+                Company = "Lucraí",
+                EmailConfirmed = true,
+                MustChangePassword = true
+            },
+            new User
+            {
+                UserName = "joao.ribeiro",
+                Email = "joao.ribeiro",
+                Name = "João Ribeiro",
+                Role = UserRole.Owner,
+                Plan = UserPlan.SuperAdmin,
+                Company = "Lucraí",
+                EmailConfirmed = true,
+                MustChangePassword = true
+            },
+            new User
+            {
+                UserName = "vitoria.justo",
+                Email = "vitoria.justo",
+                Name = "Vitória Justo",
+                Role = UserRole.Admin,
+                Plan = UserPlan.SuperAdmin,
+                Company = "Lucraí",
+                EmailConfirmed = true,
+                MustChangePassword = true
+            },
+            new User
+            {
+                UserName = "fellype.gabriel",
+                Email = "fellype.gabriel",
+                Name = "Fellype Gabriel",
+                Role = UserRole.Admin,
+                Plan = UserPlan.SuperAdmin,
+                Company = "Lucraí",
+                EmailConfirmed = true,
+                MustChangePassword = true
+            },
+            new User
+            {
+                UserName = "eduardo.contador",
+                Email = "eduardo.contador",
+                Name = "Eduardo Contador",
+                Role = UserRole.Admin,
+                Plan = UserPlan.SuperAdmin,
+                Company = "Lucraí",
+                EmailConfirmed = true,
+                MustChangePassword = true
+            }
+        };
 
-            foreach (var user in users)
+        foreach (var seedUser in seedUsers)
+        {
+            var existing = await userManager.FindByEmailAsync(seedUser.Email);
+            if (existing == null)
             {
-                var password = user.UserName switch
-                {
-                    "lucrai.adm" => "Lucrai@1",
-                    _ => "Admin@123"
-                };
-                var result = await userManager.CreateAsync(user, password);
+                seedUser.PasswordHash = userManager.PasswordHasher.HashPassword(seedUser, "123");
+                var result = await userManager.CreateAsync(seedUser);
                 if (!result.Succeeded)
                     throw new InvalidOperationException(
-                        $"Failed to seed user {user.UserName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                        $"Failed to seed user {seedUser.UserName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            }
+            else
+            {
+                existing.MustChangePassword = true;
+                existing.PasswordHash = userManager.PasswordHasher.HashPassword(existing, "123");
+                var updateResult = await userManager.UpdateAsync(existing);
+                if (!updateResult.Succeeded)
+                    throw new InvalidOperationException(
+                        $"Failed to update user {seedUser.UserName}");
             }
         }
 

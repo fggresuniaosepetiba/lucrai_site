@@ -39,7 +39,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Login_ValidCredentials_ReturnsToken()
     {
-        var request = new LoginRequest("lucrai.adm", "Lucrai@1");
+        var request = new LoginRequest("lucrai.adm", "123");
 
         var response = await _client.PostAsJsonAsync("/api/auth/login", request);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -110,7 +110,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
     private async Task<LoginResponse> LoginAsAdmin()
     {
         var loginResponse = await _client.PostAsJsonAsync("/api/auth/login",
-            new LoginRequest("lucrai.adm", "Lucrai@1"));
+            new LoginRequest("lucrai.adm", "123"));
         return (await loginResponse.Content.ReadFromJsonAsync<LoginResponse>())!;
     }
 }

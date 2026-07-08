@@ -19,7 +19,7 @@ public class AuditControllerTests : IClassFixture<CustomWebApplicationFactory>
     private string GetToken()
     {
         var loginResponse = _client.PostAsJsonAsync("/api/auth/login",
-            new LoginRequest("lucrai.adm", "Lucrai@1")).GetAwaiter().GetResult();
+            new LoginRequest("lucrai.adm", "123")).GetAwaiter().GetResult();
         var loginResult = loginResponse.Content.ReadFromJsonAsync<LoginResponse>().GetAwaiter().GetResult();
         return loginResult!.AccessToken;
     }
