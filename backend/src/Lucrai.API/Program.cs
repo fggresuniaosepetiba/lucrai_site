@@ -75,25 +75,25 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy.WithOrigins(
-                "https://lucrai-site.vercel.app",
-                "http://localhost:3000",
-                "http://localhost:5173"
-              )
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
-
 var app = builder.Build();
 
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Access-Control-Allow-Origin"] = "https://lucrai-site.vercel.app";
+    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+    context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
+    context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.StatusCode = 200;
+        return;
+    }
+
+    await next();
+});
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TenantContextMiddleware>();
