@@ -79,27 +79,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>();
-        if (origins is null)
-        {
-            var single = builder.Configuration.GetValue<string>("Cors:Origins")?.Trim('"');
-            if (single is not null)
-                origins = [single];
-        }
-
-        if (origins is { Length: > 0 })
-        {
-            policy.WithOrigins(origins)
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        }
-        else
-        {
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        }
+        policy.WithOrigins(
+                "https://lucrai-site.vercel.app",
+                "http://localhost:3000",
+                "http://localhost:5173"
+              )
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
