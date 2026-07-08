@@ -18,6 +18,7 @@ Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
 Object.defineProperty(globalThis, "window", { value: globalThis, writable: true });
 
 if (typeof URL.createObjectURL === "undefined") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (URL as any).createObjectURL = () => "blob:http://localhost/mock";
 }
 
