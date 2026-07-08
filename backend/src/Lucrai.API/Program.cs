@@ -27,6 +27,9 @@ builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 builder.Services.AddScoped<IPricingRepository, PricingRepository>();
 builder.Services.AddScoped<IDismissedAlertRepository, DismissedAlertRepository>();
 builder.Services.AddScoped<IDocumentoRepository, DocumentoRepository>();
+builder.Services.AddScoped<IDocumentoLogRepository, DocumentoLogRepository>();
+builder.Services.AddScoped<IDocumentoAprendizadoRepository, DocumentoAprendizadoRepository>();
+builder.Services.AddScoped<IDocumentoConfigRepository, DocumentoConfigRepository>();
 
 builder.Services.AddScoped<IDashboardIntelligenceService, DashboardIntelligenceService>();
 builder.Services.AddScoped<IAlertasService, AlertasService>();

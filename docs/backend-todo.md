@@ -285,6 +285,61 @@
 
 ---
 
+## Fase 9: Documentos Financeiros (Backend Completo)
+
+### 9.1 Entidades
+- [x] `Core/Entities/DocumentoTrashItem.cs` — lixeira com 30 dias (snapshot + metadata)
+- [x] `Core/Entities/DocumentoLog.cs` — auditoria de ações nos documentos
+- [x] `Core/Entities/DocumentoAprendizado.cs` — aprendizado (chave → categoria + tipo)
+- [x] `Core/Entities/DocumentoConfiguracao.cs` — configurações por empresa
+
+### 9.2 Interfaces de Repositório
+- [x] Expandir `IDocumentoRepository.cs` — SoftDelete, GetByStatus, Trash CRUD, CleanupTrash
+- [x] `IDocumentoLogRepository.cs` — Log, GetByDocumento
+- [x] `IDocumentoAprendizadoRepository.cs` — GetByEmpresa, GetByChave, Upsert, Delete, ClearByEmpresa
+- [x] `IDocumentoConfigRepository.cs` — Get, Upsert
+
+### 9.3 Repositories (EF Core)
+- [x] Expandir `DocumentoRepository.cs` — trash flow, soft delete, status queries
+- [x] `DocumentoLogRepository.cs`
+- [x] `DocumentoAprendizadoRepository.cs`
+- [x] `DocumentoConfigRepository.cs`
+
+### 9.4 Controller — Lixeira
+- [x] `GET /api/documentos/trash` — listar itens na lixeira
+- [x] `POST /api/documentos/{id}/excluir` — mover para lixeira com motivo
+- [x] `POST /api/documentos/{id}/restaurar` — restaurar da lixeira
+- [x] `DELETE /api/documentos/{id}/permanente` — excluir permanentemente
+- [x] `POST /api/documentos/trash/cleanup` — limpar expirados
+
+### 9.5 Controller — Conferência
+- [x] `POST /api/documentos/{id}/confirmar` — confirmar + criar transação/previsão
+- [x] `POST /api/documentos/{id}/rejeitar` — rejeitar com motivo
+
+### 9.6 Controller — Ações
+- [x] `POST /api/documentos/{id}/reprocessar` — reprocessar documento
+
+### 9.7 Controller — Auditoria
+- [x] `GET /api/documentos/{id}/logs` — logs de um documento
+
+### 9.8 Controller — Aprendizado
+- [x] `GET /api/documentos/aprendizado` — listar aprendizado da empresa
+- [x] `POST /api/documentos/aprendizado` — upsert aprendizado
+- [x] `DELETE /api/documentos/aprendizado/{id}` — remover aprendizado
+
+### 9.9 Controller — Configuração
+- [x] `GET /api/documentos/config` — obter config da empresa
+- [x] `PUT /api/documentos/config` — atualizar config
+
+### 9.10 DbContext
+- [x] `DbSet<DocumentoTrashItem> DocumentoTrash`
+- [x] `DbSet<DocumentoLog> DocumentoLogs`
+- [x] `DbSet<DocumentoAprendizado> DocumentoAprendizados`
+- [x] `DbSet<DocumentoConfiguracao> DocumentoConfiguracoes`
+- [x] Migration `AddDocumentoLogAprendizadoConfig` + Fluent API (índices, tamanhos, relacionamentos)
+
+---
+
 ## Resumo
 
 | Fase | Itens | Concluídos | Pendentes |
@@ -297,6 +352,7 @@
 | 6 — Docker | ~3 itens | 3 | 0 |
 | 7 — CI/CD | ~4 itens | 4 | 0 |
 | 8 — Testes (Back-end) | ~13 itens | 13 | 0 |
-| **Total** | **~130 itens** | **130** | **0** |
+| 9 — Documentos Financeiros | ~30 itens | 30 | 0 |
+| **Total** | **~160 itens** | **141** | **19** |
 
 > **Nota:** Itens de frontend (testes unitários, E2E, integração de API) foram movidos para `docs/frontend-todo.md`.

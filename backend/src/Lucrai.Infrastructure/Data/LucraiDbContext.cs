@@ -21,6 +21,10 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<DismissedAlert> DismissedAlerts => Set<DismissedAlert>();
     public DbSet<DocumentoFinanceiro> Documentos => Set<DocumentoFinanceiro>();
+    public DbSet<DocumentoTrashItem> DocumentoTrash => Set<DocumentoTrashItem>();
+    public DbSet<DocumentoLog> DocumentoLogs => Set<DocumentoLog>();
+    public DbSet<DocumentoAprendizado> DocumentoAprendizados => Set<DocumentoAprendizado>();
+    public DbSet<DocumentoConfiguracao> DocumentoConfiguracoes => Set<DocumentoConfiguracao>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -252,6 +256,56 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.HasIndex(d => new { d.Company, d.Status });
             entity.HasIndex(d => new { d.Company, d.CriadoEm });
             entity.HasIndex(d => d.HashArquivo);
+        });
+
+        builder.Entity<DocumentoTrashItem>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.Company).HasMaxLength(200).IsRequired();
+            entity.Property(t => t.NomeArquivoOriginal).HasMaxLength(500).IsRequired();
+            entity.Property(t => t.TipoArquivo).HasMaxLength(10).IsRequired();
+            entity.Property(t => t.StatusOriginal).HasMaxLength(30).IsRequired();
+            entity.Property(t => t.MotivoExclusao).HasMaxLength(500).IsRequired();
+            entity.Property(t => t.ExcluidoPor).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(t => new { t.Company, t.ExcluidoEm });
+            entity.HasIndex(t => new { t.Company, t.ExpiracaoEm });
+            entity.HasIndex(t => t.DocumentoId);
+        });
+
+        builder.Entity<DocumentoLog>(entity =>
+        {
+            entity.HasKey(l => l.Id);
+            entity.Property(l => l.Company).HasMaxLength(200).IsRequired();
+            entity.Property(l => l.Acao).HasMaxLength(30).IsRequired();
+            entity.Property(l => l.Descricao).HasMaxLength(500).IsRequired();
+            entity.Property(l => l.UsuarioId).HasMaxLength(200).IsRequired();
+            entity.Property(l => l.UsuarioNome).HasMaxLength(200).IsRequired();
+            entity.Property(l => l.Detalhes).HasMaxLength(2000);
+
+            entity.HasIndex(l => new { l.Company, l.CriadoEm });
+            entity.HasIndex(l => l.DocumentoId);
+        });
+
+        builder.Entity<DocumentoAprendizado>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Company).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.Chave).HasMaxLength(500).IsRequired();
+            entity.Property(a => a.CategoriaId).HasMaxLength(100);
+            entity.Property(a => a.TipoMovimentacao).HasMaxLength(20);
+            entity.Property(a => a.CriadoPor).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(a => new { a.Company, a.Chave }).IsUnique();
+            entity.HasIndex(a => new { a.Company, a.Ativo });
+        });
+
+        builder.Entity<DocumentoConfiguracao>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Company).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(c => c.Company).IsUnique();
         });
     }
 }

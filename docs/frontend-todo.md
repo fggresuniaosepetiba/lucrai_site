@@ -147,6 +147,45 @@
 - [x] Substituir chamadas Dexie restantes nos pages (pricing, financial, cash-forecast, dashboard, reports, resumo-cfo, cadastro)
 - [x] `useDocumentos.ts` — migrar de Dexie para API (listagem + stats + upload; conferência/lixeira continua em Dexie)
 
+### Documentos (Financeiros) — Fase 10
+
+#### 10.1 — `api-repositories/documents.ts` (adicionar métodos faltantes)
+
+- [ ] 10.1.1 Adicionar interfaces/types: `ApiDocumentoLog`, `ApiDocumentoTrashItem`, `ApiDocumentoAprendizado`, `ApiDocumentoConfig` + funções `mapLog()`, `mapTrashItem()`, `mapAprendizado()`, `mapConfig()`
+- [ ] 10.1.2 Lixeira: `getTrash()`, `excluir(id, motivo)`, `restaurar(id)`, `excluirPermanente(id)`, `cleanupTrash()`
+- [ ] 10.1.3 Conferência: `confirmar(id, data)`, `rejeitar(id, motivo)`
+- [ ] 10.1.4 Ações: `reprocessar(id)`
+- [ ] 10.1.5 Auditoria: `getLogs(documentoId)`
+- [ ] 10.1.6 Aprendizado: `getAprendizado()`, `upsertAprendizado(data)`, `deleteAprendizado(id)`
+- [ ] 10.1.7 Config: `getConfig()`, `updateConfig(data)`
+
+#### 10.2 — `useDocumentoConfig` (hook + página config)
+
+- [ ] 10.2.1 Migrar `useDocumentoConfig` — substituir `DocumentoConfigRepository.get()` por `DocumentoRepositoryApi.getConfig()`
+- [ ] 10.2.2 Adicionar `updateConfig` ao hook (chama `DocumentoRepositoryApi.updateConfig()`)
+- [ ] 10.2.3 Migrar `configuracoes/page.tsx` — substituir `DocumentoConfigRepository` por hook + API repo
+- [ ] 10.2.4 Migrar tabela de Aprendizado na config page — substituir `DocumentoAprendizadoRepository` por `DocumentoRepositoryApi`
+
+#### 10.3 — `documentos.service.ts` — Conferência & Ações
+
+- [ ] 10.3.1 Migrar `confirmar()` — chamar `POST /api/documentos/{id}/confirmar` + criar Transaction/Forecast via API + upsert aprendizado via API
+- [ ] 10.3.2 Migrar `rejeitar()` — chamar `POST /api/documentos/{id}/rejeitar`
+- [ ] 10.3.3 Migrar `reprocessar()` — chamar `POST /api/documentos/{id}/reprocessar`
+
+#### 10.4 — `documentos.service.ts` — Lixeira (Trash flow)
+
+- [ ] 10.4.1 Migrar `excluir()` — chamar `POST /api/documentos/{id}/excluir`
+- [ ] 10.4.2 Migrar `restaurarDaTrash()` — chamar `POST /api/documentos/{id}/restaurar`
+- [ ] 10.4.3 Migrar `excluirPermanentemente()` — chamar `DELETE /api/documentos/{id}/permanente`
+
+#### 10.5 — Páginas
+
+- [ ] 10.5.1 `[id]/page.tsx` — substituir `DocumentoRepository.getById()` por `DocumentoRepositoryApi`
+- [ ] 10.5.2 `[id]/page.tsx` — substituir logs por `DocumentoRepositoryApi.getLogs()`
+- [ ] 10.5.3 `[id]/page.tsx` — ações (reprocessar/excluir) passam a usar service migrado
+- [ ] 10.5.4 `[id]/conferencia/page.tsx` — substituir `DocumentoRepository` por `DocumentoRepositoryApi`
+- [ ] 10.5.5 `[id]/conferencia/page.tsx` — `confirmar`/`rejeitar` passam a usar service migrado
+
 ## Testes
 
 ### Testes Unitários (Vitest + RTL)
@@ -189,8 +228,8 @@
 | Configurações | 4 | 0 |
 | Auditoria | 6 | 0 |
 | Tema e Interface | 6 | 0 |
-| Integração com API | 7 | 1 |
+| Integração com API | 8 | 5 |
 | Testes Unitários | 0 | 3 |
 | Testes E2E | 0 | 5 |
 | Pendências Gerais | 0 | 5 |
-| **Total** | **99** | **14** |
+| **Total** | **100** | **18** |
