@@ -33,7 +33,7 @@ function getStoredToken(): string | null {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: !!getStoredToken() && !!getStoredUser(),
+  isAuthenticated: false,
   user: getStoredUser(),
   isLoading: true,
   mustChangePassword: getStoredUser()?.mustChangePassword ?? false,

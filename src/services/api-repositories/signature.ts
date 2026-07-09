@@ -18,7 +18,8 @@ export const SignatureRepositoryApi = {
     try {
       const data = await api.get<ApiSignature>("/api/signature");
       return mapSignature(data);
-    } catch {
+    } catch (err) {
+      console.error("signature.get:", err);
       return undefined;
     }
   },

@@ -7,7 +7,8 @@ export const SettingsRepositoryApi = {
     try {
       const data = await api.get<ApiSettings>("/api/settings");
       return mapSettings(data);
-    } catch {
+    } catch (err) {
+      console.error("settings.get:", err);
       return undefined;
     }
   },

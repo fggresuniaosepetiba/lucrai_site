@@ -12,7 +12,8 @@ export const PricingRepositoryApi = {
     try {
       const data = await api.get<ApiPricingProduct>(`/api/pricing/${id}`);
       return mapPricing(data);
-    } catch {
+    } catch (err) {
+      console.error("pricing.getById:", err);
       return undefined;
     }
   },

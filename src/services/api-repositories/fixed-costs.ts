@@ -33,7 +33,8 @@ export const FixedCostRepositoryApi = {
     try {
       const data = await api.get<ApiFixedCost>("/api/fixed-costs");
       return mapFixedCost(data);
-    } catch {
+    } catch (err) {
+      console.error("fixed-costs.get:", err);
       return undefined;
     }
   },

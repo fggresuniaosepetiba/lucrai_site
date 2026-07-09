@@ -30,7 +30,8 @@ export const UserRepositoryApi = {
     try {
       const data = await api.get<ApiUser>(`/api/users/${id}`);
       return mapUser(data);
-    } catch {
+    } catch (err) {
+      console.error("users.getById:", err);
       return undefined;
     }
   },

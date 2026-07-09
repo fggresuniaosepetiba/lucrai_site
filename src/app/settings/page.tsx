@@ -127,15 +127,25 @@ export default function SettingsPage() {
         primaryColor,
         logoUrl,
       });
-      await SignatureRepositoryApi.save(assinatura);
       toast("Configurações salvas", "Dados atualizados com sucesso", "success");
-      await loadSettings();
     } catch (err) {
       console.error("Erro ao salvar configurações:", err);
-      toast("Erro", "Não foi possível salvar", "destructive");
+      toast("Erro", "Não foi possível salvar configurações", "destructive");
+      setSaving(false);
+      return;
+    }
+
+    try {
+      await SignatureRepositoryApi.save(assinatura);
+      toast("Assinatura salva", "Dados atualizados com sucesso", "success");
+    } catch (err) {
+      console.error("Erro ao salvar assinatura:", err);
+      toast("Erro", "Não foi possível salvar a assinatura", "destructive");
     } finally {
       setSaving(false);
     }
+
+    await loadSettings();
   };
 
   const handleChangePassword = async () => {

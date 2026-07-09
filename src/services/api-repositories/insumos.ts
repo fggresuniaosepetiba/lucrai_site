@@ -27,7 +27,8 @@ export const InsumoRepositoryApi = {
     try {
       const data = await api.get<ApiInsumo>(`/api/insumos/${id}`);
       return mapInsumo(data);
-    } catch {
+    } catch (err) {
+      console.error("insumos.getById:", err);
       return undefined;
     }
   },

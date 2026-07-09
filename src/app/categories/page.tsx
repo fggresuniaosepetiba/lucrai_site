@@ -39,6 +39,7 @@ export default function CategoriesPage() {
   const [color, setColor] = useState("#0ea5e9");
   const [type, setType] = useState<TransactionType>("income");
   const [deleteConfirm, setDeleteConfirm] = useState<Category | null>(null);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -146,7 +147,7 @@ export default function CategoriesPage() {
             <p className="text-sm text-muted-foreground">Gerencie suas categorias de entrada e saída</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleRemoveDuplicates} variant="outline" size="sm" className="gap-2 text-xs">
+            <Button onClick={() => setDuplicateConfirmOpen(true)} variant="outline" size="sm" className="gap-2 text-xs">
               <AlertTriangle className="h-3.5 w-3.5" />
               Remover Duplicadas
             </Button>
@@ -246,6 +247,34 @@ export default function CategoriesPage() {
             </div>
           </div>
         )}
+
+        <Dialog open={duplicateConfirmOpen} onOpenChange={setDuplicateConfirmOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-400" />
+                Remover Categorias Duplicadas
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground">
+                Tem certeza que deseja remover todas as categorias duplicadas?
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Categorias com mesmo nome e tipo serão consolidadas, mantendo apenas a mais antiga.
+                Esta ação não pode ser desfeita.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDuplicateConfirmOpen(false)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={() => { setDuplicateConfirmOpen(false); handleRemoveDuplicates(); }}>
+                Remover Duplicatas
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
           <DialogContent className="sm:max-w-[400px]">

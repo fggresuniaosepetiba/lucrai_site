@@ -229,7 +229,8 @@ export const DocumentoRepositoryApi = {
     try {
       const data = await api.get<ApiDocumento>(`/api/documentos/${id}`);
       return mapDocumento(data);
-    } catch {
+    } catch (err) {
+      console.error("documents.getById:", err);
       return null;
     }
   },

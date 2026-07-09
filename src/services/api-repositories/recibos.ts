@@ -53,7 +53,8 @@ export const RecibosRepositoryApi = {
     try {
       const data = await api.get<ApiRecibo>(`/api/recibos/${id}`);
       return mapRecibo(data);
-    } catch {
+    } catch (err) {
+      console.error("recibos.getById:", err);
       return undefined;
     }
   },

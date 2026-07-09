@@ -38,7 +38,8 @@ export const CashForecastRepositoryApi = {
     try {
       const data = await api.get<ApiCashForecast>(`/api/forecasts/${id}`);
       return mapForecast(data);
-    } catch {
+    } catch (err) {
+      console.error("cash-forecast.getById:", err);
       return undefined;
     }
   },

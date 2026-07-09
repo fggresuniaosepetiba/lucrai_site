@@ -12,7 +12,7 @@ import { LogIn, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, mustChangePassword, login } = useAuthStore();
+  const { isAuthenticated, isLoading, mustChangePassword, login } = useAuthStore();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,10 +20,11 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
+    if (isLoading) return;
     if (isAuthenticated) {
       router.replace(mustChangePassword ? "/trocar-senha" : "/dashboard");
     }
-  }, [isAuthenticated, mustChangePassword, router]);
+  }, [isAuthenticated, isLoading, mustChangePassword, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

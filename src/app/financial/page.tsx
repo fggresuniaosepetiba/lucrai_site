@@ -89,26 +89,45 @@ export default function FinancialPage() {
   };
 
   const handleCreateCategory = async (data: { name: string; type: "income" | "expense" }) => {
-    const color = data.type === "income" ? "#22c55e" : "#ef4444";
-    const created = await CategoryRepositoryApi.create({
-      name: data.name.trim(),
-      type: data.type,
-      color,
-      icon: "tag",
-    });
-    setCategories((prev) => [...prev, created]);
-    return created;
+    try {
+      const color = data.type === "income" ? "#22c55e" : "#ef4444";
+      const created = await CategoryRepositoryApi.create({
+        name: data.name.trim(),
+        type: data.type,
+        color,
+        icon: "tag",
+      });
+      setCategories((prev) => [...prev, created]);
+      return created;
+    } catch (err) {
+      console.error(err);
+      toast("Erro", "Não foi possível criar categoria", "destructive");
+      throw err;
+    }
   };
+
   const handleUpdate = async (id: string, data: Partial<Transaction>) => {
-    await TransactionRepositoryApi.update(id, data);
-    setEditingTransaction(null);
-    setShowForm(false);
-    await loadData();
+    try {
+      await TransactionRepositoryApi.update(id, data);
+      toast("Lançamento atualizado", "Dados salvos com sucesso", "success");
+      setEditingTransaction(null);
+      setShowForm(false);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      toast("Erro", "Não foi possível atualizar", "destructive");
+    }
   };
 
   const handleDelete = async (id: string, reason: string) => {
-    await TransactionRepositoryApi.delete(id, reason);
-    await loadData();
+    try {
+      await TransactionRepositoryApi.delete(id, reason);
+      toast("Lançamento excluído", "", "success");
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      toast("Erro", "Não foi possível excluir", "destructive");
+    }
   };
 
   const handleEdit = (tx: Transaction) => {

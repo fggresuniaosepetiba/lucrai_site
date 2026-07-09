@@ -29,7 +29,8 @@ export const TransactionRepositoryApi = {
     try {
       const data = await api.get<ApiTransaction>(`/api/transactions/${id}`);
       return mapTransaction(data);
-    } catch {
+    } catch (err) {
+      console.error("transactions.getById:", err);
       return undefined;
     }
   },
