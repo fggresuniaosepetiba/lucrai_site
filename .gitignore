@@ -69,3 +69,6 @@ obj/
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# opencode
+.opencode/
