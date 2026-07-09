@@ -10,10 +10,9 @@ import type { ReciboFormData } from "@/components/recibos/recibo-form";
 import { ReciboViewModal } from "@/components/recibos/recibo-view-modal";
 import { ReciboCancelDialog } from "@/components/recibos/recibo-cancel-dialog";
 import { ReciboFilters } from "@/components/recibos/recibo-filters";
-import { RecibosRepository } from "@/database/repositories/recibos";
-import { AuditoriaRecibosRepository } from "@/database/repositories/auditoria-recibos";
-import { AssinaturaRepository } from "@/database/repositories/assinatura";
-import { SettingsRepository } from "@/database/repositories/settings";
+import { RecibosRepositoryApi } from "@/services/api-repositories/recibos";
+import { SignatureRepositoryApi } from "@/services/api-repositories/signature";
+import { SettingsRepositoryApi } from "@/services/api-repositories/settings";
 import { TransactionRepository } from "@/database/repositories/transactions";
 import { downloadPdf, printRecibo } from "@/services/recibos/reciboPdfService";
 import { Button } from "@/components/ui/button";
@@ -84,9 +83,9 @@ function RecibosPage() {
   const loadData = async () => {
     try {
       const [recibosData, settingsData, assinaturaData] = await Promise.all([
-        RecibosRepository.getAll(company),
-        SettingsRepository.get(company),
-        AssinaturaRepository.get(company),
+        RecibosRepositoryApi.getAll(company),
+        SettingsRepositoryApi.get(),
+        SignatureRepositoryApi.get(),
       ]);
       setRecibos(recibosData);
       setAppSettings(settingsData || null);
@@ -115,17 +114,16 @@ function RecibosPage() {
 
   const handleCreate = async (data: ReciboFormData, criarLancamento: boolean) => {
     try {
-      const recibo = await RecibosRepository.create({
+      const recibo = await RecibosRepositoryApi.create({
         tipo: data.tipo,
-        status: "emitido",
+        data: data.data,
+        valor: data.valor,
         nomePagador: data.nomePagador,
         documentoPagador: data.documentoPagador,
         semDocumentoPagador: data.semDocumentoPagador,
         nomeRecebedor: data.nomeRecebedor,
         documentoRecebedor: data.documentoRecebedor,
         semDocumentoRecebedor: data.semDocumentoRecebedor,
-        data: data.data,
-        valor: data.valor,
         referente: data.referente,
         formaPagamento: data.formaPagamento,
         observacoes: data.observacoes,
@@ -136,21 +134,13 @@ function RecibosPage() {
         exibirAssinatura: data.exibirAssinatura,
         parcelaAtual: data.parcelaAtual,
         parcelasTotal: data.parcelasTotal,
-        lancamentoId: null,
+        lancamentoId: data.lancamentoId || null,
         origem: "manual",
         criadoPor: userName,
-        company,
-      });
-
-      await AuditoriaRecibosRepository.registrar({
-        reciboId: recibo.id,
-        acao: "criado",
-        realizadoEm: new Date().toISOString(),
-        realizadoPor: userName,
       });
 
       if (data.lancamentoId) {
-        await RecibosRepository.update(recibo.id, { lancamentoId: data.lancamentoId, origem: "lancamento" });
+        await RecibosRepositoryApi.update(recibo.id, { lancamentoId: data.lancamentoId });
         toast("Recibo criado e vinculado", `Recibo ${recibo.numero} vinculado ao lançamento`, "success");
       } else if (criarLancamento) {
         const lancamento = await TransactionRepository.create(
@@ -166,7 +156,7 @@ function RecibosPage() {
           company,
           userName
         );
-        await RecibosRepository.update(recibo.id, { lancamentoId: lancamento.id });
+        await RecibosRepositoryApi.update(recibo.id, { lancamentoId: lancamento.id });
         toast("Recibo e lançamento criados", `Recibo ${recibo.numero} gerado com lançamento financeiro`, "success");
       } else {
         toast("Recibo criado", `Recibo ${recibo.numero} gerado com sucesso`, "success");
@@ -182,7 +172,7 @@ function RecibosPage() {
   const handleEdit = async (data: ReciboFormData, _criarLancamento: boolean) => {
     if (!editRecibo) return;
     try {
-      await RecibosRepository.update(editRecibo.id, {
+      await RecibosRepositoryApi.update(editRecibo.id, {
         tipo: data.tipo,
         nomePagador: data.nomePagador,
         documentoPagador: data.documentoPagador,
@@ -204,13 +194,6 @@ function RecibosPage() {
         parcelasTotal: data.parcelasTotal,
       });
 
-      await AuditoriaRecibosRepository.registrar({
-        reciboId: editRecibo.id,
-        acao: "editado",
-        realizadoEm: new Date().toISOString(),
-        realizadoPor: userName,
-      });
-
       toast("Recibo atualizado", `Recibo ${editRecibo.numero} atualizado com sucesso`, "success");
       setEditRecibo(null);
       setShowForm(false);
@@ -224,18 +207,7 @@ function RecibosPage() {
   const handleCancel = async (motivo: string) => {
     if (!cancelRecibo) return;
     try {
-      await RecibosRepository.cancelar(cancelRecibo.id, {
-        motivo,
-        canceladoEm: new Date().toISOString(),
-        canceladoPor: userName,
-      });
-
-      await AuditoriaRecibosRepository.registrar({
-        reciboId: cancelRecibo.id,
-        acao: "cancelado",
-        realizadoEm: new Date().toISOString(),
-        realizadoPor: userName,
-      });
+      await RecibosRepositoryApi.cancelar(cancelRecibo.id, motivo);
 
       toast("Recibo cancelado", `Recibo ${cancelRecibo.numero} foi cancelado`, "success");
       setCancelRecibo(null);
@@ -248,22 +220,12 @@ function RecibosPage() {
 
   const handleDownloadPdf = useCallback(async (recibo: Receipt) => {
     await downloadPdf(recibo, appSettings?.logoUrl, appSettings?.companyName, assinatura);
-    await AuditoriaRecibosRepository.registrar({
-      reciboId: recibo.id,
-      acao: "pdf_baixado",
-      realizadoEm: new Date().toISOString(),
-      realizadoPor: userName,
-    });
+    await RecibosRepositoryApi.createAudit(recibo.id, "Downloaded", `Recibo ${recibo.numero} baixado`, userName);
   }, [appSettings, assinatura, userName]);
 
   const handlePrint = useCallback(async (recibo: Receipt) => {
     printRecibo(recibo, appSettings?.logoUrl, appSettings?.companyName, assinatura);
-    await AuditoriaRecibosRepository.registrar({
-      reciboId: recibo.id,
-      acao: "impresso",
-      realizadoEm: new Date().toISOString(),
-      realizadoPor: userName,
-    });
+    await RecibosRepositoryApi.createAudit(recibo.id, "Printed", `Recibo ${recibo.numero} impresso`, userName);
   }, [appSettings, assinatura, userName]);
 
   const handleVerLancamento = (lancamentoId: string) => {

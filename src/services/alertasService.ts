@@ -1,6 +1,5 @@
 import type { Transaction } from "@/types";
 import type { AlertaItem, AlertaTipo, AlertaCategoria } from "@/types/dashboard";
-import { db } from "@/database/dexie";
 import { parseLocalDate, formatCurrency } from "@/lib/utils";
 import { DESVIO_ANOMALIA_CUSTO, LIMIAR_QUEDA_MARGEM_CRITICO, LIMIAR_QUEDA_MARGEM_ATENCAO } from "@/lib/constants";
 
@@ -23,11 +22,13 @@ interface DadosParaAlertas {
   periodoAnteriorMargem?: number;
 }
 
+const STORAGE_KEY = "lucrai-alertas-dispensados";
+
 export async function getAlertasDispensados(): Promise<Set<string>> {
   try {
-    const stored = await db.settings.get("alertas-dispensados");
-    if (stored && stored.company) {
-      const parsed = JSON.parse(stored.company);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
       return new Set<string>(parsed);
     }
     return new Set<string>();
@@ -39,23 +40,13 @@ export async function getAlertasDispensados(): Promise<Set<string>> {
 export async function dispensarAlerta(id: string): Promise<void> {
   const stored = await getAlertasDispensados();
   stored.add(id);
-  await db.settings.put({
-    id: "alertas-dispensados",
-    company: JSON.stringify(Array.from(stored)),
-    companyName: "",
-    primaryColor: "",
-  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(stored)));
 }
 
 export async function restaurarAlerta(id: string): Promise<void> {
   const stored = await getAlertasDispensados();
   stored.delete(id);
-  await db.settings.put({
-    id: "alertas-dispensados",
-    company: JSON.stringify(Array.from(stored)),
-    companyName: "",
-    primaryColor: "",
-  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(stored)));
 }
 
 function criarAlerta(

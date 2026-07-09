@@ -251,6 +251,98 @@ export interface ApiAuditLog {
   details: string | null;
 }
 
+// ============ INSUMOS ============
+export interface ApiInsumo {
+  id: string;
+  nome: string;
+  categoria: string;
+  unidadeMedida: string;
+  quantidadeComprada: number;
+  valorPago: number;
+  custoPorUnidade: number;
+  company: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============ SIGNATURE ============
+export interface ApiSignature {
+  id: string;
+  imagemBase64: string | null;
+  nomeResponsavel: string;
+  cargo: string;
+  permitirUso: boolean;
+  company: string;
+}
+
+// ============ FIXED COSTS ============
+export interface ApiFixedCostItem {
+  id: string;
+  name: string;
+  value: number;
+}
+
+export interface ApiFixedCost {
+  id: string;
+  aluguel: number;
+  energia: number;
+  agua: number;
+  internet: number;
+  contador: number;
+  proLabore: number;
+  softwares: number;
+  telefone: number;
+  marketing: number;
+  limpeza: number;
+  outros: number;
+  customCosts: ApiFixedCostItem[];
+  total: number;
+  createdAt: string;
+  updatedAt: string;
+  company: string;
+}
+
+// ============ RECIBOS ============
+export interface ApiCancelamentoRecibo {
+  motivo: string;
+  canceladoEm: string;
+  canceladoPor: string;
+}
+
+export interface ApiRecibo {
+  id: string;
+  displayId: string;
+  company: string;
+  numero: string;
+  tipo: string;
+  origem: string;
+  status: string;
+  data: string;
+  valor: number;
+  valorPorExtenso: string;
+  nomePagador: string;
+  documentoPagador: string | null;
+  semDocumentoPagador: boolean;
+  nomeRecebedor: string;
+  documentoRecebedor: string | null;
+  semDocumentoRecebedor: boolean;
+  referente: string;
+  formaPagamento: string | null;
+  observacoes: string | null;
+  telefone: string | null;
+  email: string | null;
+  cidade: string | null;
+  estado: string | null;
+  exibirAssinatura: boolean;
+  parcelaAtual: number | null;
+  parcelasTotal: number | null;
+  lancamentoId: string | null;
+  criadoPor: string;
+  cancelamento: ApiCancelamentoRecibo | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ============ CONTAS (Company Registration) ============
 export interface ApiConta {
   id: string;

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { UserRepository } from "@/database/repositories/users";
 import { UserRepositoryApi } from "@/services/api-repositories/users";
 import type { AppUser } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,7 +54,7 @@ const roleColors: Record<string, string> = {
 
 export default function UsersPage() {
   const router = useRouter();
-  const { isAuthenticated, user: currentUser } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -64,7 +63,6 @@ export default function UsersPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<AppUser["role"]>("viewer");
-  const [company, setCompany] = useState("");
 
   const [deletingUser, setDeletingUser] = useState<AppUser | null>(null);
   const [deleteStep, setDeleteStep] = useState<"confirm" | "reason">("confirm");
@@ -80,7 +78,7 @@ export default function UsersPage() {
 
   const loadUsers = async () => {
     try {
-      const all = await UserRepository.getAll();
+      const all = await UserRepositoryApi.getAll();
       setUsers(all);
     } catch (err) {
       console.error(err);
@@ -90,15 +88,13 @@ export default function UsersPage() {
   };
 
   const handleCreate = async () => {
-    if (!name.trim() || !email.trim() || !password.trim() || !company.trim()) return;
+    if (!name.trim() || !email.trim() || !password.trim()) return;
     try {
-      const apiUser = await UserRepositoryApi.create({ name: name.trim(), email: email.trim(), password: password.trim(), role });
-      await UserRepository.create({ name: apiUser.name, email: apiUser.email, role: apiUser.role, company: company.trim() });
+      await UserRepositoryApi.create({ name: name.trim(), email: email.trim(), password: password.trim(), role });
       setShowForm(false);
       setName("");
       setEmail("");
       setPassword("");
-      setCompany("");
       toast("Usuário criado", "", "success");
       loadUsers();
     } catch { toast("Erro", "", "destructive"); }
@@ -107,8 +103,7 @@ export default function UsersPage() {
   const handleUpdate = async () => {
     if (!editingUser) return;
     try {
-      const data: Partial<AppUser> = { name, email, role, company };
-      await UserRepository.update(editingUser.id, data);
+      await UserRepositoryApi.update(editingUser.id, { name, role });
       setEditingUser(null);
       toast("Usuário atualizado", "", "success");
       loadUsers();
@@ -120,7 +115,6 @@ export default function UsersPage() {
     setName(u.name);
     setEmail(u.email);
     setRole(u.role);
-    setCompany(u.company);
     setPassword("");
   };
 
@@ -133,7 +127,7 @@ export default function UsersPage() {
   const handleConfirmDelete = async () => {
     if (!deletingUser || !deleteReason.trim()) return;
     try {
-      await UserRepository.softDelete(deletingUser.id, deleteReason.trim(), currentUser?.email ?? "unknown");
+      await UserRepositoryApi.delete(deletingUser.id, deleteReason.trim());
       toast("Usuário excluído com sucesso.", "", "success");
       setDeletingUser(null);
       setDeleteReason("");
@@ -157,7 +151,7 @@ export default function UsersPage() {
     <Shell>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <Button size="sm" onClick={() => { setEditingUser(null); setName(""); setEmail(""); setPassword(""); setRole("viewer"); setCompany(""); setShowForm(true); }} className="gap-2">
+          <Button size="sm" onClick={() => { setEditingUser(null); setName(""); setEmail(""); setPassword(""); setRole("viewer"); setShowForm(true); }} className="gap-2">
             <Plus className="h-4 w-4" />
             Novo Usuário
           </Button>
@@ -296,10 +290,6 @@ export default function UsersPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Empresa</Label>
-                <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Ex: Trinary, Lucraí, Grão Natural" />
-              </div>
-              <div className="space-y-2">
                 <Label>Perfil</Label>
                 <Select value={role} onValueChange={(v) => setRole(v as AppUser["role"])}>
                   <SelectTrigger>
@@ -316,7 +306,7 @@ export default function UsersPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button onClick={editingUser ? handleUpdate : handleCreate} disabled={!name.trim() || !email.trim() || (!editingUser && (!password.trim() || !company.trim()))}>
+              <Button onClick={editingUser ? handleUpdate : handleCreate} disabled={!name.trim() || !email.trim() || (!editingUser && !password.trim())}>
                 {editingUser ? "Atualizar" : "Criar"}
               </Button>
             </DialogFooter>

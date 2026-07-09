@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FixedCostsRepository } from "@/database/repositories/fixed-costs";
+import { FixedCostRepositoryApi } from "@/services/api-repositories/fixed-costs";
 import { toast } from "@/components/ui/toast";
 import { formatCurrency, generateId } from "@/lib/utils";
 import type { FixedCostField, CustomCostItem } from "@/types";
@@ -50,7 +50,7 @@ export default function FixedCostsPage() {
 
   const loadData = async () => {
     try {
-      const data = await FixedCostsRepository.getByCompany(company);
+      const data = await FixedCostRepositoryApi.get();
       if (data) {
         const vals: Record<string, number> = {};
         for (const f of FIXED_COST_FIELDS) vals[f] = data[f] || 0;
@@ -90,8 +90,7 @@ export default function FixedCostsPage() {
     if (!company || !isEditing) return;
     setSaving(true);
     try {
-      await FixedCostsRepository.upsert({
-        company,
+      await FixedCostRepositoryApi.save({
         aluguel: values.aluguel,
         energia: values.energia,
         agua: values.agua,
@@ -104,7 +103,6 @@ export default function FixedCostsPage() {
         limpeza: values.limpeza,
         outros: values.outros,
         customCosts,
-        total,
       });
       toast("Custos fixos salvos com sucesso!", undefined, "success");
       setIsEditing(false);

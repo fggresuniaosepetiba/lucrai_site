@@ -13,16 +13,17 @@
 - [x] TypeScript configurado com strict mode
 - [x] Tailwind CSS com sistema de temas próprio
 - [x] shadcn/ui configurado com componentes base
-- [x] Dexie.js configurado com 7 tabelas e schema version 6
+- [x] Dexie.js configurado com schema version 13+ (em processo de remoção)
 - [x] Variáveis de ambiente (.env.local)
 
 ## Autenticação e Sessão
 
 - [x] Tela de login com validação local
-- [x] Store de autenticação (Zustand + localStorage)
+- [x] Store de autenticação (Zustand + JWT via API)
 - [x] Proteção de rotas por verificação de sessão
 - [x] Logout com limpeza de sessão
-- [x] Seed de usuários padrão na primeira execução
+- [x] MustChangePassword — login detecta e redireciona para troca de senha
+- [x] Landing page não é mais interceptada pelo mustChangePassword
 - [x] Controle de acesso por papel (owner, admin, financial, viewer)
 
 ## Dashboard
@@ -81,7 +82,6 @@
 - [x] Edição inline
 - [x] Exclusão com proteção (bloqueia se houver transações vinculadas)
 - [x] Detecção e remoção de categorias duplicadas
-- [x] Seed de categorias padrão na primeira execução
 
 ## Relatórios
 
@@ -122,7 +122,6 @@
 - [x] Log de criação, edição de previsões
 - [x] Log de recebimento, pagamento, cancelamento
 - [x] Log de restauração e exclusão permanente
-- [x] Tabela dedicada no IndexedDB (auditLogs)
 - [x] Registro do usuário responsável em cada ação
 
 ## Tema e Interface
@@ -136,8 +135,6 @@
 
 ## Pendentes
 
-- [ ] Testes automatizados (unitários e integração)
-- [ ] Página inicial/landing page antes do login
 - [ ] Onboarding interativo para novos usuários
 - [ ] Backup e restauração dos dados
 - [ ] Exportação para PDF

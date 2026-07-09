@@ -14,7 +14,7 @@ import {
   DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InsumosRepository } from "@/database/repositories/insumos";
+import { InsumoRepositoryApi } from "@/services/api-repositories/insumos";
 import { toast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/utils";
 import type { Insumo, UnidadeMedida } from "@/types";
@@ -54,7 +54,7 @@ export default function InsumosPage() {
 
   const loadInsumos = async () => {
     try {
-      const all = await InsumosRepository.getAll(company);
+      const all = await InsumoRepositoryApi.getAll(company);
       setInsumos(all);
     } catch (err) {
       console.error("Error loading insumos:", err);
@@ -89,7 +89,7 @@ export default function InsumosPage() {
 
     try {
       if (editingId) {
-        await InsumosRepository.update(editingId, {
+        await InsumoRepositoryApi.update(editingId, {
           nome: nome.trim(),
           categoria: categoria.trim(),
           unidadeMedida: unidade,
@@ -98,14 +98,13 @@ export default function InsumosPage() {
         });
         toast("Insumo atualizado!", undefined, "success");
       } else {
-        await InsumosRepository.create(
+        await InsumoRepositoryApi.create(
           {
             nome: nome.trim(),
             categoria: categoria.trim(),
             unidadeMedida: unidade,
             quantidadeComprada: quantidade,
             valorPago: valor,
-            custoPorUnidade: quantidade > 0 ? valor / quantidade : 0,
           },
           company
         );
@@ -131,7 +130,7 @@ export default function InsumosPage() {
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm) return;
     try {
-      await InsumosRepository.delete(deleteConfirm.id);
+      await InsumoRepositoryApi.delete(deleteConfirm.id);
       toast("Insumo excluído", undefined, "success");
       loadInsumos();
     } catch {

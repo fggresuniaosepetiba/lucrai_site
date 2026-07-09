@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { CategoryRepository } from "@/database/repositories/categories";
-import { seedDefaultCategories } from "@/database/seed";
+import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
 import type { Category, TransactionType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +30,7 @@ const COLORS = [
 
 export default function CategoriesPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -39,11 +38,7 @@ export default function CategoriesPage() {
   const [name, setName] = useState("");
   const [color, setColor] = useState("#0ea5e9");
   const [type, setType] = useState<TransactionType>("income");
-  const [duplicates, setDuplicates] = useState<{ name: string; type: TransactionType; ids: string[]; keepId: string; count: number }[]>([]);
-  const [showDuplicatesDialog, setShowDuplicatesDialog] = useState(false);
-  const [removingDuplicates, setRemovingDuplicates] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<Category | null>(null);
-  const company = user?.company ?? "";
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -51,11 +46,10 @@ export default function CategoriesPage() {
       return;
     }
     init();
-  }, [isAuthenticated, router, company]);
+  }, [isAuthenticated, router]);
 
   const init = async () => {
     try {
-      await seedDefaultCategories(company);
       await loadCategories();
     } catch (err) {
       console.error(err);
@@ -65,28 +59,17 @@ export default function CategoriesPage() {
   };
 
   const loadCategories = async () => {
-    const cats = await CategoryRepository.getAll(company);
+    const cats = await CategoryRepositoryApi.getAll();
     setCategories(cats);
   };
 
-  const handleCheckDuplicates = async () => {
-    const dups = await CategoryRepository.findDuplicates(company);
-    setDuplicates(dups);
-    setShowDuplicatesDialog(true);
-  };
-
   const handleRemoveDuplicates = async () => {
-    setRemovingDuplicates(true);
     try {
-      const removed = await CategoryRepository.removeDuplicates(company);
+      const removed = await CategoryRepositoryApi.removeDuplicates();
       toast("Duplicatas removidas", `${removed} categoria(s) duplicada(s) removida(s) com sucesso`, "success");
-      setShowDuplicatesDialog(false);
-      setDuplicates([]);
       await loadCategories();
     } catch {
       toast("Erro", "Não foi possível remover duplicatas", "destructive");
-    } finally {
-      setRemovingDuplicates(false);
     }
   };
 
@@ -96,10 +79,10 @@ export default function CategoriesPage() {
 
     try {
       if (editingCategory) {
-        await CategoryRepository.update(editingCategory.id, { name: name.trim(), color, type });
+        await CategoryRepositoryApi.update(editingCategory.id, { name: name.trim(), color, type });
         toast("Categoria atualizada", "", "success");
       } else {
-        await CategoryRepository.create({ name: name.trim(), color, type, icon: "tag" }, company);
+        await CategoryRepositoryApi.create({ name: name.trim(), color, type, icon: "tag" });
         toast("Categoria criada", "Categoria criada com sucesso", "success");
       }
       setShowForm(false);
@@ -114,7 +97,7 @@ export default function CategoriesPage() {
   const handleDeleteConfirm = async () => {
     if (!deleteConfirm) return;
     try {
-      await CategoryRepository.delete(deleteConfirm.id);
+      await CategoryRepositoryApi.delete(deleteConfirm.id);
       toast("Categoria excluída", "", "success");
       setDeleteConfirm(null);
       await loadCategories();
@@ -163,7 +146,7 @@ export default function CategoriesPage() {
             <p className="text-sm text-muted-foreground">Gerencie suas categorias de entrada e saída</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleCheckDuplicates} variant="outline" size="sm" className="gap-2 text-xs">
+            <Button onClick={handleRemoveDuplicates} variant="outline" size="sm" className="gap-2 text-xs">
               <AlertTriangle className="h-3.5 w-3.5" />
               Remover Duplicadas
             </Button>
@@ -263,56 +246,6 @@ export default function CategoriesPage() {
             </div>
           </div>
         )}
-
-        <Dialog open={showDuplicatesDialog} onOpenChange={(open) => { if (!open) { setShowDuplicatesDialog(false); } }}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-400" />
-                Remover Categorias Duplicadas
-              </DialogTitle>
-            </DialogHeader>
-            <div className="py-4">
-              {duplicates.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhuma categoria duplicada encontrada
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    As seguintes categorias aparecem mais de uma vez. Será mantida apenas a mais antiga e as
-                    transações serão reassociadas automaticamente.
-                  </p>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {duplicates.map((dup) => (
-                      <div key={`${dup.name}-${dup.type}`} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                        <div>
-                          <p className="text-sm font-medium">{dup.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {dup.type === "income" ? "Entrada" : "Saída"} &middot; {dup.count} ocorrências
-                          </p>
-                        </div>
-                        <Badge variant={dup.type === "income" ? "success" : "destructive"} className="text-[10px]">
-                          manter 1 de {dup.count}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDuplicatesDialog(false)}>
-                Cancelar
-              </Button>
-              {duplicates.length > 0 && (
-                <Button variant="destructive" onClick={handleRemoveDuplicates} disabled={removingDuplicates}>
-                  {removingDuplicates ? "Removendo..." : `Remover ${duplicates.reduce((a, d) => a + d.count - 1, 0)} duplicata(s)`}
-                </Button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         <Dialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
           <DialogContent className="sm:max-w-[400px]">

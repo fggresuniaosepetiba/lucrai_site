@@ -4,8 +4,7 @@ import { DocumentoRepository, DocumentoLogRepository, DocumentoConfigRepository 
 import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
 import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
-import { TransactionRepository } from "@/database/repositories/transactions";
-import { CashForecastRepository } from "@/database/repositories/cash-forecast";
+import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
 import { DocumentoStorageService } from "./documentos-storage.service";
 import { DocumentoExtracaoService } from "./documentos-extracao.service";
 import { DocumentoAprendizadoService } from "./documentos-aprendizado.service";
@@ -236,7 +235,7 @@ export const DocumentoService = {
     const hoje = todayStr();
 
     if (data.data_lancamento > hoje) {
-      const cats = await (await import("@/database/repositories/categories")).CategoryRepository.getAll(empresa_id);
+      const cats = await CategoryRepositoryApi.getAll();
       const cat = cats.find((c) => c.id === data.categoria_id);
 
       const forecast = await CashForecastRepositoryApi.create({
@@ -272,7 +271,7 @@ export const DocumentoService = {
       observation: data.observacoes || undefined,
     });
 
-    const cats = await (await import("@/database/repositories/categories")).CategoryRepository.getAll(empresa_id);
+    const cats = await CategoryRepositoryApi.getAll();
     const cat = cats.find((c) => c.id === data.categoria_id);
     if (cat) {
       await TransactionRepositoryApi.update(transaction.id, { categoryName: cat.name });

@@ -4,9 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { SettingsRepository } from "@/database/repositories/settings";
-import { UserRepository } from "@/database/repositories/users";
-import { AssinaturaRepository } from "@/database/repositories/assinatura";
+import { SettingsRepositoryApi } from "@/services/api-repositories/settings";
+import { SignatureRepositoryApi } from "@/services/api-repositories/signature";
 import { Switch } from "@/components/ui/switch";
 import type { AppSettings, SignatureConfig } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -70,7 +69,7 @@ export default function SettingsPage() {
 
   const loadSettings = async () => {
     try {
-      const s = await SettingsRepository.get(company);
+      const s = await SettingsRepositoryApi.get();
       if (s) {
         setSettings(s);
         setCompanyName(s.companyName);
@@ -79,7 +78,7 @@ export default function SettingsPage() {
       } else {
         setCompanyName(company || "Minha Empresa");
       }
-      const sig = await AssinaturaRepository.get(company);
+      const sig = await SignatureRepositoryApi.get();
       if (sig) {
         setAssinatura(sig);
         if (sig.imagemBase64) setAssinaturaPreview(sig.imagemBase64);
@@ -123,16 +122,12 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       const logoUrl = logoFile && logoPreview ? logoPreview : settings?.logoUrl;
-      await SettingsRepository.update(company, {
+      await SettingsRepositoryApi.update({
         companyName,
         primaryColor,
         logoUrl,
       });
-      await AssinaturaRepository.save(company, {
-        ...assinatura,
-        id: company,
-        company,
-      });
+      await SignatureRepositoryApi.save(assinatura);
       toast("Configurações salvas", "Dados atualizados com sucesso", "success");
       await loadSettings();
     } catch (err) {

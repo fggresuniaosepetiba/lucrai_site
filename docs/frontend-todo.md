@@ -204,11 +204,98 @@
 
 ## Pendências Gerais
 
-- [ ] Página inicial/landing page antes do login
 - [ ] Onboarding interativo para novos usuários
 - [ ] Backup e restauração dos dados
 - [ ] Exportação para PDF
 - [ ] Modo escuro programável (agendado)
+
+## Grupo A: Migrar páginas Dexie → API (já têm API repository)
+
+**Problema:** Essas páginas ainda leem/escrevem no Dexie (IndexedDB). Dados ficam presos no navegador.
+
+**Solução:** Trocar `import` do repositório Dexie pelo `ApiRepository` correspondente.
+
+### Plano de Implementação
+
+#### 1️⃣ `src/app/categories/page.tsx` — Categorias
+- **O que trocar:**
+  - `CategoryRepository` (Dexie) → `CategoryRepositoryApi`
+  - `seedDefaultCategories` → remover (API já seeda no backend)
+  - `CategoryRepository.getAll(company)` → `CategoryRepositoryApi.getAll()`
+  - `CategoryRepository.findDuplicates(company)` → remover (API faz find+remove em 1 call)
+  - `CategoryRepository.removeDuplicates(company)` → `CategoryRepositoryApi.removeDuplicates()`
+  - `CategoryRepository.create({...}, company)` → `CategoryRepositoryApi.create({...})` (sem company)
+  - `CategoryRepository.update(id, {...})` → `CategoryRepositoryApi.update(id, {...})`
+  - `CategoryRepository.delete(id)` → `CategoryRepositoryApi.delete(id)`
+- **Mudança de comportamento:** Fluxo de duplicatas simplificado (sem dialog de preview, remove direto com toast do resultado)
+
+#### 2️⃣ `src/app/reports/page.tsx` — Relatórios
+- **O que trocar:**
+  - `TransactionRepository` (Dexie) → `TransactionRepositoryApi`
+  - `CashForecastRepository` (Dexie) → `CashForecastRepositoryApi`
+  - `TransactionRepository.getAll(company)` → `TransactionRepositoryApi.getAll()` (sem company)
+  - `CashForecastRepository.getAll(company)` → `CashForecastRepositoryApi.getAll()` (sem company)
+- **Sem mudança de comportamento** — mesmas funções, mesmos tipos de retorno
+
+#### 3️⃣ `src/app/settings/page.tsx` — Configurações
+- **O que trocar:**
+  - `SettingsRepository` (Dexie) → `SettingsRepositoryApi`
+  - `UserRepository` (Dexie) → remover (não é mais usado na página)
+  - `AssinaturaRepository` (Dexie) → **manter** (não tem API equivalente — Grupo B)
+  - `SettingsRepository.get(company)` → `SettingsRepositoryApi.get()` (sem company)
+  - `SettingsRepository.update(company, data)` → `SettingsRepositoryApi.update(data)` (sem company)
+
+#### 4️⃣ `src/app/trash/page.tsx` — Lixeira
+- **O que trocar:**
+  - `TrashRepository` (Dexie) → `TrashRepositoryApi`
+  - `DocumentoRepository` (Dexie) → `DocumentoRepositoryApi` (para trash de docs)
+  - `TrashRepository.cleanup()` → `TrashRepositoryApi.cleanup()`
+  - `TrashRepository.getAll(company)` → `TrashRepositoryApi.getAll()` (sem company)
+  - `TrashRepository.restore(id, userName)` → `TrashRepositoryApi.restore(id)` (sem userName)
+  - `TrashRepository.permanentlyDelete(id, userName)` → `TrashRepositoryApi.permanentlyDelete(id)` (sem userName)
+  - `DocumentoRepository.cleanupTrash()` → `DocumentoRepositoryApi.cleanupTrash()`
+  - `DocumentoRepository.getAllInTrash(company)` → `DocumentoRepositoryApi.getTrash()` (sem company)
+
+#### 5️⃣ `src/app/users/page.tsx` — Usuários
+- **O que trocar:**
+  - `UserRepository` (Dexie) → `UserRepositoryApi` (para TODAS as operações)
+  - `UserRepository.getAll()` → `UserRepositoryApi.getAll()`
+  - `UserRepository.create(...)` + `UserRepositoryApi.create(...)` → só `UserRepositoryApi.create(...)` (remover dual-write)
+  - `UserRepository.update(id, data)` → `UserRepositoryApi.update(id, data)`
+  - `UserRepository.softDelete(id, reason, user)` → `UserRepositoryApi.delete(id, reason)`
+  - Remover campo `company` do formulário de criar/editar (derivado do JWT)
+
+#### 6️⃣ `src/components/financial/transaction-form.tsx` — Formulário de Transação
+- **O que trocar:**
+  - `CategoryRepository` (Dexie) → `CategoryRepositoryApi`
+  - `CategoryRepository.getAll(company)` → `CategoryRepositoryApi.getAll()`
+- **Nota:** Componente já recebe `categories` por prop — o Dexie era fallback se categories viessem vazias
+
+#### 7️⃣ `src/services/alertasService.ts` — Serviço de Alertas
+- **O que trocar:**
+  - `db.settings` (Dexie) → `localStorage`
+  - `db.settings.get("alertas-dispensados")` → `localStorage.getItem("lucrai-alertas-dispensados")`
+  - `db.settings.put(...)` → `localStorage.setItem(...)`
+- **Nota:** Alertas dispensados são preferência do usuário (não precisam ser compartilhados entre browsers)
+
+#### 8️⃣ `src/services/documentos/documentos.service.ts` — Serviço de Documentos
+- **O que trocar:**
+  - Linhas 7-8: remover `import { TransactionRepository }` e `import { CashForecastRepository }` — já não são usados (API substituiu)
+  - Linha 239 e 275: `(await import("@/database/repositories/categories")).CategoryRepository.getAll(empresa_id)` → `(await import("@/services/api-repositories/categories")).CategoryRepositoryApi.getAll()`
+- **Confirmado:** `TransactionRepositoryApi.create` e `CashForecastRepositoryApi.create` já estão sendo usados (linhas 242, 265)
+
+---
+
+## Grupo B: Features sem backend API (requer backend + frontend)
+
+**Problema:** Essas entidades só existem no Dexie. Não têm controller/entidade/repositório no backend .NET.
+
+**Escopo futuro (não implementado):**
+- [ ] Recibos (`src/app/recibos/`, `src/database/repositories/recibos.ts`)
+- [ ] Insumos/Pricing (`src/app/pricing/insumos/`, `src/database/repositories/insumos.ts`)
+- [ ] Custos Fixos/Pricing (`src/app/pricing/fixed-costs/`, `src/database/repositories/fixed-costs.ts`)
+- [ ] Assinatura/Recibos (`src/database/repositories/assinatura.ts`)
+- [ ] Auditoria de Recibos (`src/database/repositories/auditoria-recibos.ts`)
 
 ---
 
@@ -231,5 +318,7 @@
 | Integração com API | 30 | 0 |
 | Testes Unitários | 3 | 0 |
 | Testes E2E | 5 | 0 |
-| Pendências Gerais | 0 | 5 |
-| **Total** | **125** | **10** |
+| Migração Grupo A | 8 | 0 |
+| Migração Grupo B (backend + frontend) | 0 | 5 |
+| Pendências Gerais | 0 | 4 |
+| **Total** | **133** | **9** |

@@ -30,6 +30,10 @@ builder.Services.AddScoped<IDocumentoRepository, DocumentoRepository>();
 builder.Services.AddScoped<IDocumentoLogRepository, DocumentoLogRepository>();
 builder.Services.AddScoped<IDocumentoAprendizadoRepository, DocumentoAprendizadoRepository>();
 builder.Services.AddScoped<IDocumentoConfigRepository, DocumentoConfigRepository>();
+builder.Services.AddScoped<ISignatureRepository, SignatureRepository>();
+builder.Services.AddScoped<IFixedCostRepository, FixedCostRepository>();
+builder.Services.AddScoped<IInsumoRepository, InsumoRepository>();
+builder.Services.AddScoped<IReciboRepository, ReciboRepository>();
 
 builder.Services.AddScoped<IDashboardIntelligenceService, DashboardIntelligenceService>();
 builder.Services.AddScoped<IAlertasService, AlertasService>();

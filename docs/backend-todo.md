@@ -340,6 +340,19 @@
 
 ---
 
+## Grupo B: Backend pendente (features que só existem no frontend Dexie)
+
+Essas features não têm controller, entidade, repositório ou migration no backend .NET.
+Necessário criar backend completo para cada uma:
+
+- [ ] **Recibos** — CRUD de recibos (emissão, cancelamento, listagem)
+- [ ] **Insumos** — Matéria-prima para Precificação
+- [ ] **Custos Fixos** — Custos fixos mensais para Precificação
+- [ ] **Assinatura** — Configuração de assinatura digital para recibos
+- [ ] **Eventos de Auditoria (Recibos)** — Log de eventos específicos de recibos
+
+---
+
 ## Resumo
 
 | Fase | Itens | Concluídos | Pendentes |
@@ -353,6 +366,7 @@
 | 7 — CI/CD | ~4 itens | 4 | 0 |
 | 8 — Testes (Back-end) | ~13 itens | 13 | 0 |
 | 9 — Documentos Financeiros | ~30 itens | 30 | 0 |
-| **Total** | **~160 itens** | **141** | **19** |
+| Grupo B (backend) | ~5 itens | 0 | 5 |
+| **Total** | **~165 itens** | **141** | **24** |
 
 > **Nota:** Itens de frontend (testes unitários, E2E, integração de API) foram movidos para `docs/frontend-todo.md`.

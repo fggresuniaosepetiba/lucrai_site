@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { TrashRepository } from "@/database/repositories/trash";
-import { DocumentoRepository } from "@/database/repositories/documentos";
+import { TrashRepositoryApi } from "@/services/api-repositories/trash";
+import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import { DocumentoService } from "@/services/documentos/documentos.service";
 import type { DeletedTransaction, DocumentoTrashItem } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,11 +53,11 @@ export default function TrashPage() {
 
   const load = async () => {
     try {
-      await TrashRepository.cleanup();
-      await DocumentoRepository.cleanupTrash();
+      await TrashRepositoryApi.cleanup();
+      await DocumentoRepositoryApi.cleanupTrash();
       const [data, docData] = await Promise.all([
-        TrashRepository.getAll(company),
-        DocumentoRepository.getAllInTrash(company),
+        TrashRepositoryApi.getAll(),
+        DocumentoRepositoryApi.getTrash(),
       ]);
       setItems(data);
       setDocItems(docData);
@@ -71,7 +71,8 @@ export default function TrashPage() {
   const handleRestore = async () => {
     if (!restoreTarget) return;
     try {
-      const restored = await TrashRepository.restore(restoreTarget.id, userName);
+      await TrashRepositoryApi.restore(restoreTarget.id);
+      const restored = true;
       if (restored) {
         const label = restoreTarget.entryType === "forecast" ? "Previsão" : "Lançamento";
         toast(`${label} restaurado${label === "Previsão" ? "a" : ""}`, `Voltou para ${label === "Previsão" ? "a Previsão de Caixa" : "o financeiro"}`, "success");
@@ -86,7 +87,7 @@ export default function TrashPage() {
   const handlePermanentDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await TrashRepository.permanentlyDelete(deleteTarget.id, userName);
+      await TrashRepositoryApi.permanentlyDelete(deleteTarget.id);
       toast("Excluído permanentemente", "", "success");
       setDeleteTarget(null);
       load();

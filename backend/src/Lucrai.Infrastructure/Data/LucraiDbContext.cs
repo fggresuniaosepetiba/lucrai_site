@@ -25,6 +25,10 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
     public DbSet<DocumentoLog> DocumentoLogs => Set<DocumentoLog>();
     public DbSet<DocumentoAprendizado> DocumentoAprendizados => Set<DocumentoAprendizado>();
     public DbSet<DocumentoConfiguracao> DocumentoConfiguracoes => Set<DocumentoConfiguracao>();
+    public DbSet<SignatureConfig> SignatureConfigs => Set<SignatureConfig>();
+    public DbSet<FixedCost> FixedCosts => Set<FixedCost>();
+    public DbSet<Insumo> Insumos => Set<Insumo>();
+    public DbSet<Recibo> Recibos => Set<Recibo>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -305,6 +309,83 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(c => c.Company).HasMaxLength(200).IsRequired();
 
             entity.HasIndex(c => c.Company).IsUnique();
+        });
+
+        builder.Entity<SignatureConfig>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Company).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.NomeResponsavel).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.Cargo).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.PermitirUso).IsRequired();
+
+            entity.HasIndex(s => s.Company).IsUnique();
+        });
+
+        builder.Entity<FixedCost>(entity =>
+        {
+            entity.HasKey(f => f.Id);
+            entity.Property(f => f.Company).HasMaxLength(200).IsRequired();
+            entity.Property(f => f.Aluguel).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Energia).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Agua).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Internet).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Contador).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.ProLabore).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Softwares).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Telefone).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Marketing).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Limpeza).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Outros).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.Total).HasColumnType("decimal(18,2)");
+
+            entity.HasIndex(f => f.Company).IsUnique();
+        });
+
+        builder.Entity<Insumo>(entity =>
+        {
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.Company).HasMaxLength(200).IsRequired();
+            entity.Property(i => i.Nome).HasMaxLength(200).IsRequired();
+            entity.Property(i => i.Categoria).HasMaxLength(100);
+            entity.Property(i => i.UnidadeMedida).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(i => i.QuantidadeComprada).HasColumnType("decimal(18,2)");
+            entity.Property(i => i.ValorPago).HasColumnType("decimal(18,2)");
+            entity.Property(i => i.CustoPorUnidade).HasColumnType("decimal(18,2)");
+
+            entity.HasIndex(i => new { i.Company, i.Nome });
+        });
+
+        builder.Entity<Recibo>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.DisplayId).HasMaxLength(10).IsRequired();
+            entity.Property(r => r.Company).HasMaxLength(200).IsRequired();
+            entity.Property(r => r.Numero).HasMaxLength(20).IsRequired();
+            entity.Property(r => r.Tipo).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(r => r.Origem).HasConversion<string>().HasMaxLength(10).IsRequired();
+            entity.Property(r => r.Status).HasConversion<string>().HasMaxLength(10).IsRequired();
+            entity.Property(r => r.Data).HasMaxLength(10).IsRequired();
+            entity.Property(r => r.Valor).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(r => r.ValorPorExtenso).HasMaxLength(500).IsRequired();
+            entity.Property(r => r.NomePagador).HasMaxLength(200).IsRequired();
+            entity.Property(r => r.DocumentoPagador).HasMaxLength(20);
+            entity.Property(r => r.NomeRecebedor).HasMaxLength(200).IsRequired();
+            entity.Property(r => r.DocumentoRecebedor).HasMaxLength(20);
+            entity.Property(r => r.Referente).HasMaxLength(500).IsRequired();
+            entity.Property(r => r.FormaPagamento).HasMaxLength(50);
+            entity.Property(r => r.Observacoes).HasMaxLength(1000);
+            entity.Property(r => r.Telefone).HasMaxLength(20);
+            entity.Property(r => r.Email).HasMaxLength(200);
+            entity.Property(r => r.Cidade).HasMaxLength(100);
+            entity.Property(r => r.Estado).HasMaxLength(2);
+            entity.Property(r => r.CriadoPor).HasMaxLength(200).IsRequired();
+            entity.Property(r => r.Cancelamento).HasMaxLength(1000);
+
+            entity.HasIndex(r => new { r.Company, r.Numero }).IsUnique();
+            entity.HasIndex(r => new { r.Company, r.Data });
+            entity.HasIndex(r => new { r.Company, r.Status });
+            entity.HasIndex(r => r.LancamentoId);
         });
     }
 }

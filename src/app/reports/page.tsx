@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
-import { TransactionRepository } from "@/database/repositories/transactions";
-import { CashForecastRepository } from "@/database/repositories/cash-forecast";
+import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
+import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
 
 import type { Transaction, CashForecast } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,13 +18,12 @@ import { Button } from "@/components/ui/button";
 
 export default function ReportsPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [forecasts, setForecasts] = useState<CashForecast[]>([]);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(new Date().getFullYear());
   const initialized = useRef(false);
-  const company = user?.company ?? "";
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -37,7 +36,7 @@ export default function ReportsPage() {
     } else {
       loadData();
     }
-  }, [isAuthenticated, router, company]);
+  }, [isAuthenticated, router]);
 
   const runStartup = async () => {
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
@@ -47,8 +46,8 @@ export default function ReportsPage() {
   const loadData = async () => {
     try {
       const [txs, fcs] = await Promise.all([
-        TransactionRepository.getAll(company),
-        CashForecastRepository.getAll(company),
+        TransactionRepositoryApi.getAll(),
+        CashForecastRepositoryApi.getAll(),
       ]);
       setTransactions(txs);
       setForecasts(fcs.filter((f) => f.status === "predicted"));

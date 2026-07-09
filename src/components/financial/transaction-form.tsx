@@ -20,8 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CategoryRepository } from "@/database/repositories/categories";
-import { useAuthStore } from "@/store/auth-store";
+import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
 import type { Transaction, Category } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, todayStr } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
@@ -53,8 +52,6 @@ export function TransactionForm({
   onSubmit,
   onClose,
 }: TransactionFormProps) {
-  const { user } = useAuthStore();
-  const company = user?.company ?? "";
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [type, setType] = useState<"income" | "expense">(
     transaction?.type || "income"
@@ -80,12 +77,10 @@ export function TransactionForm({
   }, [categories]);
 
   useEffect(() => {
-    if (company) {
-      CategoryRepository.getAll(company).then((cats) => {
-        if (cats.length > 0) setLocalCategories(cats);
-      });
-    }
-  }, [company]);
+    CategoryRepositoryApi.getAll().then((cats) => {
+      if (cats.length > 0) setLocalCategories(cats);
+    });
+  }, []);
 
   const filteredCategories = localCategories.filter((c) => c.type === type);
 

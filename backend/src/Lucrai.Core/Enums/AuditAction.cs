@@ -9,5 +9,7 @@ public enum AuditAction
     Received,
     Restored,
     Deleted,
-    MovedToTrash
+    MovedToTrash,
+    Downloaded,
+    Printed
 }
