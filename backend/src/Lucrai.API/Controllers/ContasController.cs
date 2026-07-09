@@ -57,7 +57,6 @@ public class ContasController : ControllerBase
             Nome = request.Nome,
             Email = request.Email,
             Telefone = request.Telefone,
-            Senha = request.Senha,
             Empresa = request.Empresa,
             Porte = porte,
             Faturamento = request.Faturamento,

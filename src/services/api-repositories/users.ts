@@ -7,7 +7,6 @@ function mapUser(u: ApiUser): AppUser {
     id: u.id,
     name: u.name,
     email: u.email,
-    password: "",
     role: u.role as AppUser["role"],
     company: u.company,
     avatar: u.avatar ?? undefined,

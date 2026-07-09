@@ -36,6 +36,9 @@ appsettings.Production.json
 # env files
 .env*.local
 
+# credentials
+docs/changelog/seed-credentials.md
+
 # vercel
 .vercel
 

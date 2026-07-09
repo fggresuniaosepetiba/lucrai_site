@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { UserRepository } from "@/database/repositories/users";
+import { UserRepositoryApi } from "@/services/api-repositories/users";
 import type { AppUser } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,8 @@ export default function UsersPage() {
   const handleCreate = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !company.trim()) return;
     try {
-      await UserRepository.create({ name: name.trim(), email: email.trim(), password: password.trim(), role, company: company.trim() });
+      const apiUser = await UserRepositoryApi.create({ name: name.trim(), email: email.trim(), password: password.trim(), role });
+      await UserRepository.create({ name: apiUser.name, email: apiUser.email, role: apiUser.role, company: company.trim() });
       setShowForm(false);
       setName("");
       setEmail("");
@@ -106,7 +108,6 @@ export default function UsersPage() {
     if (!editingUser) return;
     try {
       const data: Partial<AppUser> = { name, email, role, company };
-      if (password.trim()) data.password = password.trim();
       await UserRepository.update(editingUser.id, data);
       setEditingUser(null);
       toast("Usuário atualizado", "", "success");

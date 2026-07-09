@@ -29,7 +29,6 @@ export interface AppUser {
   id: string;
   name: string;
   email: string;
-  password: string;
   role: "owner" | "admin" | "financial" | "viewer";
   company: string;
   avatar?: string;
@@ -140,7 +139,6 @@ export interface Conta {
   nome: string;
   email: string;
   telefone: string;
-  senha: string;
   empresa: string;
   cargo: string;
   porte: PorteEmpresa;

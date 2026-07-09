@@ -154,19 +154,14 @@ export default function SettingsPage() {
       return;
     }
 
-    const userRecord = await UserRepository.findByEmail(user?.email ?? "");
-    if (!userRecord) {
-      toast("Erro", "Usuário não encontrado", "destructive");
-      return;
-    }
-    if (userRecord.password !== currentPassword) {
-      toast("Senha atual incorreta", "A senha atual não confere", "destructive");
-      return;
-    }
-
     setChangingPassword(true);
     try {
-      await UserRepository.update(userRecord.id, { password: newPassword });
+      const { changePassword } = useAuthStore.getState();
+      const ok = await changePassword(currentPassword, newPassword);
+      if (!ok) {
+        toast("Erro", "Senha atual incorreta", "destructive");
+        return;
+      }
       toast("Senha alterada", "Sua senha foi atualizada com sucesso", "success");
       setCurrentPassword("");
       setNewPassword("");

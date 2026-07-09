@@ -8,7 +8,6 @@ public class CompanyRegistration
     public string Nome { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Telefone { get; set; } = string.Empty;
-    public string Senha { get; set; } = string.Empty;
     public string Empresa { get; set; } = string.Empty;
     public PorteEmpresa Porte { get; set; }
     public string Faturamento { get; set; } = string.Empty;

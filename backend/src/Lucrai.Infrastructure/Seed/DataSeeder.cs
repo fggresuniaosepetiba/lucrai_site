@@ -92,7 +92,6 @@ public static class DataSeeder
                 existing.Plan = seedUser.Plan;
                 existing.Company = seedUser.Company;
                 existing.EmailConfirmed = seedUser.EmailConfirmed;
-                existing.MustChangePassword = true;
                 existing.PasswordHash = userManager.PasswordHasher.HashPassword(existing, "123");
                 var updateResult = await userManager.UpdateAsync(existing);
                 if (!updateResult.Succeeded)

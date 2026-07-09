@@ -187,7 +187,6 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(r => r.Nome).HasMaxLength(200).IsRequired();
             entity.Property(r => r.Email).HasMaxLength(200).IsRequired();
             entity.Property(r => r.Telefone).HasMaxLength(20).IsRequired();
-            entity.Property(r => r.Senha).HasMaxLength(500).IsRequired();
             entity.Property(r => r.Empresa).HasMaxLength(200).IsRequired();
             entity.Property(r => r.Porte).HasConversion<string>().HasMaxLength(10).IsRequired();
             entity.Property(r => r.Faturamento).HasMaxLength(50).IsRequired();
