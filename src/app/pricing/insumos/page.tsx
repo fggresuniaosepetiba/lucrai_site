@@ -54,7 +54,7 @@ export default function InsumosPage() {
 
   const loadInsumos = async () => {
     try {
-      const all = await InsumoRepositoryApi.getAll(company);
+      const all = await InsumoRepositoryApi.getAll();
       setInsumos(all);
     } catch (err) {
       console.error("Error loading insumos:", err);
@@ -105,8 +105,7 @@ export default function InsumosPage() {
             unidadeMedida: unidade,
             quantidadeComprada: quantidade,
             valorPago: valor,
-          },
-          company
+          }
         );
         toast("Insumo cadastrado!", undefined, "success");
       }

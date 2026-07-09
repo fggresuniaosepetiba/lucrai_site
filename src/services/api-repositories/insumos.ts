@@ -18,7 +18,7 @@ function mapInsumo(i: ApiInsumo): Insumo {
 }
 
 export const InsumoRepositoryApi = {
-  async getAll(company: string): Promise<Insumo[]> {
+  async getAll(): Promise<Insumo[]> {
     const data = await api.get<ApiInsumo[]>("/api/insumos");
     return data.map(mapInsumo);
   },
@@ -33,8 +33,7 @@ export const InsumoRepositoryApi = {
   },
 
   async create(
-    data: Omit<Insumo, "id" | "createdAt" | "updatedAt" | "company" | "custoPorUnidade">,
-    _company: string
+    data: Omit<Insumo, "id" | "createdAt" | "updatedAt" | "company" | "custoPorUnidade">
   ): Promise<Insumo> {
     const created = await api.post<ApiInsumo>("/api/insumos", {
       nome: data.nome,

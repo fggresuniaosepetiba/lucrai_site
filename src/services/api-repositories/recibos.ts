@@ -44,7 +44,7 @@ function mapRecibo(r: ApiRecibo): Receipt {
 }
 
 export const RecibosRepositoryApi = {
-  async getAll(company: string): Promise<Receipt[]> {
+  async getAll(): Promise<Receipt[]> {
     const data = await api.get<ApiRecibo[]>("/api/recibos");
     return data.map(mapRecibo);
   },

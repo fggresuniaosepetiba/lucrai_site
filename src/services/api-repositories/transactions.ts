@@ -35,12 +35,12 @@ export const TransactionRepositoryApi = {
   },
 
   async getByType(type: "income" | "expense"): Promise<Transaction[]> {
-    const data = await api.get<ApiTransaction[]>(`/api/transactions?type=${type === "income" ? "Income" : "Expense"}`);
+    const data = await api.get<ApiTransaction[]>(`/api/transactions/type/${type === "income" ? "Income" : "Expense"}`);
     return data.map(mapTransaction);
   },
 
   async getByMonth(year: number, month: number): Promise<Transaction[]> {
-    const data = await api.get<ApiTransaction[]>(`/api/transactions?year=${year}&month=${month}`);
+    const data = await api.get<ApiTransaction[]>(`/api/transactions/month/${year}?month=${month}`);
     return data.map(mapTransaction);
   },
 
@@ -82,7 +82,7 @@ export const TransactionRepositoryApi = {
   },
 
   async getSummary(year: number, month: number): Promise<{ incomes: number; expenses: number; balance: number }> {
-    const data = await api.get<ApiSummary>(`/api/transactions/summary?year=${year}&month=${month}`);
+    const data = await api.get<ApiSummary>(`/api/transactions/summary/${year}?month=${month}`);
     return data;
   },
 

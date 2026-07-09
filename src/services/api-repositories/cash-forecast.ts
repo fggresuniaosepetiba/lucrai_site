@@ -50,7 +50,7 @@ export const CashForecastRepositoryApi = {
       paid: "Paid",
       cancelled: "Cancelled",
     };
-    const data = await api.get<ApiCashForecast[]>(`/api/forecasts?status=${statusMap[status]}`);
+    const data = await api.get<ApiCashForecast[]>(`/api/forecasts/status/${statusMap[status]}`);
     return data.map(mapForecast);
   },
 
@@ -86,6 +86,9 @@ export const CashForecastRepositoryApi = {
         : data.status === "paid" ? "Paid"
         : "Cancelled"
       ) : undefined,
+      isRecurring: data.isRecurring,
+      recurrenceType: data.recurrenceType,
+      recurrenceEndDate: data.recurrenceEndDate,
     });
   },
 
@@ -103,7 +106,7 @@ export const CashForecastRepositoryApi = {
   },
 
   async markAsCancelled(id: string, reason?: string): Promise<void> {
-    await api.post(`/api/forecasts/${id}/mark-as-cancelled`, { reason });
+    await api.post(`/api/forecasts/${id}/mark-as-cancelled`, reason ?? "");
   },
 
   async getTotals(): Promise<{ predictedIncomes: number; predictedExpenses: number; allIncomes: number; allExpenses: number }> {

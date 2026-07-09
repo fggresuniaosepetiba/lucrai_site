@@ -83,7 +83,7 @@ function RecibosPage() {
   const loadData = async () => {
     try {
       const [recibosData, settingsData, assinaturaData] = await Promise.all([
-        RecibosRepositoryApi.getAll(company),
+        RecibosRepositoryApi.getAll(),
         SettingsRepositoryApi.get(),
         SignatureRepositoryApi.get(),
       ]);

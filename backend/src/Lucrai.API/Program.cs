@@ -85,9 +85,18 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+var allowedOrigins = new[] {
+    "https://lucrai-site.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173"
+};
+
 app.Use(async (context, next) =>
 {
-    context.Response.Headers["Access-Control-Allow-Origin"] = "https://lucrai-site.vercel.app";
+    var origin = context.Request.Headers.Origin.ToString();
+    if (allowedOrigins.Contains(origin))
+        context.Response.Headers["Access-Control-Allow-Origin"] = origin;
+
     context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
     context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
     context.Response.Headers["Access-Control-Allow-Credentials"] = "true";

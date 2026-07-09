@@ -12,15 +12,6 @@ export const SettingsRepositoryApi = {
     }
   },
 
-  async save(data: { companyName: string; logoUrl?: string; primaryColor: string }): Promise<AppSettings> {
-    const saved = await api.post<ApiSettings>("/api/settings", {
-      companyName: data.companyName,
-      logoUrl: data.logoUrl ?? null,
-      primaryColor: data.primaryColor,
-    });
-    return mapSettings(saved);
-  },
-
   async update(data: { companyName: string; logoUrl?: string; primaryColor: string }): Promise<AppSettings> {
     const updated = await api.put<ApiSettings>("/api/settings", {
       companyName: data.companyName,
