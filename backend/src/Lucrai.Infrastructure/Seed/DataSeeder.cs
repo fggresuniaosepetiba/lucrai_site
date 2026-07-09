@@ -92,7 +92,13 @@ public static class DataSeeder
                 existing.Plan = seedUser.Plan;
                 existing.Company = seedUser.Company;
                 existing.EmailConfirmed = seedUser.EmailConfirmed;
-                existing.PasswordHash = userManager.PasswordHasher.HashPassword(existing, "123");
+
+                if (userManager.PasswordHasher.VerifyHashedPassword(
+                        existing, existing.PasswordHash, "123")
+                    is Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success
+                    or Microsoft.AspNetCore.Identity.PasswordVerificationResult.SuccessRehashNeeded)
+                    existing.MustChangePassword = true;
+
                 var updateResult = await userManager.UpdateAsync(existing);
                 if (!updateResult.Succeeded)
                     throw new InvalidOperationException(
