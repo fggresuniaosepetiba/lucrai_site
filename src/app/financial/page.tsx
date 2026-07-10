@@ -83,27 +83,22 @@ export default function FinancialPage() {
       setShowForm(false);
       await loadData();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível criar o lançamento";
       console.error(err);
-      toast("Erro", "Não foi possível criar o lançamento", "destructive");
+      toast("Erro", msg, "destructive");
     }
   };
 
   const handleCreateCategory = async (data: { name: string; type: "income" | "expense" }) => {
-    try {
-      const color = data.type === "income" ? "#22c55e" : "#ef4444";
-      const created = await CategoryRepositoryApi.create({
-        name: data.name.trim(),
-        type: data.type,
-        color,
-        icon: "tag",
-      });
-      setCategories((prev) => [...prev, created]);
-      return created;
-    } catch (err) {
-      console.error(err);
-      toast("Erro", "Não foi possível criar categoria", "destructive");
-      throw err;
-    }
+    const color = data.type === "income" ? "#22c55e" : "#ef4444";
+    const created = await CategoryRepositoryApi.create({
+      name: data.name.trim(),
+      type: data.type,
+      color,
+      icon: "tag",
+    });
+    setCategories((prev) => [...prev, created]);
+    return created;
   };
 
   const handleUpdate = async (id: string, data: Partial<Transaction>) => {
@@ -114,8 +109,9 @@ export default function FinancialPage() {
       setShowForm(false);
       await loadData();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível atualizar";
       console.error(err);
-      toast("Erro", "Não foi possível atualizar", "destructive");
+      toast("Erro", msg, "destructive");
     }
   };
 
@@ -125,8 +121,9 @@ export default function FinancialPage() {
       toast("Lançamento excluído", "", "success");
       await loadData();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível excluir";
       console.error(err);
-      toast("Erro", "Não foi possível excluir", "destructive");
+      toast("Erro", msg, "destructive");
     }
   };
 

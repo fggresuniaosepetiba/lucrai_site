@@ -63,12 +63,12 @@ export const CashForecastRepositoryApi = {
       description: data.description,
       amount: data.amount,
       category: data.category,
-      expectedDate: data.expectedDate,
+      expectedDate: `${data.expectedDate}T00:00:00`,
       status: "Predicted",
       notes: data.notes,
       isRecurring: data.isRecurring ?? false,
       recurrenceType: data.recurrenceType ?? null,
-      recurrenceEndDate: data.recurrenceEndDate ?? null,
+      recurrenceEndDate: data.recurrenceEndDate ? `${data.recurrenceEndDate}T00:00:00` : null,
     });
     return mapForecast(created);
   },
@@ -79,7 +79,7 @@ export const CashForecastRepositoryApi = {
       description: data.description,
       amount: data.amount,
       category: data.category,
-      expectedDate: data.expectedDate,
+      expectedDate: data.expectedDate ? `${data.expectedDate}T00:00:00` : undefined,
       notes: data.notes,
       status: data.status ? (
         data.status === "predicted" ? "Predicted"
@@ -89,7 +89,7 @@ export const CashForecastRepositoryApi = {
       ) : undefined,
       isRecurring: data.isRecurring,
       recurrenceType: data.recurrenceType,
-      recurrenceEndDate: data.recurrenceEndDate,
+      recurrenceEndDate: data.recurrenceEndDate ? `${data.recurrenceEndDate}T00:00:00` : undefined,
     });
   },
 

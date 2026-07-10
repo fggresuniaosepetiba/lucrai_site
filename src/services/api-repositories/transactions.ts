@@ -54,7 +54,7 @@ export const TransactionRepositoryApi = {
       categoryId: data.categoryId,
       categoryName: data.categoryName,
       description: data.description,
-      date: data.date,
+      date: `${data.date}T00:00:00`,
       observation: data.observation,
     });
     return mapTransaction(created);
@@ -67,7 +67,7 @@ export const TransactionRepositoryApi = {
       categoryId: data.categoryId,
       categoryName: data.categoryName,
       description: data.description,
-      date: data.date,
+      date: data.date ? `${data.date}T00:00:00` : undefined,
       observation: data.observation,
     });
   },
