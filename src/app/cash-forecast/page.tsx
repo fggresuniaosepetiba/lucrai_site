@@ -311,8 +311,10 @@ function CashForecastContent() {
       setFormCategory(created.name);
       setNewCategoryName("");
       setShowCreateCategory(false);
-    } catch {
-      toast("Erro", "Não foi possível criar categoria", "destructive");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao criar categoria";
+      console.error(err);
+      toast("Erro", msg, "destructive");
     } finally {
       setCreatingCategory(false);
     }
@@ -365,7 +367,11 @@ function CashForecastContent() {
       }
       setShowForm(false);
       await loadData();
-    } catch { toast("Erro", "Não foi possível salvar", "destructive"); }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível salvar";
+      console.error(err);
+      toast("Erro", msg, "destructive");
+    }
   };
 
   const handleSubmit = async () => {
@@ -481,7 +487,11 @@ function CashForecastContent() {
         toast("Previsão movida para lixeira", "Ela ficará disponível por 30 dias", "success");
       }
       await loadData();
-    } catch { toast("Erro", "Não foi possível atualizar", "destructive"); }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível atualizar";
+      console.error(err);
+      toast("Erro", msg, "destructive");
+    }
   };
 
   const handleClearHistory = async () => {
@@ -493,7 +503,11 @@ function CashForecastContent() {
       }
       toast("Histórico limpo", `${toDelete.length} registro(s) removido(s) permanentemente`, "success");
       await loadData();
-    } catch { toast("Erro", "Não foi possível limpar o histórico", "destructive"); }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível limpar o histórico";
+      console.error(err);
+      toast("Erro", msg, "destructive");
+    }
   };
 
   if (loading) {
