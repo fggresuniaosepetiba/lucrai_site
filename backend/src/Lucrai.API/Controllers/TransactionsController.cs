@@ -92,7 +92,7 @@ public class TransactionsController : ControllerBase
             CategoryId = request.CategoryId,
             CategoryName = request.CategoryName,
             Description = request.Description,
-            Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Utc),
+            Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Unspecified),
             Observation = request.Observation,
             Company = Company
         };
@@ -120,7 +120,7 @@ public class TransactionsController : ControllerBase
         existing.CategoryId = request.CategoryId;
         existing.CategoryName = request.CategoryName;
         existing.Description = request.Description;
-        existing.Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Utc);
+        existing.Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Unspecified);
         existing.Observation = request.Observation;
 
         var updated = await _repo.UpdateAsync(existing, UserName);
