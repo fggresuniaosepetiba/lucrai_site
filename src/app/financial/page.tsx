@@ -34,10 +34,17 @@ export default function FinancialPage() {
   const initialized = useRef(false);
   const company = user?.company ?? "";
 
-  const userCategories = useMemo(
-    () => categories.filter(c => c.company === user?.company),
-    [categories, user?.company]
-  );
+  const userCategories = useMemo(() => {
+    const filtered = categories.filter(c => c.company === user?.company);
+    if (editingTransaction) {
+      const exists = filtered.some(c => c.id === editingTransaction.categoryId);
+      if (!exists) {
+        const txCat = categories.find(c => c.id === editingTransaction.categoryId);
+        if (txCat) filtered.push(txCat);
+      }
+    }
+    return filtered;
+  }, [categories, user?.company, editingTransaction]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
