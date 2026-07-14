@@ -15,25 +15,40 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
 
-    public async Task<List<Category>> GetAllAsync(string? company)
+    public async Task<List<Category>> GetAllAsync(string? company, string? userId = null)
     {
         var query = _context.Categories.AsQueryable();
         if (company != null)
+        {
             query = query.Where(c => c.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(c => c.CreatedBy == "" || c.CreatedBy == userId);
+        }
         return await query.OrderBy(c => c.Type).ThenBy(c => c.Name).ToListAsync();
     }
 
-    public async Task<List<Category>> GetByTypeAsync(TransactionType type, string? company)
+    public async Task<List<Category>> GetByTypeAsync(TransactionType type, string? company, string? userId = null)
     {
         var query = _context.Categories.Where(c => c.Type == type);
         if (company != null)
+        {
             query = query.Where(c => c.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(c => c.CreatedBy == "" || c.CreatedBy == userId);
+        }
         return await query.OrderBy(c => c.Name).ToListAsync();
     }
 
-    public async Task<Category?> GetByIdAsync(Guid id)
+    public async Task<Category?> GetByIdAsync(Guid id, string? company, string? userId = null)
     {
-        return await _context.Categories.FindAsync(id);
+        var query = _context.Categories.Where(c => c.Id == id);
+        if (company != null)
+        {
+            query = query.Where(c => c.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(c => c.CreatedBy == "" || c.CreatedBy == userId);
+        }
+        return await query.FirstOrDefaultAsync();
     }
 
     public async Task<Category> CreateAsync(Category category)

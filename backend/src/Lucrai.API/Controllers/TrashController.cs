@@ -19,13 +19,11 @@ public class TrashController : ControllerBase
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
     private string UserName => HttpContext.Items["UserName"] as string ?? "";
-    private bool IsSuperAdmin => HttpContext.Items["UserPlan"]?.ToString() == "SuperAdmin";
-    private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var items = await _repo.GetAllAsync(QueryCompany);
+        var items = await _repo.GetAllAsync(Company);
         var result = items.Select(i => new TrashResponse(
             i.Id, i.OriginalId, i.DisplayId, i.EntryType.ToString(),
             i.Type.ToString(), i.Value, i.CategoryName, i.Description,
@@ -38,7 +36,7 @@ public class TrashController : ControllerBase
     [HttpPost("{id:guid}/restore")]
     public async Task<IActionResult> Restore(Guid id)
     {
-        var item = await _repo.RestoreAsync(id, UserName);
+        var item = await _repo.RestoreAsync(id, UserName, Company);
         if (item == null)
             return NotFound(new { error = "Item não encontrado na lixeira" });
 
@@ -48,7 +46,7 @@ public class TrashController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> PermanentlyDelete(Guid id)
     {
-        await _repo.PermanentlyDeleteAsync(id, UserName);
+        await _repo.PermanentlyDeleteAsync(id, UserName, Company);
         return Ok(new { message = "Item excluído permanentemente" });
     }
 

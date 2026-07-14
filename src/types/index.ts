@@ -11,6 +11,7 @@ export interface Transaction {
   date: string;
   observation?: string;
   company: string;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +23,7 @@ export interface Category {
   icon: string;
   type: TransactionType;
   company: string;
+  createdBy: string;
   createdAt: string;
 }
 
@@ -87,6 +89,7 @@ export interface CashForecast {
   status: ForecastStatus;
   notes?: string;
   company: string;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
   cancelledReason?: string;

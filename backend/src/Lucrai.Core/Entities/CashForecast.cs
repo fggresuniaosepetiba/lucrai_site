@@ -14,6 +14,7 @@ public class CashForecast
     public ForecastStatus Status { get; set; } = ForecastStatus.Predicted;
     public string? Notes { get; set; }
     public string Company { get; set; } = string.Empty;
+    public string CreatedBy { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public string? CancelledReason { get; set; }

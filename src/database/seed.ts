@@ -71,6 +71,7 @@ export async function seedDefaultCategories(company: string): Promise<void> {
     ...cat,
     id: generateId(),
     company,
+    createdBy: "",
     createdAt: now,
   }));
 

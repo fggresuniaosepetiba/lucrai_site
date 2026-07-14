@@ -166,8 +166,8 @@ function CashForecastContent() {
     }
   };
 
-  const activeItems = useMemo(() => items.filter((i) => i.status === "predicted"), [items]);
-  const historyItems = useMemo(() => items.filter((i) => i.status !== "predicted"), [items]);
+  const activeItems = useMemo(() => items.filter((i) => i.status === "predicted" && i.createdBy === user?.id), [items, user?.id]);
+  const historyItems = useMemo(() => items.filter((i) => i.status !== "predicted" && i.createdBy === user?.id), [items, user?.id]);
 
   const totals = useMemo(() => {
     const predicted = activeItems.filter((i) => i.status === "predicted");
@@ -180,8 +180,8 @@ function CashForecastContent() {
   const hasCashAlert = totals.predictedExpenses > currentBalance;
 
   const userCategories = useMemo(
-    () => categories.filter(c => c.company === company),
-    [categories, company]
+    () => categories.filter(c => c.company === company && (c.createdBy === "" || c.createdBy === user?.id)),
+    [categories, company, user?.id]
   );
 
   const availableYears = useMemo(() => {

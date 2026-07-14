@@ -15,32 +15,51 @@ public class TransactionRepository : ITransactionRepository
         _context = context;
     }
 
-    public async Task<List<Transaction>> GetAllAsync(string? company)
+    public async Task<List<Transaction>> GetAllAsync(string? company, string? userId = null)
     {
         var query = _context.Transactions.AsQueryable();
         if (company != null)
+        {
             query = query.Where(t => t.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(t => t.CreatedBy == userId);
+        }
         return await query.OrderByDescending(t => t.Date).ToListAsync();
     }
 
-    public async Task<Transaction?> GetByIdAsync(Guid id)
+    public async Task<Transaction?> GetByIdAsync(Guid id, string? company, string? userId = null)
     {
-        return await _context.Transactions.FindAsync(id);
+        var query = _context.Transactions.Where(t => t.Id == id);
+        if (company != null)
+        {
+            query = query.Where(t => t.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(t => t.CreatedBy == userId);
+        }
+        return await query.FirstOrDefaultAsync();
     }
 
-    public async Task<List<Transaction>> GetByTypeAsync(TransactionType type, string? company)
+    public async Task<List<Transaction>> GetByTypeAsync(TransactionType type, string? company, string? userId = null)
     {
         var query = _context.Transactions.Where(t => t.Type == type);
         if (company != null)
+        {
             query = query.Where(t => t.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(t => t.CreatedBy == userId);
+        }
         return await query.OrderByDescending(t => t.Date).ToListAsync();
     }
 
-    public async Task<List<Transaction>> GetByMonthAsync(int year, int? month, string? company)
+    public async Task<List<Transaction>> GetByMonthAsync(int year, int? month, string? company, string? userId = null)
     {
         var query = _context.Transactions.Where(t => t.Date.Year == year);
         if (company != null)
+        {
             query = query.Where(t => t.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(t => t.CreatedBy == userId);
+        }
 
         if (month.HasValue)
             query = query.Where(t => t.Date.Month == month.Value);
@@ -101,11 +120,15 @@ public class TransactionRepository : ITransactionRepository
         }
     }
 
-    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetSummaryAsync(int year, int? month, string? company)
+    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetSummaryAsync(int year, int? month, string? company, string? userId = null)
     {
         var query = _context.Transactions.Where(t => t.Date.Year == year);
         if (company != null)
+        {
             query = query.Where(t => t.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(t => t.CreatedBy == userId);
+        }
 
         if (month.HasValue)
             query = query.Where(t => t.Date.Month == month.Value);
@@ -116,11 +139,15 @@ public class TransactionRepository : ITransactionRepository
         return (incomes, expenses, incomes - expenses);
     }
 
-    public async Task<(decimal Incomes, decimal Expenses, decimal Balance, decimal Total)> GetYearlySummaryAsync(int year, string? company)
+    public async Task<(decimal Incomes, decimal Expenses, decimal Balance, decimal Total)> GetYearlySummaryAsync(int year, string? company, string? userId = null)
     {
         var query = _context.Transactions.Where(t => t.Date.Year == year);
         if (company != null)
+        {
             query = query.Where(t => t.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(t => t.CreatedBy == userId);
+        }
 
         var incomes = await query.Where(t => t.Type == TransactionType.Income).SumAsync(t => t.Value);
         var expenses = await query.Where(t => t.Type == TransactionType.Expense).SumAsync(t => t.Value);
@@ -128,7 +155,7 @@ public class TransactionRepository : ITransactionRepository
         return (incomes, expenses, incomes - expenses, incomes + expenses);
     }
 
-    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetAllBalanceAsync(string? company)
+    public async Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetAllBalanceAsync(string? company, string? userId = null)
     {
         var incomesQuery = _context.Transactions.Where(t => t.Type == TransactionType.Income);
         var expensesQuery = _context.Transactions.Where(t => t.Type == TransactionType.Expense);
@@ -136,6 +163,11 @@ public class TransactionRepository : ITransactionRepository
         {
             incomesQuery = incomesQuery.Where(t => t.Company == company);
             expensesQuery = expensesQuery.Where(t => t.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                incomesQuery = incomesQuery.Where(t => t.CreatedBy == userId);
+                expensesQuery = expensesQuery.Where(t => t.CreatedBy == userId);
+            }
         }
 
         var incomes = await incomesQuery.SumAsync(t => t.Value);

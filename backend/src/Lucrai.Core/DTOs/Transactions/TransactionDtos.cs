@@ -31,6 +31,7 @@ public record TransactionResponse(
     DateTime Date,
     string? Observation,
     string Company,
+    string CreatedBy,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

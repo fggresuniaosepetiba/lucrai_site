@@ -64,6 +64,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(t => t.Date).HasColumnType("timestamp without time zone");
             entity.Property(t => t.Observation).HasMaxLength(1000);
             entity.Property(t => t.Company).HasMaxLength(200).IsRequired();
+            entity.Property(t => t.CreatedBy).HasMaxLength(200).IsRequired();
 
             entity.HasOne(t => t.Category)
                 .WithMany(c => c.Transactions)
@@ -83,6 +84,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(c => c.Icon).HasMaxLength(50).IsRequired();
             entity.Property(c => c.Type).HasConversion<string>().HasMaxLength(10).IsRequired();
             entity.Property(c => c.Company).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.CreatedBy).HasMaxLength(200).IsRequired();
 
             entity.HasIndex(c => new { c.Company, c.Type });
             entity.HasIndex(c => new { c.Company, c.Name });
@@ -100,6 +102,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(f => f.Status).HasConversion<string>().HasMaxLength(15).IsRequired();
             entity.Property(f => f.Notes).HasMaxLength(1000);
             entity.Property(f => f.Company).HasMaxLength(200).IsRequired();
+            entity.Property(f => f.CreatedBy).HasMaxLength(200).IsRequired();
             entity.Property(f => f.CancelledReason).HasMaxLength(500);
             entity.Property(f => f.CancelledBy).HasMaxLength(200);
             entity.Property(f => f.RecurrenceType).HasConversion<string>().HasMaxLength(15);

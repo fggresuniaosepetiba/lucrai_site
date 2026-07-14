@@ -10,6 +10,7 @@ function mapCategory(c: ApiCategory): Category {
     icon: c.icon,
     type: c.type === "Income" ? "income" : "expense",
     company: c.company,
+    createdBy: c.createdBy,
     createdAt: c.createdAt,
   };
 }

@@ -35,6 +35,7 @@ public record ForecastResponse(
     string Status,
     string? Notes,
     string Company,
+    string CreatedBy,
     DateTime CreatedAt,
     DateTime UpdatedAt,
     string? CancelledReason,

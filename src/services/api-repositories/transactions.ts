@@ -14,6 +14,7 @@ function mapTransaction(t: ApiTransaction): Transaction {
     date: t.date,
     observation: t.observation ?? undefined,
     company: t.company,
+    createdBy: t.createdBy,
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
   };
@@ -46,7 +47,7 @@ export const TransactionRepositoryApi = {
   },
 
   async create(
-    data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company">,
+    data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company" | "createdBy">,
   ): Promise<Transaction> {
     const created = await api.post<ApiTransaction>("/api/transactions", {
       type: data.type === "income" ? "Income" : "Expense",

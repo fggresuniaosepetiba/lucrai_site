@@ -17,6 +17,7 @@ function mapForecast(f: ApiCashForecast): CashForecast {
       : "cancelled",
     notes: f.notes ?? undefined,
     company: f.company,
+    createdBy: f.createdBy,
     createdAt: f.createdAt,
     updatedAt: f.updatedAt,
     cancelledReason: f.cancelledReason ?? undefined,
@@ -56,7 +57,7 @@ export const CashForecastRepositoryApi = {
   },
 
   async create(
-    data: Omit<CashForecast, "id" | "displayId" | "createdAt" | "updatedAt" | "company">,
+    data: Omit<CashForecast, "id" | "displayId" | "createdAt" | "updatedAt" | "company" | "createdBy">,
   ): Promise<CashForecast> {
     const created = await api.post<ApiCashForecast>("/api/forecasts", {
       type: data.type === "income" ? "Income" : "Expense",

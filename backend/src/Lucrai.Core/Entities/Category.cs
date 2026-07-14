@@ -10,6 +10,7 @@ public class Category
     public string Icon { get; set; } = "circle";
     public TransactionType Type { get; set; }
     public string Company { get; set; } = string.Empty;
+    public string CreatedBy { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();

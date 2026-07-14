@@ -41,7 +41,7 @@ export const TransactionRepository = {
       .toArray();
   },
 
-  async create(data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company">, company: string, userName?: string): Promise<Transaction> {
+  async create(data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company" | "createdBy">, company: string, userName?: string): Promise<Transaction> {
     const dateCheck = validateTransactionDate(data.date);
     if (!dateCheck.valid) throw new Error(dateCheck.message);
     if (data.value > 999999999999.99) throw new Error("Valor excede o limite máximo permitido de R$ 999.999.999.999,99");
@@ -52,6 +52,7 @@ export const TransactionRepository = {
     const transaction: Transaction = {
       ...data,
       company,
+      createdBy: "",
       id: generateId(),
       displayId,
       createdAt: now,

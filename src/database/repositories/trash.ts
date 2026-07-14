@@ -85,6 +85,7 @@ export const TrashRepository = {
         status: deleted.status ?? "predicted",
         notes: deleted.notes,
         company: deleted.company,
+        createdBy: "",
         createdAt: deleted.createdAt,
         updatedAt: new Date().toISOString(),
         cancelledReason: deleted.cancelledReason,
@@ -118,9 +119,10 @@ export const TrashRepository = {
       description: deleted.description,
       date: deleted.date ?? "",
       observation: deleted.observation,
+      company: deleted.company,
+      createdBy: "",
       createdAt: deleted.createdAt,
       updatedAt: new Date().toISOString(),
-      company: deleted.company,
     };
 
     await db.transactions.add(restored);

@@ -21,6 +21,7 @@ public record CategoryResponse(
     string Icon,
     string Type,
     string Company,
+    string CreatedBy,
     DateTime CreatedAt,
     int TransactionCount
 );

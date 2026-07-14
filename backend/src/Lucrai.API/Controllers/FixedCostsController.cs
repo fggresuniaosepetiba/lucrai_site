@@ -19,13 +19,11 @@ public class FixedCostsController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
-    private bool IsSuperAdmin => HttpContext.Items["UserPlan"]?.ToString() == "SuperAdmin";
-    private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var data = await _repo.GetAsync(QueryCompany);
+        var data = await _repo.GetAsync(Company);
         if (data == null)
             return NotFound(new { error = "Custos fixos não encontrados" });
 

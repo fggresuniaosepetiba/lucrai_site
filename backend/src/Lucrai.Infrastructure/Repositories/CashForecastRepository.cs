@@ -15,24 +15,39 @@ public class CashForecastRepository : ICashForecastRepository
         _context = context;
     }
 
-    public async Task<List<CashForecast>> GetAllAsync(string? company)
+    public async Task<List<CashForecast>> GetAllAsync(string? company, string? userId = null)
     {
         var query = _context.CashForecasts.AsQueryable();
         if (company != null)
+        {
             query = query.Where(f => f.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(f => f.CreatedBy == userId);
+        }
         return await query.OrderBy(f => f.ExpectedDate).ToListAsync();
     }
 
-    public async Task<CashForecast?> GetByIdAsync(Guid id)
+    public async Task<CashForecast?> GetByIdAsync(Guid id, string? company, string? userId = null)
     {
-        return await _context.CashForecasts.FindAsync(id);
+        var query = _context.CashForecasts.Where(f => f.Id == id);
+        if (company != null)
+        {
+            query = query.Where(f => f.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(f => f.CreatedBy == userId);
+        }
+        return await query.FirstOrDefaultAsync();
     }
 
-    public async Task<List<CashForecast>> GetByStatusAsync(ForecastStatus status, string? company)
+    public async Task<List<CashForecast>> GetByStatusAsync(ForecastStatus status, string? company, string? userId = null)
     {
         var query = _context.CashForecasts.Where(f => f.Status == status);
         if (company != null)
+        {
             query = query.Where(f => f.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+                query = query.Where(f => f.CreatedBy == userId);
+        }
         return await query.OrderBy(f => f.ExpectedDate).ToListAsync();
     }
 
@@ -105,7 +120,8 @@ public class CashForecastRepository : ICashForecastRepository
             Description = forecast.Description,
             Date = DateTime.UtcNow,
             Observation = $"Originado da previsão {forecast.DisplayId}",
-            Company = forecast.Company
+            Company = forecast.Company,
+            CreatedBy = forecast.CreatedBy
         };
 
         var txRepo = new TransactionRepository(_context);
@@ -143,7 +159,8 @@ public class CashForecastRepository : ICashForecastRepository
             Description = forecast.Description,
             Date = DateTime.UtcNow,
             Observation = $"Originado da previsão {forecast.DisplayId}",
-            Company = forecast.Company
+            Company = forecast.Company,
+            CreatedBy = forecast.CreatedBy
         };
 
         var txRepo = new TransactionRepository(_context);
@@ -192,7 +209,7 @@ public class CashForecastRepository : ICashForecastRepository
         return forecast;
     }
 
-    public async Task<(decimal PredictedIncomes, decimal PredictedExpenses, decimal AllIncomes, decimal AllExpenses)> GetTotalsAsync(string? company)
+    public async Task<(decimal PredictedIncomes, decimal PredictedExpenses, decimal AllIncomes, decimal AllExpenses)> GetTotalsAsync(string? company, string? userId = null)
     {
         var predictedIncomesQuery = _context.CashForecasts.Where(f => f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Income);
         var predictedExpensesQuery = _context.CashForecasts.Where(f => f.Status == ForecastStatus.Predicted && f.Type == TransactionType.Expense);
@@ -205,6 +222,13 @@ public class CashForecastRepository : ICashForecastRepository
             predictedExpensesQuery = predictedExpensesQuery.Where(f => f.Company == company);
             allIncomesQuery = allIncomesQuery.Where(f => f.Company == company);
             allExpensesQuery = allExpensesQuery.Where(f => f.Company == company);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                predictedIncomesQuery = predictedIncomesQuery.Where(f => f.CreatedBy == userId);
+                predictedExpensesQuery = predictedExpensesQuery.Where(f => f.CreatedBy == userId);
+                allIncomesQuery = allIncomesQuery.Where(f => f.CreatedBy == userId);
+                allExpensesQuery = allExpensesQuery.Where(f => f.CreatedBy == userId);
+            }
         }
 
         var predictedIncomes = await predictedIncomesQuery.SumAsync(f => f.Amount);

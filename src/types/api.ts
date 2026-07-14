@@ -45,6 +45,7 @@ export interface ApiTransaction {
   date: string;
   observation: string | null;
   company: string;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +61,7 @@ export interface ApiCashForecast {
   status: "Predicted" | "Received" | "Paid" | "Cancelled";
   notes: string | null;
   company: string;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
   cancelledReason: string | null;
@@ -77,6 +79,7 @@ export interface ApiCategory {
   icon: string;
   type: "Income" | "Expense";
   company: string;
+  createdBy: string;
   createdAt: string;
 }
 

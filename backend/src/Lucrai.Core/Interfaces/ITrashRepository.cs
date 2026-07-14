@@ -7,7 +7,7 @@ public interface ITrashRepository
     Task<List<DeletedItem>> GetAllAsync(string? company);
     Task<List<DeletedItem>> GetAllExpiredAsync();
     Task MoveToTrashAsync(DeletedItem item, string? userName);
-    Task<DeletedItem?> RestoreAsync(Guid id, string? userName);
-    Task PermanentlyDeleteAsync(Guid id, string? userName);
+    Task<DeletedItem?> RestoreAsync(Guid id, string? userName, string? company = null);
+    Task PermanentlyDeleteAsync(Guid id, string? userName, string? company = null);
     Task<int> CleanupAsync();
 }

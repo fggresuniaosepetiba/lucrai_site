@@ -18,13 +18,11 @@ public class AuditController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
-    private bool IsSuperAdmin => HttpContext.Items["UserPlan"]?.ToString() == "SuperAdmin";
-    private string? QueryCompany => IsSuperAdmin ? null : Company;
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var logs = await _repo.GetAllAsync(QueryCompany);
+        var logs = await _repo.GetAllAsync(Company);
         var result = logs.Select(l => new AuditResponse(
             l.Id, l.EntityId, l.EntityType, l.DisplayId,
             l.Action.ToString(), l.Description, l.User,
@@ -51,7 +49,7 @@ public class AuditController : ControllerBase
         if (!Enum.TryParse<Core.Enums.AuditAction>(actionName, true, out var aAction))
             return BadRequest(new { error = "Ação inválida" });
 
-        var logs = await _repo.GetByActionAsync(aAction, QueryCompany);
+        var logs = await _repo.GetByActionAsync(aAction, Company);
         var result = logs.Select(l => new AuditResponse(
             l.Id, l.EntityId, l.EntityType, l.DisplayId,
             l.Action.ToString(), l.Description, l.User,

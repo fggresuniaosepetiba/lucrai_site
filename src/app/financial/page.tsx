@@ -35,7 +35,7 @@ export default function FinancialPage() {
   const company = user?.company ?? "";
 
   const userCategories = useMemo(() => {
-    const filtered = categories.filter(c => c.company === user?.company);
+    const filtered = categories.filter(c => c.company === user?.company && (c.createdBy === "" || c.createdBy === user?.id));
     if (editingTransaction) {
       const exists = filtered.some(c => c.id === editingTransaction.categoryId);
       if (!exists) {
@@ -44,7 +44,7 @@ export default function FinancialPage() {
       }
     }
     return filtered;
-  }, [categories, user?.company, editingTransaction]);
+  }, [categories, user?.company, user?.id, editingTransaction]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -145,6 +145,7 @@ export default function FinancialPage() {
   };
 
   const filtered = transactions
+    .filter((t) => t.createdBy === user?.id)
     .filter((t) => {
       if (filterType !== "all" && t.type !== filterType) return false;
       if (filterMonth !== "all") {
