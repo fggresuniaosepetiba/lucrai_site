@@ -3,12 +3,13 @@ using Lucrai.Core.Enums;
 using Lucrai.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Lucrai.Infrastructure.Seed;
 
 public static class DataSeeder
 {
-    public static async Task SeedAsync(LucraiDbContext context, UserManager<User> userManager)
+    public static async Task SeedAsync(LucraiDbContext context, UserManager<User> userManager, ILogger? logger = null)
     {
         if (context.Database.IsRelational())
             await context.Database.MigrateAsync();
@@ -76,33 +77,54 @@ public static class DataSeeder
 
         foreach (var seedUser in seedUsers)
         {
-            var existing = await userManager.FindByEmailAsync(seedUser.Email);
-            if (existing == null)
+            try
             {
-                seedUser.PasswordHash = userManager.PasswordHasher.HashPassword(seedUser, "123");
-                var result = await userManager.CreateAsync(seedUser);
-                if (!result.Succeeded)
-                    throw new InvalidOperationException(
-                        $"Failed to seed user {seedUser.UserName}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                var existing = await userManager.FindByEmailAsync(seedUser.Email!)
+                    ?? await userManager.FindByNameAsync(seedUser.UserName!);
+
+                if (existing == null)
+                {
+                    seedUser.PasswordHash = userManager.PasswordHasher.HashPassword(seedUser, "123");
+                    var result = await userManager.CreateAsync(seedUser);
+                    if (!result.Succeeded)
+                    {
+                        var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                        logger?.LogError("Failed to create seed user {UserName}: {Errors}", seedUser.UserName, errors);
+                    }
+                    else
+                    {
+                        logger?.LogInformation("Seed user {UserName} created", seedUser.UserName);
+                    }
+                }
+                else
+                {
+                    existing.Name = seedUser.Name;
+                    existing.Role = seedUser.Role;
+                    existing.Plan = seedUser.Plan;
+                    existing.Company = seedUser.Company;
+                    existing.EmailConfirmed = seedUser.EmailConfirmed;
+
+                    if (existing.PasswordHash != null && userManager.PasswordHasher.VerifyHashedPassword(
+                            existing, existing.PasswordHash, "123")
+                        is Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success
+                        or Microsoft.AspNetCore.Identity.PasswordVerificationResult.SuccessRehashNeeded)
+                        existing.MustChangePassword = true;
+
+                    var updateResult = await userManager.UpdateAsync(existing);
+                    if (!updateResult.Succeeded)
+                    {
+                        var errors = string.Join(", ", updateResult.Errors.Select(e => e.Description));
+                        logger?.LogError("Failed to update seed user {UserName}: {Errors}", seedUser.UserName, errors);
+                    }
+                    else
+                    {
+                        logger?.LogInformation("Seed user {UserName} verified", seedUser.UserName);
+                    }
+                }
             }
-            else
+            catch (Exception ex)
             {
-                existing.Name = seedUser.Name;
-                existing.Role = seedUser.Role;
-                existing.Plan = seedUser.Plan;
-                existing.Company = seedUser.Company;
-                existing.EmailConfirmed = seedUser.EmailConfirmed;
-
-                if (userManager.PasswordHasher.VerifyHashedPassword(
-                        existing, existing.PasswordHash, "123")
-                    is Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success
-                    or Microsoft.AspNetCore.Identity.PasswordVerificationResult.SuccessRehashNeeded)
-                    existing.MustChangePassword = true;
-
-                var updateResult = await userManager.UpdateAsync(existing);
-                if (!updateResult.Succeeded)
-                    throw new InvalidOperationException(
-                        $"Failed to update user {seedUser.UserName}");
+                logger?.LogError(ex, "Unexpected error processing seed user {UserName}", seedUser.UserName);
             }
         }
 
@@ -135,6 +157,8 @@ public static class DataSeeder
                 context.Categories.AddRange(incomeCategories);
                 context.Categories.AddRange(expenseCategories);
                 await context.SaveChangesAsync();
+
+                logger?.LogInformation("Default categories seeded for company {Company}", company);
             }
         }
     }

@@ -120,7 +120,8 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<LucraiDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-    await DataSeeder.SeedAsync(context, userManager);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await DataSeeder.SeedAsync(context, userManager, logger);
 }
 
 app.Run();
