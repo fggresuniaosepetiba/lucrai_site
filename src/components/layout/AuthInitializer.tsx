@@ -20,11 +20,17 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated) return;
+    if (!isAuthenticated && !PUBLIC_PATHS.includes(pathname)) {
+      sessionStorage.setItem("lucrai-return-url", pathname);
+      router.replace("/login");
+      return;
+    }
     if (mustChangePassword && pathname !== "/trocar-senha" && !PUBLIC_PATHS.includes(pathname)) {
       router.replace("/trocar-senha");
     }
   }, [isAuthenticated, mustChangePassword, isLoading, pathname, router]);
+
+  if (isLoading) return null;
 
   return <>{children}</>;
 }

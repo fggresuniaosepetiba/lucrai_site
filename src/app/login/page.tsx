@@ -22,7 +22,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (isLoading) return;
     if (isAuthenticated) {
-      router.replace(mustChangePassword ? "/trocar-senha" : "/dashboard");
+      const returnUrl = sessionStorage.getItem("lucrai-return-url");
+      sessionStorage.removeItem("lucrai-return-url");
+      router.replace(returnUrl || (mustChangePassword ? "/trocar-senha" : "/dashboard"));
     }
   }, [isAuthenticated, isLoading, mustChangePassword, router]);
 
@@ -35,8 +37,10 @@ export default function LoginPage() {
 
     const success = await login(username, password);
     if (success) {
+      const returnUrl = sessionStorage.getItem("lucrai-return-url");
+      sessionStorage.removeItem("lucrai-return-url");
       const { mustChangePassword: mcp } = useAuthStore.getState();
-      router.replace(mcp ? "/trocar-senha" : "/dashboard");
+      router.replace(returnUrl || (mcp ? "/trocar-senha" : "/dashboard"));
     } else {
       setError("Usuário ou senha inválidos.");
     }
