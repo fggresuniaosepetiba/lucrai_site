@@ -20,8 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/cn";
 import type { Transaction, Category } from "@/types";
-import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, todayStr } from "@/lib/utils";
+import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, formatDate, parseLocalDate, todayStr } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 
 interface TransactionFormProps {
@@ -225,13 +233,37 @@ export function TransactionForm({
                 Data
                 <span className="text-red-400">*</span>
               </Label>
-              <Input
-                id="date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className={errors.date ? "border-red-400" : ""}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground",
+                      errors.date && "border-red-400"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? formatDate(date) : <span>Selecionar data</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date ? parseLocalDate(date) : undefined}
+                    onSelect={(d) => {
+                      if (d) {
+                        setDate(
+                          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+                        );
+                        setErrors((prev) => ({ ...prev, date: "" }));
+                      }
+                    }}
+                    autoFocus
+                  />
+                </PopoverContent>
+              </Popover>
               {errors.date && <p className="text-xs text-red-400">{errors.date}</p>}
             </div>
           </div>

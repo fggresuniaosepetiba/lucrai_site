@@ -22,8 +22,9 @@ import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, va
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
   AlertTriangle, Search, Pencil, CheckCircle2, XCircle, Trash2,
-  Target, BarChart3, Hash, History, Clock, Wallet, Repeat,
+  Target, BarChart3, Hash, History, Clock, Wallet, Repeat, CalendarIcon,
 } from "lucide-react";
+import { cn } from "@/lib/cn";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -171,6 +178,11 @@ function CashForecastContent() {
 
   const projectedBalance = currentBalance + totals.predictedIncomes - totals.predictedExpenses;
   const hasCashAlert = totals.predictedExpenses > currentBalance;
+
+  const userCategories = useMemo(
+    () => categories.filter(c => c.company === company),
+    [categories, company]
+  );
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -940,7 +952,35 @@ function CashForecastContent() {
                   <Label htmlFor="date" className="flex items-center gap-1">
                     Data Prevista <span className="text-red-400">*</span>
                   </Label>
-                  <Input id="date" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="date"
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formDate ? formatDate(formDate) : <span>Selecionar data</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formDate ? parseLocalDate(formDate) : undefined}
+                        onSelect={(d) => {
+                          if (d) {
+                            setFormDate(
+                              `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+                            );
+                          }
+                        }}
+                        autoFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               {!editingItem && (
@@ -1043,7 +1083,7 @@ function CashForecastContent() {
                 <Label htmlFor="cat" className="flex items-center gap-1">
                   Categoria <span className="text-red-400">*</span>
                 </Label>
-                {categories.filter((c) => c.type === formType).length > 0 ? (
+                {userCategories.filter((c) => c.type === formType).length > 0 ? (
                   <Select
                     key={formType + (editingItem?.id || "new")}
                     value={formCategory}
@@ -1053,7 +1093,7 @@ function CashForecastContent() {
                       <SelectValue placeholder="Selecionar categoria" />
                     </SelectTrigger>
                     <SelectContent position="popper" className="max-h-60">
-                      {categories
+                      {userCategories
                         .filter((c) => c.type === formType)
                         .map((cat) => (
                           <SelectItem key={cat.id} value={cat.name}>
