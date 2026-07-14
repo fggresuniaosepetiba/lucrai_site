@@ -274,17 +274,16 @@ export function TransactionForm({
               value={amountValue > 0 ? valorPorExtenso(amountValue) : ""}
               disabled
               readOnly
-              rows={3}
+              rows={1}
               className="bg-muted/50 text-muted-foreground cursor-default resize-none leading-relaxed"
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="description" className="flex items-center gap-1">
               Descrição
               <span className="text-red-400">*</span>
             </Label>
-            <Input
+            <Textarea
               id="description"
               placeholder="Ex: Venda de serviço"
               value={description}
@@ -300,6 +299,7 @@ export function TransactionForm({
                   }));
                 }
               }}
+              rows={3}
               className={errors.description ? "border-red-400" : ""}
             />
             <p className="text-xs text-muted-foreground">

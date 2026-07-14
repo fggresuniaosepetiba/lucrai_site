@@ -931,7 +931,7 @@ function CashForecastContent() {
                 <Label htmlFor="desc" className="flex items-center gap-1">
                   Descrição <span className="text-red-400">*</span>
                 </Label>
-                <Input id="desc" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Ex: Pagamento cliente X" />
+                <Textarea id="desc" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Ex: Pagamento cliente X" rows={3} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1075,7 +1075,7 @@ function CashForecastContent() {
                   value={formAmountValue > 0 ? valorPorExtenso(formAmountValue) : ""}
                   disabled
                   readOnly
-                  rows={3}
+                  rows={1}
                   className="bg-muted/50 text-muted-foreground cursor-default resize-none leading-relaxed"
                 />
               </div>
