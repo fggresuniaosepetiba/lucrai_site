@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
@@ -61,6 +60,9 @@ function Calendar({
         ...classNames,
       }}
       captionLayout="dropdown"
+      components={{
+        Chevron: () => <></>,
+      }}
       {...props}
     />
   );
