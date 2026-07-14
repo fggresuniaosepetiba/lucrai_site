@@ -21,7 +21,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated && !PUBLIC_PATHS.includes(pathname)) {
-      sessionStorage.setItem("lucrai-return-url", pathname);
+      sessionStorage.setItem("lucrai-return-url", pathname + window.location.search);
       router.replace("/login");
       return;
     }
