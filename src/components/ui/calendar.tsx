@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/cn";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
@@ -22,14 +23,8 @@ function Calendar({
         month_caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
         nav: "flex items-center gap-1",
-        button_previous: cn(
-          "absolute left-1 top-1 inline-flex items-center justify-center rounded-md text-sm font-medium",
-          "h-7 w-7 bg-transparent p-0 text-muted-foreground opacity-50 hover:opacity-100"
-        ),
-        button_next: cn(
-          "absolute right-1 top-1 inline-flex items-center justify-center rounded-md text-sm font-medium",
-          "h-7 w-7 bg-transparent p-0 text-muted-foreground opacity-50 hover:opacity-100"
-        ),
+        button_previous: "hidden",
+        button_next: "hidden",
         months: "flex flex-col sm:flex-row gap-2",
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex",
@@ -54,11 +49,12 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
-        dropdowns: "flex items-center gap-1",
-        dropdown: "bg-popover text-popover-foreground rounded-md border border-input px-2 py-1 text-xs",
+        dropdowns: "flex items-center gap-3",
+        dropdown: "bg-popover text-popover-foreground rounded-md border border-input px-1.5 py-0.5 text-xs",
         dropdown_root: "relative",
         ...classNames,
       }}
+      locale={ptBR}
       captionLayout="dropdown"
       components={{
         Chevron: () => <></>,
