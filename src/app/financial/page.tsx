@@ -34,6 +34,11 @@ export default function FinancialPage() {
   const initialized = useRef(false);
   const company = user?.company ?? "";
 
+  const userCategories = useMemo(
+    () => categories.filter(c => c.company === user?.company),
+    [categories, user?.company]
+  );
+
   const availableYears = useMemo(() => {
     const years = new Set<number>();
     transactions.forEach((t) => {
@@ -305,7 +310,7 @@ export default function FinancialPage() {
         {showForm && (
           <TransactionForm
             transaction={editingTransaction}
-            categories={categories}
+            categories={userCategories}
             onCreateCategory={handleCreateCategory}
             onSubmit={editingTransaction ? (data) => handleUpdate(editingTransaction.id, data) : handleCreate}
             onClose={() => { setShowForm(false); setEditingTransaction(null); }}

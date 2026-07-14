@@ -38,7 +38,10 @@ public class ExceptionHandlingMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro interno não tratado");
-            await WriteErrorResponse(context, HttpStatusCode.InternalServerError, $"{ex.GetType().Name}: {ex.Message}");
+            var inner = ex.InnerException != null
+                ? $" | Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}"
+                : "";
+            await WriteErrorResponse(context, HttpStatusCode.InternalServerError, $"{ex.GetType().Name}: {ex.Message}{inner}");
         }
     }
 

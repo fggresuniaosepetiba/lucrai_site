@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
 import type { Transaction, Category } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, todayStr } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
@@ -75,12 +74,6 @@ export function TransactionForm({
   useEffect(() => {
     setLocalCategories(categories);
   }, [categories]);
-
-  useEffect(() => {
-    CategoryRepositoryApi.getAll().then((cats) => {
-      if (cats.length > 0) setLocalCategories(cats);
-    });
-  }, []);
 
   const filteredCategories = localCategories.filter((c) => c.type === type);
 
