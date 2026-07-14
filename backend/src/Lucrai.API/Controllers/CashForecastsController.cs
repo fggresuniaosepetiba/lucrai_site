@@ -67,7 +67,7 @@ public class CashForecastsController : ControllerBase
             Description = request.Description,
             Amount = request.Amount,
             Category = request.Category,
-            ExpectedDate = request.ExpectedDate,
+            ExpectedDate = DateTime.SpecifyKind(request.ExpectedDate, DateTimeKind.Utc),
             Notes = request.Notes,
             IsRecurring = request.IsRecurring,
             Company = Company
@@ -78,7 +78,9 @@ public class CashForecastsController : ControllerBase
             if (!Enum.TryParse<Core.Enums.RecurrenceType>(request.RecurrenceType, true, out var recType))
                 return BadRequest(new { error = "Tipo de recorrência inválido" });
             forecast.RecurrenceType = recType;
-            forecast.RecurrenceEndDate = request.RecurrenceEndDate;
+            forecast.RecurrenceEndDate = request.RecurrenceEndDate.HasValue
+                ? DateTime.SpecifyKind(request.RecurrenceEndDate.Value, DateTimeKind.Utc)
+                : null;
         }
 
         var created = await _repo.CreateAsync(forecast, UserName);
@@ -97,12 +99,12 @@ public class CashForecastsController : ControllerBase
         if (request.Description != null) existing.Description = request.Description;
         if (request.Amount.HasValue) existing.Amount = request.Amount.Value;
         if (request.Category != null) existing.Category = request.Category;
-        if (request.ExpectedDate.HasValue) existing.ExpectedDate = request.ExpectedDate.Value;
+        if (request.ExpectedDate.HasValue) existing.ExpectedDate = DateTime.SpecifyKind(request.ExpectedDate.Value, DateTimeKind.Utc);
         if (request.Notes != null) existing.Notes = request.Notes;
         if (request.IsRecurring.HasValue) existing.IsRecurring = request.IsRecurring.Value;
         if (request.RecurrenceType != null && Enum.TryParse<Core.Enums.RecurrenceType>(request.RecurrenceType, true, out var recType))
             existing.RecurrenceType = recType;
-        if (request.RecurrenceEndDate.HasValue) existing.RecurrenceEndDate = request.RecurrenceEndDate;
+        if (request.RecurrenceEndDate.HasValue) existing.RecurrenceEndDate = DateTime.SpecifyKind(request.RecurrenceEndDate.Value, DateTimeKind.Utc);
 
         var updated = await _repo.UpdateAsync(existing, UserName);
         return Ok(ToResponse(updated));
