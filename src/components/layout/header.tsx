@@ -29,7 +29,7 @@ const pageTitles: Record<string, string> = {
   "/pricing/insumos": "Insumos",
 };
 
-const dashRoutes = ["/dashboard", "/dashboard/alertas", "/dashboard/projecoes", "/dashboard/resumo-cfo"];
+const dashRoutes = ["/dashboard", "/dashboard/alertas", "/dashboard/projecoes", "/dashboard/resumo-cfo", "/dashboard/indicadores"];
 
 const themes: { value: ThemeMode; label: string; icon: typeof Moon }[] = [
   { value: "normal", label: "Normal", icon: Monitor },

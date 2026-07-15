@@ -73,3 +73,6 @@ obj/
 
 # opencode
 .opencode/
+
+# prompts
+prompts/

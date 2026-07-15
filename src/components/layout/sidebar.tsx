@@ -28,6 +28,7 @@ import {
   Building2,
   Package,
   BrainCircuit,
+  LineChart,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
@@ -52,6 +53,7 @@ const dashItems = [
   { icon: Brain, label: "Resumo do CFO", href: "/dashboard/resumo-cfo" },
   { icon: Bell, label: "Alertas", href: "/dashboard/alertas" },
   { icon: TrendingUp, label: "Projeções", href: "/dashboard/projecoes" },
+  { icon: LineChart, label: "Indicadores", href: "/dashboard/indicadores" },
 ];
 
 const pricingItems = [
