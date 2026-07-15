@@ -5,9 +5,9 @@ services:
     environment:
       POSTGRES_DB: lucrai
       POSTGRES_USER: lucrai
-      POSTGRES_PASSWORD: devpass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,7 +24,7 @@ services:
     ports:
       - "5000:8080"
     environment:
-      ConnectionStrings__Default: Host=postgres;Port=5432;Database=lucrai;Username=lucrai;Password=devpass
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=lucrai;Username=lucrai;Password=${POSTGRES_PASSWORD}
       Jwt__Key: dev-secret-key-lucrai-at-least-32-chars!!
       Jwt__Issuer: lucrai-api
       Jwt__Audience: lucrai-frontend

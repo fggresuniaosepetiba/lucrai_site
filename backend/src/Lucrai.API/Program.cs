@@ -1,4 +1,5 @@
 using System.Text;
+using DotNetEnv;
 using FluentValidation;
 using Lucrai.API.Middleware;
 using Lucrai.Core.Entities;
@@ -11,6 +12,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
+var envDir = Directory.GetCurrentDirectory();
+while (envDir != null && !File.Exists(Path.Combine(envDir, ".env")))
+    envDir = Path.GetDirectoryName(envDir);
+if (envDir != null)
+    DotNetEnv.Env.Load(Path.Combine(envDir, ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +51,19 @@ builder.Services.AddDbContext<LucraiDbContext>(options =>
     if (dbProvider == "InMemory")
         options.UseInMemoryDatabase(builder.Configuration.GetValue<string>("InMemoryDbName") ?? "LucraiTestDb");
     else
-        options.UseNpgsql(builder.Configuration.GetConnectionString("Default")?.Trim('"'));
+    {
+        var connStr = builder.Configuration.GetConnectionString("Default")?.Trim('"') ?? "";
+        var pgPort = Environment.GetEnvironmentVariable("POSTGRES_PORT");
+        if (!string.IsNullOrEmpty(pgPort) && !connStr.Contains("Port=", StringComparison.OrdinalIgnoreCase))
+            connStr = $"{connStr};Port={pgPort}";
+        if (!connStr.Contains("Password=", StringComparison.OrdinalIgnoreCase))
+        {
+            var password = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+            if (!string.IsNullOrEmpty(password))
+                connStr = $"{connStr};Password={password}";
+        }
+        options.UseNpgsql(connStr);
+    }
 });
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
