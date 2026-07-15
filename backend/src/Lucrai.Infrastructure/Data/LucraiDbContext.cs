@@ -29,6 +29,11 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
     public DbSet<FixedCost> FixedCosts => Set<FixedCost>();
     public DbSet<Insumo> Insumos => Set<Insumo>();
     public DbSet<Recibo> Recibos => Set<Recibo>();
+    public DbSet<AccountReceivable> AccountsReceivable => Set<AccountReceivable>();
+    public DbSet<AccountPayable> AccountsPayable => Set<AccountPayable>();
+    public DbSet<Debt> Debts => Set<Debt>();
+    public DbSet<Investment> Investments => Set<Investment>();
+    public DbSet<BalanceAccount> BalanceAccounts => Set<BalanceAccount>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -393,6 +398,108 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.HasIndex(r => new { r.Company, r.Data });
             entity.HasIndex(r => new { r.Company, r.Status });
             entity.HasIndex(r => r.LancamentoId);
+        });
+
+        builder.Entity<AccountReceivable>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.DisplayId).HasMaxLength(10).IsRequired();
+            entity.Property(a => a.Company).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.ClientName).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.ClientDocument).HasMaxLength(20);
+            entity.Property(a => a.Description).HasMaxLength(500);
+            entity.Property(a => a.Value).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(a => a.IssueDate).HasColumnType("timestamp without time zone");
+            entity.Property(a => a.DueDate).HasColumnType("timestamp without time zone");
+            entity.Property(a => a.ReceivedDate).HasColumnType("timestamp without time zone");
+            entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(a => a.Category).HasMaxLength(120);
+            entity.Property(a => a.Notes).HasMaxLength(1000);
+            entity.Property(a => a.CreatedBy).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(a => new { a.Company, a.Status });
+            entity.HasIndex(a => new { a.Company, a.DueDate });
+        });
+
+        builder.Entity<AccountPayable>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.DisplayId).HasMaxLength(10).IsRequired();
+            entity.Property(a => a.Company).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.SupplierName).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.SupplierDocument).HasMaxLength(20);
+            entity.Property(a => a.Description).HasMaxLength(500);
+            entity.Property(a => a.Value).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(a => a.IssueDate).HasColumnType("timestamp without time zone");
+            entity.Property(a => a.DueDate).HasColumnType("timestamp without time zone");
+            entity.Property(a => a.PaymentDate).HasColumnType("timestamp without time zone");
+            entity.Property(a => a.Status).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(a => a.Category).HasMaxLength(120);
+            entity.Property(a => a.Notes).HasMaxLength(1000);
+            entity.Property(a => a.CreatedBy).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(a => new { a.Company, a.Status });
+            entity.HasIndex(a => new { a.Company, a.DueDate });
+        });
+
+        builder.Entity<Debt>(entity =>
+        {
+            entity.HasKey(d => d.Id);
+            entity.Property(d => d.DisplayId).HasMaxLength(10).IsRequired();
+            entity.Property(d => d.Company).HasMaxLength(200).IsRequired();
+            entity.Property(d => d.Creditor).HasMaxLength(200).IsRequired();
+            entity.Property(d => d.Description).HasMaxLength(500);
+            entity.Property(d => d.TotalAmount).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(d => d.OutstandingBalance).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(d => d.InterestRate).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(d => d.StartDate).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.EndDate).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.InstallmentValue).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(d => d.Status).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(d => d.Type).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(d => d.Notes).HasMaxLength(1000);
+            entity.Property(d => d.CreatedBy).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(d => new { d.Company, d.Status });
+        });
+
+        builder.Entity<Investment>(entity =>
+        {
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.DisplayId).HasMaxLength(10).IsRequired();
+            entity.Property(i => i.Company).HasMaxLength(200).IsRequired();
+            entity.Property(i => i.Name).HasMaxLength(200).IsRequired();
+            entity.Property(i => i.Description).HasMaxLength(500);
+            entity.Property(i => i.Type).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(i => i.InvestedAmount).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(i => i.CurrentValue).HasColumnType("decimal(18,2)");
+            entity.Property(i => i.StartDate).HasColumnType("timestamp without time zone");
+            entity.Property(i => i.EndDate).HasColumnType("timestamp without time zone");
+            entity.Property(i => i.ExpectedROI).HasColumnType("decimal(5,2)");
+            entity.Property(i => i.ActualROI).HasColumnType("decimal(5,2)");
+            entity.Property(i => i.IRR).HasColumnType("decimal(5,2)");
+            entity.Property(i => i.NPV).HasColumnType("decimal(18,2)");
+            entity.Property(i => i.Status).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(i => i.Notes).HasMaxLength(1000);
+            entity.Property(i => i.CreatedBy).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(i => new { i.Company, i.Status });
+        });
+
+        builder.Entity<BalanceAccount>(entity =>
+        {
+            entity.HasKey(b => b.Id);
+            entity.Property(b => b.Company).HasMaxLength(200).IsRequired();
+            entity.Property(b => b.Code).HasMaxLength(20).IsRequired();
+            entity.Property(b => b.Name).HasMaxLength(200).IsRequired();
+            entity.Property(b => b.Nature).HasConversion<string>().HasMaxLength(15).IsRequired();
+            entity.Property(b => b.Balance).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(b => b.Notes).HasMaxLength(1000);
+            entity.Property(b => b.CreatedBy).HasMaxLength(200).IsRequired();
+
+            entity.HasIndex(b => new { b.Company, b.Code }).IsUnique();
+            entity.HasIndex(b => new { b.Company, b.Nature });
+            entity.HasIndex(b => new { b.Company, b.Year, b.Month });
         });
     }
 }

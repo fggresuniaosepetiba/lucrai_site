@@ -6,6 +6,7 @@ import { usePeriodoStore } from "@/store/periodo-store";
 import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
 import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
 import { AuditRepositoryApi } from "@/services/api-repositories/audit";
+import { IndicatorsRepositoryApi } from "@/services/api-repositories/indicators";
 import { calcularSaude, calcularSparkline } from "@/services/dashboardIntelligenceService";
 import { formatCurrency, parseLocalDate } from "@/lib/utils";
 import type { Transaction } from "@/types";
@@ -139,6 +140,10 @@ export function useIndicadores(): IndicadoresContext {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [forecastIncomes, setForecastIncomes] = useState(0);
   const [forecastExpenses, setForecastExpenses] = useState(0);
+  const [arSummary, setArSummary] = useState<{ totalAReceber: number; vencido: number; aVencer30d: number; aVencer60d: number; aVencer90d: number; inadimplencia: number; prazoMedioRecebimento: number } | null>(null);
+  const [apSummary, setApSummary] = useState<{ totalAPagar: number; vencido: number; aVencer30d: number; aVencer60d: number; aVencer90d: number; prazoMedioPagamento: number } | null>(null);
+  const [debtSummary, setDebtSummary] = useState<{ dividaTotal: number; dividaCurtoPrazo: number; dividaLongoPrazo: number } | null>(null);
+  const [investmentSummary, setInvestmentSummary] = useState<{ totalInvestido: number; projetosAtivos: number; roiMedio: number | null; capEx: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -147,11 +152,19 @@ export function useIndicadores(): IndicadoresContext {
     Promise.all([
       TransactionRepositoryApi.getAll(),
       CashForecastRepositoryApi.getTotals(),
+      IndicatorsRepositoryApi.getAccountsReceivableSummary().catch(() => null),
+      IndicatorsRepositoryApi.getAccountsPayableSummary().catch(() => null),
+      IndicatorsRepositoryApi.getDebtSummary().catch(() => null),
+      IndicatorsRepositoryApi.getInvestmentSummary().catch(() => null),
     ])
-      .then(([txs, forecastTotals]) => {
+      .then(([txs, forecastTotals, ar, ap, debt, inv]) => {
         setAllTransactions(txs);
         setForecastIncomes(forecastTotals.predictedIncomes);
         setForecastExpenses(forecastTotals.predictedExpenses);
+        setArSummary(ar);
+        setApSummary(ap);
+        setDebtSummary(debt);
+        setInvestmentSummary(inv);
       })
       .catch((err) => console.error("useIndicadores error:", err))
       .finally(() => setIsLoading(false));
@@ -257,10 +270,15 @@ export function useIndicadores(): IndicadoresContext {
       ebit,
     };
 
-    // Investimentos (empty - backend missing)
+    // Investimentos
     const investimentos: InvestimentosData = {
-      totalInvestido: 0, capEx: 0, roi: 0, tir: 0, vpl: 0,
-      paybackMeses: 0, projetosAtivos: 0,
+      totalInvestido: investmentSummary?.totalInvestido ?? 0,
+      capEx: investmentSummary?.capEx ?? 0,
+      roi: investmentSummary?.roiMedio ?? 0,
+      tir: 0,
+      vpl: 0,
+      paybackMeses: 0,
+      projetosAtivos: investmentSummary?.projetosAtivos ?? 0,
     };
 
     // Receitas
@@ -330,22 +348,36 @@ export function useIndicadores(): IndicadoresContext {
       topCategoriasDespesa: categoriasDespesa,
     };
 
-    // Contas a Receber (empty)
+    // Contas a Receber
     const contasAReceber: ContasAReceberData = {
-      totalAReceber: 0, vencido: 0, aVencer30d: 0, aVencer60d: 0,
-      aVencer90d: 0, inadimplencia: 0, prazoMedioRecebimento: 0,
+      totalAReceber: arSummary?.totalAReceber ?? 0,
+      vencido: arSummary?.vencido ?? 0,
+      aVencer30d: arSummary?.aVencer30d ?? 0,
+      aVencer60d: arSummary?.aVencer60d ?? 0,
+      aVencer90d: arSummary?.aVencer90d ?? 0,
+      inadimplencia: arSummary?.inadimplencia ?? 0,
+      prazoMedioRecebimento: arSummary?.prazoMedioRecebimento ?? 0,
     };
 
-    // Contas a Pagar (empty)
+    // Contas a Pagar
     const contasAPagar: ContasAPagarData = {
-      totalAPagar: 0, vencido: 0, aVencer30d: 0, aVencer60d: 0,
-      aVencer90d: 0, prazoMedioPagamento: 0,
+      totalAPagar: apSummary?.totalAPagar ?? 0,
+      vencido: apSummary?.vencido ?? 0,
+      aVencer30d: apSummary?.aVencer30d ?? 0,
+      aVencer60d: apSummary?.aVencer60d ?? 0,
+      aVencer90d: apSummary?.aVencer90d ?? 0,
+      prazoMedioPagamento: apSummary?.prazoMedioPagamento ?? 0,
     };
 
-    // Endividamento (empty)
+    // Endividamento
     const endividamento: EndividamentoData = {
-      dividaTotal: 0, dividaCurtoPrazo: 0, dividaLongoPrazo: 0,
-      dividaLiquida: 0, alavancagem: 0, coberturaJuros: 0, comprometimentoReceita: 0,
+      dividaTotal: debtSummary?.dividaTotal ?? 0,
+      dividaCurtoPrazo: debtSummary?.dividaCurtoPrazo ?? 0,
+      dividaLongoPrazo: debtSummary?.dividaLongoPrazo ?? 0,
+      dividaLiquida: (debtSummary?.dividaTotal ?? 0) - (saldoAtual > 0 ? saldoAtual : 0),
+      alavancagem: receitaPeriodo > 0 ? ((debtSummary?.dividaTotal ?? 0) / receitaPeriodo) : 0,
+      coberturaJuros: 0,
+      comprometimentoReceita: receitaPeriodo > 0 ? ((debtSummary?.dividaTotal ?? 0) / receitaPeriodo) * 100 : 0,
     };
 
     // Projeções
@@ -444,7 +476,7 @@ export function useIndicadores(): IndicadoresContext {
       demonstrativos,
       auditoria,
     };
-  }, [allTransactions, lancamentosFiltrados, forecastIncomes, forecastExpenses, mes, ano, isLoading]);
+  }, [allTransactions, lancamentosFiltrados, forecastIncomes, forecastExpenses, mes, ano, isLoading, arSummary, apSummary, debtSummary, investmentSummary]);
 
   return ctx;
 }

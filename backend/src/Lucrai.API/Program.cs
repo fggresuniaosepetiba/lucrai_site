@@ -41,6 +41,11 @@ builder.Services.AddScoped<ISignatureRepository, SignatureRepository>();
 builder.Services.AddScoped<IFixedCostRepository, FixedCostRepository>();
 builder.Services.AddScoped<IInsumoRepository, InsumoRepository>();
 builder.Services.AddScoped<IReciboRepository, ReciboRepository>();
+builder.Services.AddScoped<IAccountReceivableRepository, AccountReceivableRepository>();
+builder.Services.AddScoped<IAccountPayableRepository, AccountPayableRepository>();
+builder.Services.AddScoped<IDebtRepository, DebtRepository>();
+builder.Services.AddScoped<IInvestmentRepository, InvestmentRepository>();
+builder.Services.AddScoped<IBalanceAccountRepository, BalanceAccountRepository>();
 
 builder.Services.AddScoped<IDashboardIntelligenceService, DashboardIntelligenceService>();
 builder.Services.AddScoped<IAlertasService, AlertasService>();
