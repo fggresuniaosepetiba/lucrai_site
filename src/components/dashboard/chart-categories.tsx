@@ -37,7 +37,7 @@ interface ChartCategoriesProps {
 }
 
 export function ChartCategories({ transactions, syncType, onSyncChange }: ChartCategoriesProps) {
-  const [type, setType] = useState<"expense" | "income">("expense");
+  const [type, setType] = useState<"expense" | "income">("income");
 
   useEffect(() => {
     if (syncType) setType(syncType);
@@ -78,8 +78,8 @@ export function ChartCategories({ transactions, syncType, onSyncChange }: ChartC
         </CardTitle>
         <Tabs value={type} onValueChange={(v) => { setType(v as "expense" | "income"); onSyncChange?.(v as "expense" | "income"); }}>
           <TabsList className="h-8">
-            <TabsTrigger value="expense" className="text-xs px-3">Saídas</TabsTrigger>
             <TabsTrigger value="income" className="text-xs px-3">Entradas</TabsTrigger>
+            <TabsTrigger value="expense" className="text-xs px-3">Saídas</TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>
