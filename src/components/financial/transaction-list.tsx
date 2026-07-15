@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "./delete-dialog";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { toast } from "@/components/ui/toast";
 import type { Transaction, Category } from "@/types";
 
 interface TransactionListProps {
@@ -34,9 +33,9 @@ export function TransactionList({
 
   const handleDeleteConfirm = async (reason: string) => {
     if (!deleteTarget) return;
-    await onDelete(deleteTarget.id, reason);
-    toast("Lançamento enviado para a lixeira com sucesso.");
+    const target = deleteTarget;
     setDeleteTarget(null);
+    await onDelete(target.id, reason);
   };
 
   if (transactions.length === 0) {

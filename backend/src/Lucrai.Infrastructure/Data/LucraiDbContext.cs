@@ -165,6 +165,13 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(d => d.CancelledBy).HasMaxLength(200);
             entity.Property(d => d.Company).HasMaxLength(200).IsRequired();
             entity.Property(d => d.Reason).HasMaxLength(500).IsRequired();
+            entity.Property(d => d.Date).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.ExpectedDate).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.CancelledAt).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.CreatedAt).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.UpdatedAt).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.DeletedAt).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.RestoreUntil).HasColumnType("timestamp without time zone");
 
             entity.HasIndex(d => new { d.Company, d.DeletedAt });
             entity.HasIndex(d => new { d.Company, d.RestoreUntil });
