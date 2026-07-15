@@ -168,10 +168,10 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(d => d.Date).HasColumnType("timestamp without time zone");
             entity.Property(d => d.ExpectedDate).HasColumnType("timestamp without time zone");
             entity.Property(d => d.CancelledAt).HasColumnType("timestamp without time zone");
-            entity.Property(d => d.CreatedAt).HasColumnType("timestamp without time zone");
-            entity.Property(d => d.UpdatedAt).HasColumnType("timestamp without time zone");
-            entity.Property(d => d.DeletedAt).HasColumnType("timestamp without time zone");
-            entity.Property(d => d.RestoreUntil).HasColumnType("timestamp without time zone");
+            entity.Property(d => d.CreatedAt);
+            entity.Property(d => d.UpdatedAt);
+            entity.Property(d => d.DeletedAt);
+            entity.Property(d => d.RestoreUntil);
 
             entity.HasIndex(d => new { d.Company, d.DeletedAt });
             entity.HasIndex(d => new { d.Company, d.RestoreUntil });
