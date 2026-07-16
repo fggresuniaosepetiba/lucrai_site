@@ -1,23 +1,25 @@
--- Limpa registros de transacoes que NAO sao do usuario atual
--- (criados por seed/sistema com createdBy diferente)
+-- LIMPEZA: Remove registros de transacoes que NAO sao do usuario atual
 -- 
--- Para usar:
---   1. Substitua 'SEU_EMAIL_AQUI' pelo seu email de usuario
---   2. Execute no banco de producao
---   3. Confirme que so os registros corretos serao afetados (SELECT primeiro)
+-- COMO USAR:
+--   1. Substitua 'SEU_EMAIL_AQUI' pelo seu email de login
+--   2. Execute cada bloco em ordem, um de cada vez
+--   3. PASSO 2: so prossiga se o COUNT parecer correto
 
--- Primeiro: verifique quantos registros serao afetados
-SELECT COUNT(*) as registros_a_limpar
-FROM "Transactions"
-WHERE "CreatedBy" != 'SEU_EMAIL_AQUI'
-  AND "Company" = (SELECT "Company" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1);
+-- PASSO 1: Descubra seu UserId (apenas para conferencia)
+SELECT "Id" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI';
 
--- Delete apenas se o SELECT acima mostrar registros que podem ser removidos
+-- PASSO 2: Confira quantas transacoes serao afetadas
+SELECT COUNT(*) FROM "Transactions"
+WHERE "Company" = (SELECT "Company" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1)
+  AND "CreatedBy" != (SELECT "Id" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1);
+
+-- PASSO 3: Delete as transacoes (so execute se o PASSO 2 fez sentido)
 DELETE FROM "Transactions"
-WHERE "CreatedBy" != 'SEU_EMAIL_AQUI'
-  AND "Company" = (SELECT "Company" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1);
+WHERE "Company" = (SELECT "Company" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1)
+  AND "CreatedBy" != (SELECT "Id" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1);
 
--- Verifique o resultado
-SELECT COUNT(*) as total_restante
-FROM "Transactions"
-WHERE "Company" = (SELECT "Company" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1);
+-- PASSO 4: (opcional) Deletar AuditLogs desses registros
+DELETE FROM "AuditLogs"
+WHERE "EntityType" = 'transaction'
+  AND "Company" = (SELECT "Company" FROM "Users" WHERE "Email" = 'SEU_EMAIL_AQUI' LIMIT 1)
+  AND "DisplayId" IN ('#001', '#002', '#003', '#004', '#005');
