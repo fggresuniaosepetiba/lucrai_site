@@ -22,7 +22,7 @@ import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, va
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
   AlertTriangle, Search, Pencil, CheckCircle2, XCircle, Trash2,
-  Target, BarChart3, Hash, History, Clock, Wallet, Repeat, CalendarIcon,
+  Target, BarChart3, History, Clock, Wallet, Repeat, CalendarIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import {
@@ -760,10 +760,7 @@ function CashForecastContent() {
                         filtered.map((item) => (
                           <tr key={item.id} className="border-b border-border/25 hover:bg-muted/30 transition-colors">
                             <td className="p-4">
-                              <div className="flex items-center gap-1.5">
-                                <Hash className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-xs font-mono text-muted-foreground">{item.displayId}</span>
-                              </div>
+                              <span className="text-xs font-mono text-muted-foreground">{item.displayId}</span>
                             </td>
                             <td className="p-4">
                               <div className="flex items-center gap-2">
@@ -863,10 +860,7 @@ function CashForecastContent() {
                         filtered.map((item) => (
                           <tr key={item.id} className="border-b border-border/25 hover:bg-muted/30 transition-colors">
                             <td className="p-4">
-                              <div className="flex items-center gap-1.5">
-                                <Hash className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-xs font-mono text-muted-foreground">{item.displayId}</span>
-                              </div>
+                              <span className="text-xs font-mono text-muted-foreground">{item.displayId}</span>
                             </td>
                             <td className="p-4">
                               <div className="flex items-center gap-2">
@@ -1353,7 +1347,6 @@ function CashForecastContent() {
               </div>
 
               <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
-                <Hash className="h-4 w-4 text-muted-foreground shrink-0" />
                 <p className="text-xs text-muted-foreground">
                   Serão removidos: {historyItems.slice(0, 5).map((i) => i.displayId).join(", ")}
                   {historyItems.length > 5 && ` e mais ${historyItems.length - 5} registro(s)`}

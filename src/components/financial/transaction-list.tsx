@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUpRight, ArrowDownRight, Pencil, Trash2, Hash, MoreHorizontal, Receipt } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Pencil, Trash2, MoreHorizontal, Receipt } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,10 +78,7 @@ export function TransactionList({
                     className="border-b border-border/25 hover:bg-muted/30 transition-colors"
                   >
                     <td className="p-4">
-                      <div className="flex items-center gap-1.5">
-                        <Hash className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs font-mono text-muted-foreground">{t.displayId}</span>
-                      </div>
+                      <span className="text-xs font-mono text-muted-foreground">{t.displayId}</span>
                     </td>
                     <td className="p-4">
                       {t.type === "income" ? (

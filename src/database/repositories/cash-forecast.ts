@@ -4,7 +4,7 @@ import { db } from "../dexie";
 import { TransactionRepository } from "./transactions";
 import { AuditRepository } from "./audit";
 import type { CashForecast } from "@/types";
-import { generateId, getNextDisplayId, validateForecastDate, parseLocalDate, todayStr } from "@/lib/utils";
+import { generateId, getNextDisplayId, validateForecastDate, todayStr } from "@/lib/utils";
 
 export const CashForecastRepository = {
   async getAll(company: string): Promise<CashForecast[]> {
@@ -12,9 +12,7 @@ export const CashForecastRepository = {
       .where("company")
       .equals(company)
       .toArray();
-    return all.sort(
-      (a, b) => parseLocalDate(a.expectedDate).getTime() - parseLocalDate(b.expectedDate).getTime()
-    );
+    return all.sort((a, b) => a.displayId.localeCompare(b.displayId));
   },
 
   async getById(id: string): Promise<CashForecast | undefined> {
@@ -27,9 +25,7 @@ export const CashForecastRepository = {
       .equals(status)
       .filter((f) => f.company === company)
       .toArray();
-    return all.sort(
-      (a, b) => parseLocalDate(a.expectedDate).getTime() - parseLocalDate(b.expectedDate).getTime()
-    );
+    return all.sort((a, b) => a.displayId.localeCompare(b.displayId));
   },
 
   async create(

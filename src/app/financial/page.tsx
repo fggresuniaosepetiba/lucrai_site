@@ -30,7 +30,7 @@ export default function FinancialPage() {
   const [filterYear, setFilterYear] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("asc");
   const initialized = useRef(false);
   const company = user?.company ?? "";
 
@@ -167,9 +167,9 @@ export default function FinancialPage() {
       return true;
     })
     .sort((a, b) => {
-      const dateA = parseLocalDate(a.date).getTime();
-      const dateB = parseLocalDate(b.date).getTime();
-      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+      return sortOrder === "desc"
+        ? b.displayId.localeCompare(a.displayId)
+        : a.displayId.localeCompare(b.displayId);
     });
 
   const handleExportCSV = () => {
@@ -236,7 +236,7 @@ export default function FinancialPage() {
             <button
               onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
               className="rounded-lg border p-2 text-muted-foreground hover:text-foreground transition-colors"
-              title="Ordenar por data"
+              title="Ordenar por ID"
             >
               <ArrowUpDown className="h-4 w-4" />
             </button>

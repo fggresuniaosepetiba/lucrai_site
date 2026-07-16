@@ -24,7 +24,7 @@ public class TransactionRepository : ITransactionRepository
             if (!string.IsNullOrEmpty(userId))
                 query = query.Where(t => t.CreatedBy == userId);
         }
-        return await query.OrderByDescending(t => t.Date).ToListAsync();
+        return await query.OrderBy(t => t.DisplayId).ToListAsync();
     }
 
     public async Task<Transaction?> GetByIdAsync(Guid id, string? company, string? userId = null)
@@ -48,7 +48,7 @@ public class TransactionRepository : ITransactionRepository
             if (!string.IsNullOrEmpty(userId))
                 query = query.Where(t => t.CreatedBy == userId);
         }
-        return await query.OrderByDescending(t => t.Date).ToListAsync();
+        return await query.OrderBy(t => t.DisplayId).ToListAsync();
     }
 
     public async Task<List<Transaction>> GetByMonthAsync(int year, int? month, string? company, string? userId = null)
@@ -64,7 +64,7 @@ public class TransactionRepository : ITransactionRepository
         if (month.HasValue)
             query = query.Where(t => t.Date.Month == month.Value);
 
-        return await query.OrderByDescending(t => t.Date).ToListAsync();
+        return await query.OrderBy(t => t.DisplayId).ToListAsync();
     }
 
     public async Task<Transaction> CreateAsync(Transaction transaction, string? userName)

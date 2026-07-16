@@ -11,9 +11,7 @@ export const TransactionRepository = {
       .where("company")
       .equals(company)
       .toArray();
-    return all.sort(
-      (a, b) => parseLocalDate(b.date).getTime() - parseLocalDate(a.date).getTime()
-    );
+    return all.sort((a, b) => a.displayId.localeCompare(b.displayId));
   },
 
   async getById(id: string): Promise<Transaction | undefined> {
@@ -26,9 +24,7 @@ export const TransactionRepository = {
       .equals(type)
       .filter((t) => t.company === company)
       .toArray();
-    return all.sort(
-      (a, b) => parseLocalDate(b.date).getTime() - parseLocalDate(a.date).getTime()
-    );
+    return all.sort((a, b) => a.displayId.localeCompare(b.displayId));
   },
 
   async getByMonth(year: number, month: number, company: string): Promise<Transaction[]> {

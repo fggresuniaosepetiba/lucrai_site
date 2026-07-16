@@ -24,7 +24,7 @@ public class CashForecastRepository : ICashForecastRepository
             if (!string.IsNullOrEmpty(userId))
                 query = query.Where(f => f.CreatedBy == userId);
         }
-        return await query.OrderBy(f => f.ExpectedDate).ToListAsync();
+        return await query.OrderBy(f => f.DisplayId).ToListAsync();
     }
 
     public async Task<CashForecast?> GetByIdAsync(Guid id, string? company, string? userId = null)
@@ -48,7 +48,7 @@ public class CashForecastRepository : ICashForecastRepository
             if (!string.IsNullOrEmpty(userId))
                 query = query.Where(f => f.CreatedBy == userId);
         }
-        return await query.OrderBy(f => f.ExpectedDate).ToListAsync();
+        return await query.OrderBy(f => f.DisplayId).ToListAsync();
     }
 
     public async Task<CashForecast> CreateAsync(CashForecast forecast, string? userName)

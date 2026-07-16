@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { formatCurrency, formatDate, parseLocalDate } from "@/lib/utils";
-import { Trash2, RotateCcw, AlertTriangle, Clock, Hash, ArrowUpRight, ArrowDownRight, FileText } from "lucide-react";
+import { Trash2, RotateCcw, AlertTriangle, Clock, ArrowUpRight, ArrowDownRight, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -473,10 +473,7 @@ function TrashItemCard({
               <Badge variant="outline" className="text-[10px] gap-1">
                 {item.entryType === "forecast" ? "Previsão" : "Lançamento"}
               </Badge>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Hash className="h-3 w-3" />
-                <span className="font-mono">{item.displayId}</span>
-              </div>
+              <span className="text-xs font-mono text-muted-foreground">{item.displayId}</span>
               <Badge variant={item.type === "income" ? "success" : "destructive"} className="gap-1 text-[10px]">
                 {item.type === "income" ? (
                   <ArrowUpRight className="h-3 w-3" />
