@@ -88,6 +88,7 @@ function CashForecastContent() {
   const [formDate, setFormDate] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [formRecurring, setFormRecurring] = useState(false);
+  const [formCalendarOpen, setFormCalendarOpen] = useState(false);
   const [formRecurrenceType, setFormRecurrenceType] = useState("monthly");
   const [formRecurrenceEndType, setFormRecurrenceEndType] = useState("never");
   const [formRecurrenceEndDate, setFormRecurrenceEndDate] = useState("");
@@ -301,7 +302,7 @@ function CashForecastContent() {
     setFormDescription(item.description);
     setFormAmountDisplay(formatCurrencyInput(String(Math.round(item.amount * 100))));
     setFormCategory(item.category);
-    setFormDate(item.expectedDate);
+    setFormDate(item.expectedDate.split("T")[0]);
     setFormNotes(item.notes || "");
     setFormRecurring(item.isRecurring ?? false);
     setFormRecurrenceType(item.recurrenceType ?? "monthly");
@@ -952,13 +953,13 @@ function CashForecastContent() {
                   <Label htmlFor="date" className="flex items-center gap-1">
                     Data Prevista <span className="text-red-400">*</span>
                   </Label>
-                  <Popover>
+                  <Popover open={formCalendarOpen} onOpenChange={setFormCalendarOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         id="date"
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal h-9",
                           !formDate && "text-muted-foreground"
                         )}
                       >
@@ -966,17 +967,20 @@ function CashForecastContent() {
                         {formDate ? formatDate(formDate) : <span>Selecionar data</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 shadow-lg overflow-hidden" align="start">
                       <Calendar
                         mode="single"
+                        defaultMonth={formDate ? parseLocalDate(formDate) : undefined}
                         selected={formDate ? parseLocalDate(formDate) : undefined}
                         onSelect={(d) => {
                           if (d) {
                             setFormDate(
                               `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
                             );
+                            setFormCalendarOpen(false);
                           }
                         }}
+                        required
                         autoFocus
                       />
                     </PopoverContent>

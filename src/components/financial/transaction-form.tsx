@@ -29,7 +29,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Transaction, Category } from "@/types";
-import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, formatDate, parseLocalDate, todayStr } from "@/lib/utils";
+import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, formatDate, parseLocalDate } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 
 interface TransactionFormProps {
@@ -69,8 +69,9 @@ export function TransactionForm({
   const [categoryId, setCategoryId] = useState(transaction?.categoryId || "");
   const [description, setDescription] = useState(transaction?.description || "");
   const [date, setDate] = useState(
-    transaction?.date || todayStr()
+    transaction?.date ? transaction.date.split("T")[0] : ""
   );
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [observation, setObservation] = useState(transaction?.observation || "");
   const [submitting, setSubmitting] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -233,13 +234,13 @@ export function TransactionForm({
                 Data
                 <span className="text-red-400">*</span>
               </Label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     id="date"
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal h-9",
                       !date && "text-muted-foreground",
                       errors.date && "border-red-400"
                     )}
@@ -248,9 +249,10 @@ export function TransactionForm({
                     {date ? formatDate(date) : <span>Selecionar data</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 shadow-lg overflow-hidden" align="start">
                   <Calendar
                     mode="single"
+                    defaultMonth={date ? parseLocalDate(date) : undefined}
                     selected={date ? parseLocalDate(date) : undefined}
                     onSelect={(d) => {
                       if (d) {
@@ -258,8 +260,10 @@ export function TransactionForm({
                           `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
                         );
                         setErrors((prev) => ({ ...prev, date: "" }));
+                        setCalendarOpen(false);
                       }
                     }}
+                    required
                     autoFocus
                   />
                 </PopoverContent>
