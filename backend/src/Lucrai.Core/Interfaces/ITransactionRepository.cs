@@ -14,5 +14,5 @@ public interface ITransactionRepository
     Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetSummaryAsync(int year, int? month, string? company, string? userId = null);
     Task<(decimal Incomes, decimal Expenses, decimal Balance, decimal Total)> GetYearlySummaryAsync(int year, string? company, string? userId = null);
     Task<(decimal Incomes, decimal Expenses, decimal Balance)> GetAllBalanceAsync(string? company, string? userId = null);
-    Task<string> GetNextDisplayIdAsync(string? company);
+    Task<string> GetNextDisplayIdAsync(string? company, string? userId);
 }

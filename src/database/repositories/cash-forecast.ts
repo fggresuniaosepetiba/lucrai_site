@@ -37,12 +37,14 @@ export const CashForecastRepository = {
     if (!dateCheck.valid) throw new Error(dateCheck.message);
     const now = new Date().toISOString();
     const all = await db.cashForecasts.where("company").equals(company).toArray();
-    const displayId = await getNextDisplayId(all);
+    const userForecasts = userName ? all.filter((f) => f.createdBy === userName) : all;
+    const displayId = await getNextDisplayId(userForecasts);
     const forecast: CashForecast = {
       ...data,
       company,
       id: generateId(),
       displayId,
+      createdBy: userName || "",
       createdAt: now,
       updatedAt: now,
     };

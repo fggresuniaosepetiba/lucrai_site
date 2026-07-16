@@ -69,7 +69,7 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task<Transaction> CreateAsync(Transaction transaction, string? userName)
     {
-        transaction.DisplayId = await GetNextDisplayIdAsync(transaction.Company);
+        transaction.DisplayId = await GetNextDisplayIdAsync(transaction.Company, transaction.CreatedBy);
         transaction.CreatedAt = DateTime.UtcNow;
         transaction.UpdatedAt = DateTime.UtcNow;
 
@@ -176,13 +176,28 @@ public class TransactionRepository : ITransactionRepository
         return (incomes, expenses, incomes - expenses);
     }
 
-    public async Task<string> GetNextDisplayIdAsync(string? company)
+    public async Task<string> GetNextDisplayIdAsync(string? company, string? userId)
     {
-        var query = _context.Transactions.AsQueryable();
+        var query = _context.Transactions.Where(t => !string.IsNullOrEmpty(t.DisplayId));
         if (company != null)
             query = query.Where(t => t.Company == company);
+        if (!string.IsNullOrEmpty(userId))
+            query = query.Where(t => t.CreatedBy == userId);
 
-        var count = await query.CountAsync();
-        return $"#{(count + 1):D3}";
+        var displayIds = await query.Select(t => t.DisplayId).ToListAsync();
+
+        var used = displayIds
+            .Select(id =>
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(id, @"#(\d+)");
+                return match.Success ? int.Parse(match.Groups[1].Value) : 0;
+            })
+            .Where(n => n > 0)
+            .ToHashSet();
+
+        var next = 1;
+        while (used.Contains(next)) next++;
+
+        return $"#{next:D3}";
     }
 }

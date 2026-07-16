@@ -26,15 +26,18 @@ export async function getNextDisplayId(
   table: { displayId?: string }[],
   prefix: string = "#"
 ): Promise<string> {
-  const ids = table
+  const numbers = table
     .map((t) => {
       const match = t.displayId?.match(/#(\d+)/);
       return match ? parseInt(match[1], 10) : 0;
     })
     .filter((n) => !isNaN(n) && n > 0);
-  const max = ids.length > 0 ? Math.max(...ids) : 0;
-  const num = String(max + 1).padStart(3, "0");
-  return `${prefix}${num}`;
+
+  const used = new Set(numbers);
+  let next = 1;
+  while (used.has(next)) next++;
+
+  return `${prefix}${String(next).padStart(3, "0")}`;
 }
 
 const UNIDADES = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];

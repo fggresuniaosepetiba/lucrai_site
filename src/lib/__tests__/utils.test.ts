@@ -46,12 +46,12 @@ describe("getNextDisplayId", () => {
     expect(await getNextDisplayId([])).toBe("#001");
   });
 
-  it("deve incrementar a partir do maior ID existente", async () => {
+  it("deve encontrar o menor ID disponivel", async () => {
     const table = [
       { displayId: "#005" },
       { displayId: "#003" },
     ];
-    expect(await getNextDisplayId(table)).toBe("#006");
+    expect(await getNextDisplayId(table)).toBe("#001");
   });
 
   it("deve ignorar IDs sem padrao numerico", async () => {

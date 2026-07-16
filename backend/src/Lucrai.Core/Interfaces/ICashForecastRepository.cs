@@ -14,5 +14,5 @@ public interface ICashForecastRepository
     Task<CashForecast> MarkAsPaidAsync(Guid id, string? userName);
     Task<CashForecast> MarkAsCancelledAsync(Guid id, string? reason, string? userName);
     Task<(decimal PredictedIncomes, decimal PredictedExpenses, decimal AllIncomes, decimal AllExpenses)> GetTotalsAsync(string? company, string? userId = null);
-    Task<string> GetNextDisplayIdAsync(string? company);
+    Task<string> GetNextDisplayIdAsync(string? company, string? userId);
 }

@@ -44,11 +44,12 @@ export const TransactionRepository = {
     if (data.description && data.description.length > 300) throw new Error("Descrição excede o limite máximo de 300 caracteres");
     const now = new Date().toISOString();
     const all = await db.transactions.where("company").equals(company).toArray();
-    const displayId = await getNextDisplayId(all);
+    const userTx = userName ? all.filter((t) => t.createdBy === userName) : all;
+    const displayId = await getNextDisplayId(userTx);
     const transaction: Transaction = {
       ...data,
       company,
-      createdBy: "",
+      createdBy: userName || "",
       id: generateId(),
       displayId,
       createdAt: now,

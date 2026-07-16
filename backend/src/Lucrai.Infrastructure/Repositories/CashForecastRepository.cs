@@ -53,7 +53,7 @@ public class CashForecastRepository : ICashForecastRepository
 
     public async Task<CashForecast> CreateAsync(CashForecast forecast, string? userName)
     {
-        forecast.DisplayId = await GetNextDisplayIdAsync(forecast.Company);
+        forecast.DisplayId = await GetNextDisplayIdAsync(forecast.Company, forecast.CreatedBy);
         forecast.CreatedAt = DateTime.UtcNow;
         forecast.UpdatedAt = DateTime.UtcNow;
 
@@ -239,13 +239,28 @@ public class CashForecastRepository : ICashForecastRepository
         return (predictedIncomes, predictedExpenses, allIncomes, allExpenses);
     }
 
-    public async Task<string> GetNextDisplayIdAsync(string? company)
+    public async Task<string> GetNextDisplayIdAsync(string? company, string? userId)
     {
-        var query = _context.CashForecasts.AsQueryable();
+        var query = _context.CashForecasts.Where(f => !string.IsNullOrEmpty(f.DisplayId));
         if (company != null)
             query = query.Where(f => f.Company == company);
+        if (!string.IsNullOrEmpty(userId))
+            query = query.Where(f => f.CreatedBy == userId);
 
-        var count = await query.CountAsync();
-        return $"#{(count + 1):D3}";
+        var displayIds = await query.Select(f => f.DisplayId).ToListAsync();
+
+        var used = displayIds
+            .Select(id =>
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(id, @"#(\d+)");
+                return match.Success ? int.Parse(match.Groups[1].Value) : 0;
+            })
+            .Where(n => n > 0)
+            .ToHashSet();
+
+        var next = 1;
+        while (used.Contains(next)) next++;
+
+        return $"#{next:D3}";
     }
 }
