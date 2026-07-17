@@ -103,60 +103,6 @@ export interface ApiBalance {
   balance: number;
 }
 
-export interface ApiDashboardAlert {
-  id: string;
-  tipo: string;
-  categoria: string;
-  titulo: string;
-  descricao: string;
-  dadosContextuais: { label: string; valor: string }[];
-  acaoLabel: string;
-  acaoHref: string;
-  dispensado: boolean;
-  geradoEm: string;
-}
-
-export interface ApiHealthResponse {
-  score: number;
-  label: string;
-  cor: string;
-  bg: string;
-  subIndicadores: { nome: string; score: number; tooltip: string }[];
-}
-
-export interface ApiRunwayResponse {
-  meses: number;
-  dias: number;
-  status: string;
-  label: string;
-}
-
-export interface ApiBreakEvenResponse {
-  valor: number;
-  percentualAtingido: number;
-  acima: boolean;
-}
-
-export interface ApiSparklinePoint {
-  mes: string;
-  valor: number;
-}
-
-export interface ApiNotaCFOResponse {
-  resumo: string;
-  nota: string;
-  pontosForca: string[];
-  pontosAtencao: string[];
-}
-
-export interface ApiAcaoRecomendada {
-  titulo: string;
-  descricao: string;
-  prioridade: string;
-  categoria: string;
-  link: string | null;
-}
-
 // ============ PRICING ============
 export interface ApiPricingProduct {
   id: string;
@@ -239,20 +185,6 @@ export interface ApiRestoreResponse {
 
 export interface ApiCleanupResponse {
   removedCount: number;
-}
-
-// ============ AUDIT ============
-export interface ApiAuditLog {
-  id: string;
-  entityId: string;
-  entityType: string;
-  displayId: string;
-  action: string;
-  description: string;
-  user: string;
-  company: string;
-  timestamp: string;
-  details: string | null;
 }
 
 // ============ INSUMOS ============

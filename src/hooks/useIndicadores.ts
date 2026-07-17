@@ -5,7 +5,6 @@ import { useAuthStore } from "@/store/auth-store";
 import { usePeriodoStore } from "@/store/periodo-store";
 import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
 import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
-import { AuditRepositoryApi } from "@/services/api-repositories/audit";
 import { IndicatorsRepositoryApi } from "@/services/api-repositories/indicators";
 import { calcularSaude, calcularSparkline } from "@/services/dashboardIntelligenceService";
 import { formatCurrency, parseLocalDate } from "@/lib/utils";

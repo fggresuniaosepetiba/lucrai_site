@@ -101,14 +101,6 @@ export interface CashForecast {
   recurrenceEndDate?: string;
 }
 
-export interface MonthlySummary {
-  month: string;
-  year: number;
-  incomes: number;
-  expenses: number;
-  balance: number;
-}
-
 export interface PricingProduct {
   id: string;
   name: string;
@@ -153,29 +145,6 @@ export interface Conta {
   trialFim: string;
   primeiroAcesso: boolean;
   createdAt: string;
-}
-
-export type AuditAction =
-  | "created"
-  | "edited"
-  | "cancelled"
-  | "paid"
-  | "received"
-  | "restored"
-  | "deleted"
-  | "moved_to_trash";
-
-export interface AuditLog {
-  id: string;
-  entityId: string;
-  entityType: "transaction" | "forecast" | "user";
-  displayId: string;
-  action: AuditAction;
-  description: string;
-  user: string;
-  company: string;
-  timestamp: string;
-  details?: string;
 }
 
 // ============ DOCUMENTOS FINANCEIROS ============
