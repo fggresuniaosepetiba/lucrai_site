@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
 import { PricingRepositoryApi } from "@/services/api-repositories/pricing";
-import { FixedCostsRepository } from "@/database/repositories/fixed-costs";
-import { seedDefaultCategories } from "@/database/seed";
+import { FixedCostRepositoryApi } from "@/services/api-repositories/fixed-costs";
+
 import type { PricingProduct, ProductionMode, PaymentMethod, FixedCost } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -207,14 +207,13 @@ export default function PricingPage() {
 
   const runStartup = async () => {
     try { await useAuthStore.getState().refreshUser(); } catch (e) { console.error("refreshUser:", e); }
-    try { await seedDefaultCategories(company); } catch (e) { console.error("seedDefaultCategories:", e); }
     loadFixedCosts();
     loadProducts();
   };
 
   const loadFixedCosts = async () => {
     try {
-      const data = await FixedCostsRepository.getByCompany(company);
+      const data = await FixedCostRepositoryApi.get();
       setFixedCostsData(data ?? null);
     } catch (err) {
       console.error("Error loading fixed costs:", err);

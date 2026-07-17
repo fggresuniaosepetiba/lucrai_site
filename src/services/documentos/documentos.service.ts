@@ -1,52 +1,12 @@
 "use client";
 
-import { DocumentoRepository, DocumentoLogRepository, DocumentoConfigRepository } from "@/database/repositories/documentos";
 import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
 import { CashForecastRepositoryApi } from "@/services/api-repositories/cash-forecast";
 import { CategoryRepositoryApi } from "@/services/api-repositories/categories";
-import { DocumentoStorageService } from "./documentos-storage.service";
-import { DocumentoExtracaoService } from "./documentos-extracao.service";
 import { DocumentoAprendizadoService } from "./documentos-aprendizado.service";
-import { DocumentExtractorService } from "./document-extractor";
 import type { DocumentoFinanceiro, TipoMovimentacao } from "@/types";
 import { todayStr } from "@/lib/utils";
-
-function gerarResumoExecutivo(resultado: Awaited<ReturnType<typeof DocumentoExtracaoService.extrairDeImagemOuPDF>>): string {
-  const partes: string[] = [];
-
-  const tipo = resultado.tipo_documento?.replace(/_/g, " ").toLowerCase() || "documento";
-  const valor = resultado.valor;
-  const produtos = resultado.produtos || [];
-  const emitente = resultado.emitente;
-  const favorecido = resultado.favorecido;
-  const descricao = resultado.descricao;
-
-  if (produtos.length > 0 && valor) {
-    const totalItens = produtos.reduce((s, p) => s + p.quantidade, 0);
-    const nomes = produtos.slice(0, 3).map((p) => p.descricao).join(", ");
-    const extra = produtos.length > 3 ? ` e mais ${produtos.length - 3} produto(s)` : "";
-    const valorFormatado = valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    const nome = emitente || favorecido || "fornecedor";
-
-    partes.push(`Foi identificada uma compra de ${totalItens} ${nomes}${extra} no valor de ${valorFormatado} realizada junto à ${nome}.`);
-  } else if (valor) {
-    const valorFormatado = valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    const nome = emitente || favorecido || "destinatário";
-    const mov = resultado.tipo_movimentacao === "RECEITA" ? "recebimento" : "pagamento";
-    partes.push(`Foi identificado um ${mov} de ${valorFormatado} relacionado à ${nome}.`);
-  } else if (descricao) {
-    partes.push(`Documento identificado como ${tipo}: ${descricao}.`);
-  } else {
-    partes.push(`Documento do tipo ${tipo} processado e aguardando conferência.`);
-  }
-
-  if (resultado.numero_nota) {
-    partes.push(`Nota Fiscal nº ${resultado.numero_nota}.`);
-  }
-
-  return partes.join(" ");
-}
 
 export const DocumentoService = {
   async upload(
@@ -54,166 +14,8 @@ export const DocumentoService = {
     empresa_id: string,
     usuario_id: string
   ): Promise<DocumentoFinanceiro[]> {
-    // Try API first
-    try {
-      const apiDocs = await DocumentoRepositoryApi.upload(files);
-      return apiDocs;
-    } catch {
-      // Fallback: Dexie
-    }
-
-    const config = await DocumentoConfigRepository.get(empresa_id);
-    const maxSizeMB = config?.limite_tamanho_mb || 10;
-
-    const documentos: DocumentoFinanceiro[] = [];
-
-    for (const file of files) {
-      const typeCheck = DocumentoStorageService.validateFileType(file);
-      if (!typeCheck.valid) throw new Error(typeCheck.error);
-
-      const sizeCheck = DocumentoStorageService.validateFileSize(file, maxSizeMB);
-      if (!sizeCheck.valid) throw new Error(sizeCheck.error);
-
-      const { nome_arquivo_storage, path_storage, arquivo_data } =
-        await DocumentoStorageService.storeFile(empresa_id, file);
-
-      const hash = await DocumentoStorageService.generateChecksum(arquivo_data);
-
-      const existingDuplicates = await DocumentoRepository.getAll(empresa_id);
-      const isDuplicate = existingDuplicates.some((d) => d.hash_arquivo === hash && !d.excluido_em);
-      if (isDuplicate) continue;
-
-      const tipo = typeCheck.tipo || "PDF";
-
-      const doc = await DocumentoRepository.create({
-        empresa_id,
-        usuario_upload_id: usuario_id,
-        nome_arquivo_original: file.name,
-        nome_arquivo_storage,
-        path_storage,
-        tipo_arquivo: tipo as DocumentoFinanceiro["tipo_arquivo"],
-        tamanho_bytes: file.size,
-        hash_arquivo: hash,
-        status: "NOVO",
-        tipo_documento_detectado: null,
-        valor_extraido: null,
-        data_extraida: null,
-        favorecido_extraido: null,
-        emitente_extraido: null,
-        descricao_extraida: null,
-        tipo_movimentacao_sugerido: null,
-        categoria_sugerida_id: null,
-        confianca_extracao: null,
-        dados_extraidos_raw: null,
-        dados_estruturados: null,
-        observacoes_ia: null,
-        resumo_executivo: null,
-        lancamento_id: null,
-        usuario_conferencia_id: null,
-        data_conferencia: null,
-        motivo_rejeicao: null,
-        motivo_exclusao: null,
-        exclusao_permanente: null,
-        excluido_por: null,
-        data_exclusao: null,
-        tentativas_processamento: 0,
-        ultimo_erro: null,
-        arquivo_data,
-        excluido_em: null,
-      });
-
-      await DocumentoLogRepository.log(empresa_id, doc.id, "UPLOAD", usuario_id, {
-        nome_arquivo: file.name,
-        tamanho_bytes: file.size,
-        tipo_arquivo: tipo,
-      });
-
-      documentos.push(doc);
-    }
-
-    for (const doc of documentos) {
-      this.iniciarProcessamento(doc.id);
-    }
-
-    return documentos;
-  },
-
-  async iniciarProcessamento(documentoId: string): Promise<void> {
-    await DocumentoRepository.update(documentoId, { status: "PROCESSANDO" });
-    const doc = await DocumentoRepository.getById(documentoId);
-    if (!doc) return;
-
-    await DocumentoLogRepository.log(doc.empresa_id, documentoId, "PROCESSAMENTO_INICIADO");
-
-    try {
-      let resultado;
-      if (doc.tipo_arquivo === "XML") {
-        resultado = await DocumentoExtracaoService.extrairDeXML(
-          doc.arquivo_data!,
-          doc.nome_arquivo_original
-        );
-      } else {
-        resultado = await DocumentExtractorService.extract(
-          doc.arquivo_data!,
-          doc.tipo_arquivo,
-          doc.nome_arquivo_original
-        );
-      }
-
-      const aprendizado = await DocumentoAprendizadoService.buscarSugestao(
-        doc.empresa_id,
-        resultado.emitente,
-        resultado.favorecido
-      );
-
-      const categoriaFinal = aprendizado.aplicado && aprendizado.categoria_id
-        ? aprendizado.categoria_id
-        : null;
-
-      const resumo = gerarResumoExecutivo(resultado);
-
-      await DocumentoRepository.update(documentoId, {
-        tipo_documento_detectado: resultado.tipo_documento,
-        valor_extraido: resultado.valor,
-        data_extraida: resultado.data,
-        favorecido_extraido: resultado.favorecido,
-        emitente_extraido: resultado.emitente,
-        descricao_extraida: resultado.descricao,
-        tipo_movimentacao_sugerido: resultado.tipo_movimentacao,
-        categoria_sugerida_id: categoriaFinal || null,
-        confianca_extracao: resultado.confianca,
-        dados_extraidos_raw: JSON.stringify(resultado),
-        dados_estruturados: resultado.dados_estruturados ? JSON.stringify(resultado.dados_estruturados) : null,
-        observacoes_ia: resultado.observacoes,
-        resumo_executivo: resumo,
-        status: "AGUARDANDO_CONFERENCIA",
-        tentativas_processamento: doc.tentativas_processamento + 1,
-      });
-
-      await DocumentoLogRepository.log(doc.empresa_id, documentoId, "PROCESSAMENTO_CONCLUIDO", null, {
-        confianca: resultado.confianca,
-        tipo_documento: resultado.tipo_documento,
-        aprendizado_aplicado: aprendizado.aplicado,
-      });
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Erro desconhecido no processamento";
-      const tentativas = doc.tentativas_processamento + 1;
-
-      await DocumentoRepository.update(documentoId, {
-        status: "ERRO",
-        tentativas_processamento: tentativas,
-        ultimo_erro: errorMsg,
-      });
-
-      await DocumentoLogRepository.log(doc.empresa_id, documentoId, "PROCESSAMENTO_ERRO", null, {
-        erro: errorMsg,
-        tentativa: tentativas,
-      });
-
-      if (tentativas < 3) {
-        setTimeout(() => this.iniciarProcessamento(documentoId), 5000);
-      }
-    }
+    const apiDocs = await DocumentoRepositoryApi.upload(files);
+    return apiDocs;
   },
 
   async confirmar(
@@ -352,8 +154,7 @@ export const DocumentoService = {
     await DocumentoRepositoryApi.excluirPermanente(documentoId);
   },
 
-  async reprocessar(documentoId: string, empresa_id: string): Promise<void> {
+  async reprocessar(documentoId: string): Promise<void> {
     await DocumentoRepositoryApi.reprocessar(documentoId);
-    this.iniciarProcessamento(documentoId);
   },
 };

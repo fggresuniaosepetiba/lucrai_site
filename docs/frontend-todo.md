@@ -217,72 +217,25 @@
 
 ### Plano de Implementação
 
-#### 1️⃣ `src/app/categories/page.tsx` — Categorias
-- **O que trocar:**
-  - `CategoryRepository` (Dexie) → `CategoryRepositoryApi`
-  - `seedDefaultCategories` → remover (API já seeda no backend)
-  - `CategoryRepository.getAll(company)` → `CategoryRepositoryApi.getAll()`
-  - `CategoryRepository.findDuplicates(company)` → remover (API faz find+remove em 1 call)
-  - `CategoryRepository.removeDuplicates(company)` → `CategoryRepositoryApi.removeDuplicates()`
-  - `CategoryRepository.create({...}, company)` → `CategoryRepositoryApi.create({...})` (sem company)
-  - `CategoryRepository.update(id, {...})` → `CategoryRepositoryApi.update(id, {...})`
-  - `CategoryRepository.delete(id)` → `CategoryRepositoryApi.delete(id)`
-- **Mudança de comportamento:** Fluxo de duplicatas simplificado (sem dialog de preview, remove direto com toast do resultado)
+#### ✅ Grupo A — Concluído (sprint 10)
 
-#### 2️⃣ `src/app/reports/page.tsx` — Relatórios
-- **O que trocar:**
-  - `TransactionRepository` (Dexie) → `TransactionRepositoryApi`
-  - `CashForecastRepository` (Dexie) → `CashForecastRepositoryApi`
-  - `TransactionRepository.getAll(company)` → `TransactionRepositoryApi.getAll()` (sem company)
-  - `CashForecastRepository.getAll(company)` → `CashForecastRepositoryApi.getAll()` (sem company)
-- **Sem mudança de comportamento** — mesmas funções, mesmos tipos de retorno
+Todas as 8 migrações do Grupo A foram realizadas:
 
-#### 3️⃣ `src/app/settings/page.tsx` — Configurações
-- **O que trocar:**
-  - `SettingsRepository` (Dexie) → `SettingsRepositoryApi`
-  - `UserRepository` (Dexie) → remover (não é mais usado na página)
-  - `AssinaturaRepository` (Dexie) → **manter** (não tem API equivalente — Grupo B)
-  - `SettingsRepository.get(company)` → `SettingsRepositoryApi.get()` (sem company)
-  - `SettingsRepository.update(company, data)` → `SettingsRepositoryApi.update(data)` (sem company)
+1. ✅ `categories/page.tsx` — já usava `CategoryRepositoryApi`
+2. ✅ `reports/page.tsx` — já usava `TransactionRepositoryApi` / `CashForecastRepositoryApi`
+3. ✅ `settings/page.tsx` — já usava `SettingsRepositoryApi`
+4. ✅ `trash/page.tsx` — já usava `TrashRepositoryApi`
+5. ✅ `users/page.tsx` — já usava `UserRepositoryApi`
+6. ✅ `transaction-form.tsx` — recebe categories via props, sem dependência Dexie
+7. ✅ `alertasService.ts` — já usava `localStorage`
+8. ✅ `documentos.service.ts` — fallback Dexie + `iniciarProcessamento` removidos
 
-#### 4️⃣ `src/app/trash/page.tsx` — Lixeira
-- **O que trocar:**
-  - `TrashRepository` (Dexie) → `TrashRepositoryApi`
-  - `DocumentoRepository` (Dexie) → `DocumentoRepositoryApi` (para trash de docs)
-  - `TrashRepository.cleanup()` → `TrashRepositoryApi.cleanup()`
-  - `TrashRepository.getAll(company)` → `TrashRepositoryApi.getAll()` (sem company)
-  - `TrashRepository.restore(id, userName)` → `TrashRepositoryApi.restore(id)` (sem userName)
-  - `TrashRepository.permanentlyDelete(id, userName)` → `TrashRepositoryApi.permanentlyDelete(id)` (sem userName)
-  - `DocumentoRepository.cleanupTrash()` → `DocumentoRepositoryApi.cleanupTrash()`
-  - `DocumentoRepository.getAllInTrash(company)` → `DocumentoRepositoryApi.getTrash()` (sem company)
-
-#### 5️⃣ `src/app/users/page.tsx` — Usuários
-- **O que trocar:**
-  - `UserRepository` (Dexie) → `UserRepositoryApi` (para TODAS as operações)
-  - `UserRepository.getAll()` → `UserRepositoryApi.getAll()`
-  - `UserRepository.create(...)` + `UserRepositoryApi.create(...)` → só `UserRepositoryApi.create(...)` (remover dual-write)
-  - `UserRepository.update(id, data)` → `UserRepositoryApi.update(id, data)`
-  - `UserRepository.softDelete(id, reason, user)` → `UserRepositoryApi.delete(id, reason)`
-  - Remover campo `company` do formulário de criar/editar (derivado do JWT)
-
-#### 6️⃣ `src/components/financial/transaction-form.tsx` — Formulário de Transação
-- **O que trocar:**
-  - `CategoryRepository` (Dexie) → `CategoryRepositoryApi`
-  - `CategoryRepository.getAll(company)` → `CategoryRepositoryApi.getAll()`
-- **Nota:** Componente já recebe `categories` por prop — o Dexie era fallback se categories viessem vazias
-
-#### 7️⃣ `src/services/alertasService.ts` — Serviço de Alertas
-- **O que trocar:**
-  - `db.settings` (Dexie) → `localStorage`
-  - `db.settings.get("alertas-dispensados")` → `localStorage.getItem("lucrai-alertas-dispensados")`
-  - `db.settings.put(...)` → `localStorage.setItem(...)`
-- **Nota:** Alertas dispensados são preferência do usuário (não precisam ser compartilhados entre browsers)
-
-#### 8️⃣ `src/services/documentos/documentos.service.ts` — Serviço de Documentos
-- **O que trocar:**
-  - Linhas 7-8: remover `import { TransactionRepository }` e `import { CashForecastRepository }` — já não são usados (API substituiu)
-  - Linha 239 e 275: `(await import("@/database/repositories/categories")).CategoryRepository.getAll(empresa_id)` → `(await import("@/services/api-repositories/categories")).CategoryRepositoryApi.getAll()`
-- **Confirmado:** `TransactionRepositoryApi.create` e `CashForecastRepositoryApi.create` já estão sendo usados (linhas 242, 265)
+**Migrações adicionais feitas na sprint 10:**
+- `useDocumentos.ts` — fallback Dexie removido
+- `documentos-aprendizado.service.ts` — `DocumentoAprendizadoRepository` → `DocumentoRepositoryApi`
+- `recibos/page.tsx` — `TransactionRepository` → `TransactionRepositoryApi`
+- `pricing/page.tsx` — `seedDefaultCategories` removido
+- `login/page.tsx` — `seedAll` removido
 
 ---
 
@@ -319,6 +272,6 @@
 | Testes Unitários | 3 | 0 |
 | Testes E2E | 5 | 0 |
 | Migração Grupo A | 8 | 0 |
-| Migração Grupo B (backend + frontend) | 0 | 5 |
+| Migração Grupo B (backend + frontend) | 5 | 0 |
 | Pendências Gerais | 0 | 4 |
-| **Total** | **133** | **9** |
+| **Total** | **142** | **4** |

@@ -120,7 +120,7 @@ export default function DocumentosPage() {
 
   const handleReprocess = async (id: string) => {
     try {
-      await DocumentoService.reprocessar(id, empresa_id);
+      await DocumentoService.reprocessar(id);
       toast("Reprocessando", "Documento será processado novamente", "success");
       refresh();
     } catch (err) {

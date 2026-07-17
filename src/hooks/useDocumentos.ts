@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { DocumentoRepository, DocumentoConfigRepository } from "@/database/repositories/documentos";
 import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import type { UpdateConfigRequest } from "@/services/api-repositories/documents";
 import type { DocumentoFinanceiro, DocumentoConfiguracao, DocumentoStats } from "@/types";
@@ -19,16 +18,8 @@ export function useDocumentos(empresa_id: string) {
       const now = new Date();
       const s = await DocumentoRepositoryApi.getStats(now.getMonth() + 1, now.getFullYear());
       setStats(s);
-    } catch {
-      try {
-        const docs = await DocumentoRepository.getAll(empresa_id);
-        setDocumentos(docs);
-        const now = new Date();
-        const s = await DocumentoRepository.getStats(empresa_id, now.getMonth() + 1, now.getFullYear());
-        setStats(s);
-      } catch (err) {
-        console.error("Error loading documentos:", err);
-      }
+    } catch (err) {
+      console.error("Error loading documentos:", err);
     }
   }, [empresa_id]);
 
@@ -51,8 +42,7 @@ export function useAguardandoCount(empresa_id: string) {
         const stats = await DocumentoRepositoryApi.getStats(new Date().getMonth() + 1, new Date().getFullYear());
         if (!cancelled) setCount(stats.aguardando);
       } catch {
-        const c = await DocumentoRepository.getAguardandoCount(empresa_id);
-        if (!cancelled) setCount(c);
+        // silently ignore
       }
     };
     check();
@@ -73,13 +63,8 @@ export function useDocumentoConfig(empresa_id: string) {
     try {
       const c = await DocumentoRepositoryApi.getConfig();
       setConfig(c);
-    } catch {
-      try {
-        const c = await DocumentoConfigRepository.get(empresa_id);
-        setConfig(c ?? null);
-      } catch (err) {
-        console.error("Error loading documento config:", err);
-      }
+    } catch (err) {
+      console.error("Error loading documento config:", err);
     }
     setLoading(false);
   }, [empresa_id]);

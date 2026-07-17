@@ -340,16 +340,17 @@
 
 ---
 
-## Grupo B: Backend pendente (features que só existem no frontend Dexie)
+## Grupo B: Backend completo ✅
 
-Essas features não têm controller, entidade, repositório ou migration no backend .NET.
-Necessário criar backend completo para cada uma:
+Os 5 módulos do Grupo B já possuem backend completo (controllers, entities, repositories, migrations, DI registration):
 
-- [ ] **Recibos** — CRUD de recibos (emissão, cancelamento, listagem)
-- [ ] **Insumos** — Matéria-prima para Precificação
-- [ ] **Custos Fixos** — Custos fixos mensais para Precificação
-- [ ] **Assinatura** — Configuração de assinatura digital para recibos
-- [ ] **Eventos de Auditoria (Recibos)** — Log de eventos específicos de recibos
+- [x] **Recibos** — CRUD de recibos com emissão, cancelamento, listagem
+- [x] **Insumos** — Matéria-prima para Precificação
+- [x] **Custos Fixos** — Custos fixos mensais para Precificação
+- [x] **Assinatura** — Configuração de assinatura digital para recibos
+- [x] **Eventos de Auditoria (Recibos)** — Log de eventos específicos de recibos
+
+> **Nota:** Os repositórios Dexie que duplicavam esses dados foram removidos nas sprints 9 e 10. O frontend agora usa exclusivamente os API repositories.
 
 ---
 
@@ -366,7 +367,7 @@ Necessário criar backend completo para cada uma:
 | 7 — CI/CD | ~4 itens | 4 | 0 |
 | 8 — Testes (Back-end) | ~13 itens | 13 | 0 |
 | 9 — Documentos Financeiros | ~30 itens | 30 | 0 |
-| Grupo B (backend) | ~5 itens | 0 | 5 |
+| Grupo B (backend) | 5 | 5 | 0 |
 | **Total** | **~165 itens** | **141** | **24** |
 
 > **Nota:** Itens de frontend (testes unitários, E2E, integração de API) foram movidos para `docs/frontend-todo.md`.

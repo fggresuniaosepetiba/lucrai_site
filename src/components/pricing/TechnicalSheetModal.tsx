@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 
 import { Combobox } from "@/components/ui/combobox";
 import { formatCurrency } from "@/lib/utils";
-import { InsumosRepository } from "@/database/repositories/insumos";
+import { InsumoRepositoryApi } from "@/services/api-repositories/insumos";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "@/components/ui/toast";
 import { Plus, Trash2, Package, X, FileText } from "lucide-react";
@@ -58,7 +58,7 @@ export function TechnicalSheetModal({ onApply }: Props) {
 
   const loadInsumos = useCallback(async () => {
     if (!company) return;
-    const all = await InsumosRepository.getAll(company);
+    const all = await InsumoRepositoryApi.getAll();
     setInsumos(all);
   }, [company]);
 
@@ -145,17 +145,13 @@ export function TechnicalSheetModal({ onApply }: Props) {
       return;
     }
     try {
-      await InsumosRepository.create(
-        {
-          nome: quickNome.trim(),
-          categoria: quickCategoria.trim(),
-          unidadeMedida: quickUnidade,
-          quantidadeComprada: quickQuantidade,
-          valorPago: quickValor,
-          custoPorUnidade: quickQuantidade > 0 ? quickValor / quickQuantidade : 0,
-        },
-        company
-      );
+      await InsumoRepositoryApi.create({
+        nome: quickNome.trim(),
+        categoria: quickCategoria.trim(),
+        unidadeMedida: quickUnidade,
+        quantidadeComprada: quickQuantidade,
+        valorPago: quickValor,
+      });
       toast("Insumo cadastrado com sucesso!", undefined, "success");
       setShowQuickForm(false);
       setQuickNome("");

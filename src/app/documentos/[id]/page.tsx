@@ -79,7 +79,7 @@ export default function DetalheDocumentoPage() {
   const handleReprocess = async () => {
     if (!doc) return;
     try {
-      await DocumentoService.reprocessar(documentoId, empresa_id);
+      await DocumentoService.reprocessar(documentoId);
       toast("Reprocessando", "Documento será processado novamente", "success");
       loadData();
     } catch (err) {

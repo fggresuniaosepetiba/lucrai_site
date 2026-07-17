@@ -13,7 +13,7 @@ import { ReciboFilters } from "@/components/recibos/recibo-filters";
 import { RecibosRepositoryApi } from "@/services/api-repositories/recibos";
 import { SignatureRepositoryApi } from "@/services/api-repositories/signature";
 import { SettingsRepositoryApi } from "@/services/api-repositories/settings";
-import { TransactionRepository } from "@/database/repositories/transactions";
+import { TransactionRepositoryApi } from "@/services/api-repositories/transactions";
 import { downloadPdf, printRecibo } from "@/services/recibos/reciboPdfService";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -143,19 +143,15 @@ function RecibosPage() {
         await RecibosRepositoryApi.update(recibo.id, { lancamentoId: data.lancamentoId });
         toast("Recibo criado e vinculado", `Recibo ${recibo.numero} vinculado ao lançamento`, "success");
       } else if (criarLancamento) {
-        const lancamento = await TransactionRepository.create(
-          {
-            type: data.tipo === "recebimento" ? "income" : "expense",
-            value: data.valor,
-            categoryId: "",
-            categoryName: "Recibo",
-            description: `Recibo ${recibo.numero} - ${data.referente}`,
-            date: data.data,
-            observation: `Gerado automaticamente pelo recibo ${recibo.numero}`,
-          },
-          company,
-          userName
-        );
+        const lancamento = await TransactionRepositoryApi.create({
+          type: data.tipo === "recebimento" ? "income" : "expense",
+          value: data.valor,
+          categoryId: "",
+          categoryName: "Recibo",
+          description: `Recibo ${recibo.numero} - ${data.referente}`,
+          date: data.data,
+          observation: `Gerado automaticamente pelo recibo ${recibo.numero}`,
+        });
         await RecibosRepositoryApi.update(recibo.id, { lancamentoId: lancamento.id });
         toast("Recibo e lançamento criados", `Recibo ${recibo.numero} gerado com lançamento financeiro`, "success");
       } else {

@@ -325,15 +325,6 @@ export interface CancelamentoRecibo {
   canceladoPor: string;
 }
 
-export interface EventoAuditoria {
-  id: string;
-  reciboId: string;
-  acao: "criado" | "editado" | "cancelado" | "pdf_baixado" | "impresso";
-  realizadoEm: string;
-  realizadoPor: string;
-  detalhes?: Record<string, unknown>;
-}
-
 export interface Receipt {
   id: string;
   company: string;

@@ -133,6 +133,25 @@
 - [x] Animações de entrada (fade-in, slide-in)
 - [x] Sistema de notificações (toast)
 
+## Dexie removido
+
+Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclusivamente via API REST.
+
+### Repositórios Dexie deletados (14 no total)
+
+**Grupo B (6, sprint 9):** `recibos.ts`, `insumos.ts`, `assinatura.ts`, `audit.ts`, `auditoria-recibos.ts`, `fixed-costs.ts`
+
+**Grupo A (8, sprint 10):** `transactions.ts`, `cash-forecast.ts`, `categories.ts`, `documentos.ts`, `settings.ts`, `trash.ts`, `users.ts`, `pricing.ts`
+
+**Seed removido:** `seed.ts` (Dexie seed)
+
+### Arquivos migrados para API
+
+- `app/recibos/page.tsx` — `TransactionRepository` → `TransactionRepositoryApi`
+- `hooks/useDocumentos.ts` — fallback Dexie removido
+- `services/documentos/documentos.service.ts` — fallback Dexie + `iniciarProcessamento` removidos
+- `services/documentos/documentos-aprendizado.service.ts` — `DocumentoAprendizadoRepository` → `DocumentoRepositoryApi`
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários

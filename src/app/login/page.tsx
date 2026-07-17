@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
-import { seedAll } from "@/database/seed";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,8 +32,6 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    await seedAll();
 
     const success = await login(username, password);
     if (success) {

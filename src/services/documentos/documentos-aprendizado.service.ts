@@ -1,6 +1,6 @@
 "use client";
 
-import { DocumentoAprendizadoRepository } from "@/database/repositories/documentos";
+import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import type { TipoMovimentacao } from "@/types";
 
 export const DocumentoAprendizadoService = {
@@ -38,8 +38,9 @@ export const DocumentoAprendizadoService = {
 
     const chaves = [chaveEmitente, chaveFavorecido].filter(Boolean);
 
+    const all = await DocumentoRepositoryApi.getAprendizado();
     for (const chave of chaves) {
-      const registro = await DocumentoAprendizadoRepository.getByChave(empresa_id, chave);
+      const registro = all.find((a) => a.chave_reconhecimento === chave);
       if (registro) {
         return {
           categoria_id: registro.categoria_id,
@@ -51,26 +52,5 @@ export const DocumentoAprendizadoService = {
     }
 
     return { categoria_id: null, tipo_movimentacao: null, frequencia: 0, aplicado: false };
-  },
-
-  async registrarAprendizado(
-    empresa_id: string,
-    emitente: string | null,
-    favorecido: string | null,
-    categoria_id: string,
-    tipo_movimentacao: TipoMovimentacao
-  ): Promise<void> {
-    const nomeParaChave = favorecido || emitente;
-    if (!nomeParaChave) return;
-
-    const chave = this.gerarChaveReconhecimento(nomeParaChave);
-    if (!chave) return;
-
-    await DocumentoAprendizadoRepository.upsert(
-      empresa_id,
-      chave,
-      categoria_id,
-      tipo_movimentacao
-    );
   },
 };

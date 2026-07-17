@@ -139,7 +139,6 @@ describe("DocumentoService", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     localStorageMock.clear();
-    vi.spyOn(DocumentoService, "iniciarProcessamento").mockResolvedValue();
   });
 
   // ── confirmar ──
@@ -316,20 +315,18 @@ describe("DocumentoService", () => {
 
   // ── reprocessar ──
   describe("reprocessar", () => {
-    it("deve chamar API de reprocessamento e iniciar processamento local", async () => {
+    it("deve chamar API de reprocessamento", async () => {
       const fetchMock = vi.fn().mockResolvedValueOnce(
         mockResponse({ ...documentoConfirmado, status: "PROCESSANDO" })
       );
       globalThis.fetch = fetchMock;
 
-      await DocumentoService.reprocessar("doc-1", "emp-1");
+      await DocumentoService.reprocessar("doc-1");
 
       expect(fetchMock).toHaveBeenCalledWith(
         `${API_BASE}/api/documentos/doc-1/reprocessar`,
         expect.objectContaining({ method: "POST" })
       );
-
-      expect(DocumentoService.iniciarProcessamento).toHaveBeenCalledWith("doc-1");
     });
   });
 });

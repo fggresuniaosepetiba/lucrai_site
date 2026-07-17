@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, AuditLog, PricingProduct, Conta, DocumentoFinanceiro, DocumentoAprendizado, DocumentoLog, DocumentoConfiguracao, DocumentoTrashItem, Receipt, EventoAuditoria, SignatureConfig, FixedCost, Insumo } from "@/types";
+import type { Transaction, Category, AppUser, AppSettings, DeletedTransaction, CashForecast, PricingProduct, Conta, DocumentoFinanceiro, DocumentoAprendizado, DocumentoLog, DocumentoConfiguracao, DocumentoTrashItem } from "@/types";
 
 export class LucraiDatabase extends Dexie {
   transactions!: Table<Transaction, string>;
@@ -8,7 +8,6 @@ export class LucraiDatabase extends Dexie {
   settings!: Table<AppSettings, string>;
   deletedTransactions!: Table<DeletedTransaction, string>;
   cashForecasts!: Table<CashForecast, string>;
-  auditLogs!: Table<AuditLog, string>;
   pricingProducts!: Table<PricingProduct, string>;
   contas!: Table<Conta, string>;
   documentos!: Table<DocumentoFinanceiro, string>;
@@ -16,16 +15,11 @@ export class LucraiDatabase extends Dexie {
   documentoLogs!: Table<DocumentoLog, string>;
   documentoConfiguracoes!: Table<DocumentoConfiguracao, string>;
   documentoTrash!: Table<DocumentoTrashItem, string>;
-  recibos!: Table<Receipt, string>;
-  eventosAuditoria!: Table<EventoAuditoria, string>;
-  configuracoesAssinatura!: Table<SignatureConfig, string>;
-  fixedCosts!: Table<FixedCost, string>;
-  insumos!: Table<Insumo, string>;
 
   constructor() {
     super("lucrai-core");
 
-    this.version(14).stores({
+    this.version(15).stores({
       pricingProducts: "id, name, category, company, createdAt",
       transactions: "id, displayId, type, categoryId, date, createdAt, company",
       categories: "id, type, name, company",
@@ -33,18 +27,12 @@ export class LucraiDatabase extends Dexie {
       settings: "id, company",
       deletedTransactions: "id, originalId, displayId, deletedAt, restoreUntil, company, createdBy",
       cashForecasts: "id, displayId, type, status, expectedDate, company, isRecurring",
-      auditLogs: "id, entityId, entityType, action, company, timestamp",
       contas: "id, email, empresa, createdAt",
       documentos: "id, empresa_id, status, tipo_arquivo, hash_arquivo, criado_em, excluido_em, lancamento_id, *tipo_documento_detectado",
       documentoAprendizado: "id, empresa_id, chave_reconhecimento, categoria_id, frequencia",
       documentoLogs: "id, documento_id, empresa_id, usuario_id, acao, criado_em",
       documentoConfiguracoes: "id, empresa_id",
       documentoTrash: "id, documento_id, empresa_id, excluido_em, restore_until, excluido_por",
-      recibos: "id, numero, tipo, status, data, lancamentoId, origem, criadoEm, company",
-      eventosAuditoria: "id, reciboId, acao, realizadoEm, realizadoPor",
-      configuracoesAssinatura: "id, company",
-      fixedCosts: "id, company",
-      insumos: "id, company, nome, categoria",
     });
   }
 }
