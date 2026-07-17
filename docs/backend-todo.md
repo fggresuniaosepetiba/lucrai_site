@@ -137,10 +137,10 @@
 
 ### 2.6 Trash
 - [x] `TrashController.cs`
-  - [x] `GET /api/trash` — listar itens não expirados
-  - [x] `POST /api/trash/{id}/restore` — restaurar
-  - [x] `DELETE /api/trash/{id}` — excluir permanentemente
-  - [x] `POST /api/trash/cleanup` — limpar expirados
+  - [x] `GET /api/trash` — listar itens não expirados (filtrado por Company)
+  - [x] `POST /api/trash/{id}/restore` — restaurar (filtrado por Company)
+  - [x] `DELETE /api/trash/{id}` — excluir permanentemente (filtrado por Company)
+  - [x] `POST /api/trash/cleanup` — limpar expirados (filtrado por Company)
 
 ### 2.7 Audit
 - [x] `AuditController.cs`
@@ -306,11 +306,11 @@
 - [x] `DocumentoConfigRepository.cs`
 
 ### 9.4 Controller — Lixeira
-- [x] `GET /api/documentos/trash` — listar itens na lixeira
-- [x] `POST /api/documentos/{id}/excluir` — mover para lixeira com motivo
-- [x] `POST /api/documentos/{id}/restaurar` — restaurar da lixeira
-- [x] `DELETE /api/documentos/{id}/permanente` — excluir permanentemente
-- [x] `POST /api/documentos/trash/cleanup` — limpar expirados
+- [x] `GET /api/documentos/trash` — listar itens na lixeira (filtrado por Company)
+- [x] `POST /api/documentos/{id}/excluir` — mover para lixeira com motivo (valida Company)
+- [x] `POST /api/documentos/{id}/restaurar` — restaurar da lixeira (valida Company)
+- [x] `DELETE /api/documentos/{id}/permanente` — excluir permanentemente (valida Company)
+- [x] `POST /api/documentos/trash/cleanup` — limpar expirados (filtrado por Company)
 
 ### 9.5 Controller — Conferência
 - [x] `POST /api/documentos/{id}/confirmar` — confirmar + criar transação/previsão

@@ -216,7 +216,7 @@ public class DocumentosController : ControllerBase
     [HttpPost("trash/cleanup")]
     public async Task<IActionResult> CleanupTrash()
     {
-        var removidos = await _repo.CleanupTrashAsync();
+        var removidos = await _repo.CleanupTrashAsync(Company);
         return Ok(new CleanupResponse(removidos));
     }
 

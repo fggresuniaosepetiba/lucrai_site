@@ -183,11 +183,13 @@ public class DocumentoRepository : IDocumentoRepository
             .FirstOrDefaultAsync(t => t.DocumentoId == documentoId);
     }
 
-    public async Task<int> CleanupTrashAsync()
+    public async Task<int> CleanupTrashAsync(string? company = null)
     {
-        var expired = await _context.Set<DocumentoTrashItem>()
-            .Where(t => t.ExpiracaoEm < DateTime.UtcNow)
-            .ToListAsync();
+        var query = _context.Set<DocumentoTrashItem>()
+            .Where(t => t.ExpiracaoEm < DateTime.UtcNow);
+        if (company != null)
+            query = query.Where(t => t.Company == company);
+        var expired = await query.ToListAsync();
 
         if (expired.Count == 0)
             return 0;

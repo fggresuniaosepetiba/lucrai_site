@@ -53,7 +53,7 @@ public class TrashController : ControllerBase
     [HttpPost("cleanup")]
     public async Task<IActionResult> Cleanup()
     {
-        var removed = await _repo.CleanupAsync();
+        var removed = await _repo.CleanupAsync(Company);
         return Ok(new CleanupResponse(removed));
     }
 }

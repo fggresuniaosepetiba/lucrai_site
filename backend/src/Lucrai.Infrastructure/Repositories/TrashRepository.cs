@@ -24,12 +24,13 @@ public class TrashRepository : ITrashRepository
         return await query.OrderByDescending(d => d.DeletedAt).ToListAsync();
     }
 
-    public async Task<List<DeletedItem>> GetAllExpiredAsync()
+    public async Task<List<DeletedItem>> GetAllExpiredAsync(string? company = null)
     {
         var now = DateTime.UtcNow;
-        return await _context.DeletedItems
-            .Where(d => d.RestoreUntil <= now)
-            .ToListAsync();
+        var query = _context.DeletedItems.Where(d => d.RestoreUntil <= now);
+        if (company != null)
+            query = query.Where(d => d.Company == company);
+        return await query.ToListAsync();
     }
 
     public async Task MoveToTrashAsync(DeletedItem item, string? userName)
@@ -132,9 +133,9 @@ public class TrashRepository : ITrashRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<int> CleanupAsync()
+    public async Task<int> CleanupAsync(string? company = null)
     {
-        var expired = await GetAllExpiredAsync();
+        var expired = await GetAllExpiredAsync(company);
         if (expired.Count == 0) return 0;
 
         _context.DeletedItems.RemoveRange(expired);

@@ -17,5 +17,5 @@ public interface IDocumentoRepository
     Task PermanentDeleteAsync(Guid id);
     Task<List<DocumentoTrashItem>> GetAllTrashItemsAsync(string? company);
     Task<DocumentoTrashItem?> GetTrashItemAsync(Guid documentoId);
-    Task<int> CleanupTrashAsync();
+    Task<int> CleanupTrashAsync(string? company = null);
 }
