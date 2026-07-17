@@ -28,7 +28,7 @@ public class TrashController : ControllerBase
             i.Id, i.OriginalId, i.DisplayId, i.EntryType.ToString(),
             i.Type.ToString(), i.Value, i.CategoryName, i.Description,
             i.Date, i.Amount, i.Category, i.ExpectedDate,
-            i.Status?.ToString(), i.Company, i.DeletedAt, i.Reason, i.RestoreUntil
+            i.Status?.ToString(), i.Company, i.CreatedBy, i.DeletedAt, i.Reason, i.RestoreUntil
         ));
         return Ok(result);
     }

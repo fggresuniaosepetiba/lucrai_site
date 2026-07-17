@@ -69,6 +69,7 @@ export interface DeletedTransaction {
   createdAt: string;
   updatedAt: string;
   company: string;
+  createdBy: string;
   deletedAt: string;
   reason: string;
   restoreUntil: string;

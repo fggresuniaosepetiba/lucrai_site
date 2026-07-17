@@ -226,6 +226,7 @@ export interface ApiTrashItem {
   expectedDate: string | null;
   status: string | null;
   company: string;
+  createdBy: string;
   deletedAt: string;
   reason: string;
   restoreUntil: string;

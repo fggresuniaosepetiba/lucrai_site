@@ -15,6 +15,7 @@ public record TrashResponse(
     DateTime? ExpectedDate,
     string? Status,
     string Company,
+    string CreatedBy,
     DateTime DeletedAt,
     string Reason,
     DateTime RestoreUntil

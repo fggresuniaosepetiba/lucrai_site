@@ -19,6 +19,7 @@ function mapTrashItem(t: ApiTrashItem): DeletedTransaction {
     notes: undefined,
     status: t.status as DeletedTransaction["status"],
     company: t.company,
+    createdBy: t.createdBy ?? "",
     createdAt: t.deletedAt,
     updatedAt: t.deletedAt,
     deletedAt: t.deletedAt,

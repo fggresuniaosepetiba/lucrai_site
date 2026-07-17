@@ -25,6 +25,7 @@ public class DeletedItem
     public string? CancelledBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public string CreatedBy { get; set; } = string.Empty;
     public string Company { get; set; } = string.Empty;
     public DateTime DeletedAt { get; set; } = DateTime.UtcNow;
     public string Reason { get; set; } = string.Empty;

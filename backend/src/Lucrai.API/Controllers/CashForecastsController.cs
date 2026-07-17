@@ -129,6 +129,7 @@ public class CashForecastsController : ControllerBase
             ExpectedDate = existing.ExpectedDate,
             Status = existing.Status,
             Notes = existing.Notes,
+            CreatedBy = existing.CreatedBy,
             Company = existing.Company,
             Reason = reason ?? "Excluído pelo usuário",
             DeletedAt = DateTime.UtcNow,

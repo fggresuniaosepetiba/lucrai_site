@@ -68,6 +68,7 @@ public class TrashRepository : ITrashRepository
                 Description = deleted.Description,
                 Date = deleted.Date ?? DateTime.UtcNow,
                 Observation = deleted.Observation,
+                CreatedBy = deleted.CreatedBy,
                 Company = deleted.Company
             };
 
@@ -85,6 +86,7 @@ public class TrashRepository : ITrashRepository
                 ExpectedDate = deleted.ExpectedDate ?? DateTime.UtcNow,
                 Status = deleted.Status ?? ForecastStatus.Predicted,
                 Notes = deleted.Notes,
+                CreatedBy = deleted.CreatedBy,
                 Company = deleted.Company,
                 IsRecurring = false
             };

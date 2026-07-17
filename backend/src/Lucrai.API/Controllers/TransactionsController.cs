@@ -150,6 +150,7 @@ public class TransactionsController : ControllerBase
             Description = existing.Description,
             Date = existing.Date,
             Observation = existing.Observation,
+            CreatedBy = existing.CreatedBy,
             Company = existing.Company,
             Reason = reason ?? "Excluído pelo usuário",
             DeletedAt = DateTime.UtcNow,

@@ -115,6 +115,7 @@ export const CashForecastRepository = {
       cancelledBy: forecast.cancelledBy,
       createdAt: forecast.createdAt,
       updatedAt: forecast.updatedAt,
+      createdBy: forecast.createdBy,
       company: forecast.company,
       deletedAt: now.toISOString(),
       reason,

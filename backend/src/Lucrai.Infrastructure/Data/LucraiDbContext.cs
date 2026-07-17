@@ -163,6 +163,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(d => d.Status).HasConversion<string>().HasMaxLength(15);
             entity.Property(d => d.CancelledReason).HasMaxLength(500);
             entity.Property(d => d.CancelledBy).HasMaxLength(200);
+            entity.Property(d => d.CreatedBy).HasMaxLength(200).IsRequired();
             entity.Property(d => d.Company).HasMaxLength(200).IsRequired();
             entity.Property(d => d.Reason).HasMaxLength(500).IsRequired();
             entity.Property(d => d.Date).HasColumnType("timestamp without time zone");
