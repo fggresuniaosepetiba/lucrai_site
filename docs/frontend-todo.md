@@ -13,7 +13,7 @@
 - [x] TypeScript configurado com strict mode
 - [x] Tailwind CSS com sistema de temas próprio
 - [x] shadcn/ui configurado com componentes base
-- [x] Dexie.js configurado com 7 tabelas e schema version 6
+- [x] Dexie.js configurado com 7 tabelas e schema version 6 (removido na sprint 11)
 - [x] Variáveis de ambiente (.env.local)
 
 ## Autenticação e Sessão
@@ -239,16 +239,21 @@ Todas as 8 migrações do Grupo A foram realizadas:
 
 ---
 
-## Grupo B: Features sem backend API (requer backend + frontend)
+## Grupo B: Features — Backend + Frontend conectados via API
 
-**Problema:** Essas entidades só existem no Dexie. Não têm controller/entidade/repositório no backend .NET.
+**Problema original:** Essas entidades só existiam no Dexie. Não tinham controller/entidade/repositório no backend .NET.
 
-**Escopo futuro (não implementado):**
-- [ ] Recibos (`src/app/recibos/`, `src/database/repositories/recibos.ts`)
-- [ ] Insumos/Pricing (`src/app/pricing/insumos/`, `src/database/repositories/insumos.ts`)
-- [ ] Custos Fixos/Pricing (`src/app/pricing/fixed-costs/`, `src/database/repositories/fixed-costs.ts`)
-- [ ] Assinatura/Recibos (`src/database/repositories/assinatura.ts`)
-- [ ] Auditoria de Recibos (`src/database/repositories/auditoria-recibos.ts`)
+**Situação atual:** Backend completo (controllers, entities, repositories) + Frontend conectado via API repositories. Dexie removido.
+
+### ✅ Concluído
+
+| Módulo | Frontend (API repo) | Backend |
+|--------|-------------------|---------|
+| Recibos | `RecibosRepositoryApi` | Controller + Repository |
+| Insumos | `InsumoRepositoryApi` | Controller + Repository |
+| Custos Fixos | `FixedCostRepositoryApi` | Controller + Repository |
+| Assinatura | `SignatureRepositoryApi` | Controller + Repository |
+| Auditoria de Recibos | Embutido no `RecibosRepositoryApi.createAudit()` | Controller + Repository |
 
 ---
 
@@ -274,4 +279,4 @@ Todas as 8 migrações do Grupo A foram realizadas:
 | Migração Grupo A | 8 | 0 |
 | Migração Grupo B (backend + frontend) | 5 | 0 |
 | Pendências Gerais | 0 | 4 |
-| **Total** | **142** | **4** |
+| **Total** | **147** | **4** |

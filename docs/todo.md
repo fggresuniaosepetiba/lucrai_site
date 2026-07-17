@@ -137,13 +137,15 @@
 
 Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclusivamente via API REST.
 
-### Repositórios Dexie deletados (14 no total)
+### Tudo que foi removido (sprints 9, 10 e 11)
 
-**Grupo B (6, sprint 9):** `recibos.ts`, `insumos.ts`, `assinatura.ts`, `audit.ts`, `auditoria-recibos.ts`, `fixed-costs.ts`
-
-**Grupo A (8, sprint 10):** `transactions.ts`, `cash-forecast.ts`, `categories.ts`, `documentos.ts`, `settings.ts`, `trash.ts`, `users.ts`, `pricing.ts`
-
-**Seed removido:** `seed.ts` (Dexie seed)
+| Item | Detalhes |
+|------|----------|
+| **14 repositórios Dexie** | `recibos.ts`, `insumos.ts`, `assinatura.ts`, `audit.ts`, `auditoria-recibos.ts`, `fixed-costs.ts` (sprint 9) + `transactions.ts`, `cash-forecast.ts`, `categories.ts`, `documentos.ts`, `settings.ts`, `trash.ts`, `users.ts`, `pricing.ts` (sprint 10) |
+| **Seed Dexie** | `src/database/seed.ts` |
+| **Arquivo dexie.ts** | `src/database/dexie.ts` (sprint 11) |
+| **Pasta database/** | `src/database/` — removida completamente (sprint 11) |
+| **Pacote npm** | `dexie` removido do `package.json` (sprint 11) |
 
 ### Arquivos migrados para API
 
@@ -151,6 +153,9 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - `hooks/useDocumentos.ts` — fallback Dexie removido
 - `services/documentos/documentos.service.ts` — fallback Dexie + `iniciarProcessamento` removidos
 - `services/documentos/documentos-aprendizado.service.ts` — `DocumentoAprendizadoRepository` → `DocumentoRepositoryApi`
+- `components/pricing/TechnicalSheetModal.tsx` — `InsumosRepository` → `InsumoRepositoryApi`
+- `app/pricing/page.tsx` — `seedDefaultCategories` removido
+- `app/login/page.tsx` — `seedAll` removido
 
 ## Pendentes
 
