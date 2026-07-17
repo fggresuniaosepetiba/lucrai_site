@@ -25,13 +25,13 @@ export class LucraiDatabase extends Dexie {
   constructor() {
     super("lucrai-core");
 
-    this.version(13).stores({
+    this.version(14).stores({
       pricingProducts: "id, name, category, company, createdAt",
       transactions: "id, displayId, type, categoryId, date, createdAt, company",
       categories: "id, type, name, company",
       users: "id, email, role, company",
       settings: "id, company",
-      deletedTransactions: "id, originalId, displayId, deletedAt, restoreUntil, company",
+      deletedTransactions: "id, originalId, displayId, deletedAt, restoreUntil, company, createdBy",
       cashForecasts: "id, displayId, type, status, expectedDate, company, isRecurring",
       auditLogs: "id, entityId, entityType, action, company, timestamp",
       contas: "id, email, empresa, createdAt",
