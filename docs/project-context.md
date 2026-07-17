@@ -10,7 +10,7 @@ Fornecer às empresas brasileiras uma ferramenta profissional de gestão finance
 
 - **Simples** o suficiente para microempreendedores
 - **Completa** o bastante para atender PMEs estruturadas
-- **Offline-first** — funciona sem depender de servidor remoto
+- **Híbrido (online + offline)** — opera com API remota e fallback local
 - **Multiempresa** — um único sistema atende múltiplos CNPJs
 
 ## Público-Alvo
@@ -27,25 +27,29 @@ LUCRAÍ se posiciona como a camada de inteligência financeira entre o controle 
 
 ## Stack Tecnológica
 
-| Categoria        | Tecnologia                                              |
-|------------------|---------------------------------------------------------|
-| Framework        | Next.js 15 (App Router)                                 |
-| Linguagem        | TypeScript 5.x                                          |
-| Banco de Dados   | IndexedDB via Dexie.js 4.x (client-side)                |
-| Estado           | Zustand 5.x com persistência localStorage               |
-| UI               | shadcn/ui + Radix UI + Tailwind CSS 3.x                 |
-| Ícones           | Lucide React                                            |
-| Gráficos         | Recharts 2.x                                            |
-| Formulários      | react-hook-form + zod                                   |
-| Datas            | date-fns                                                |
-| Tema             | Sistema próprio com 3 temas (Normal, Dark Mega, Clean)  |
+| Categoria          | Tecnologia                                              |
+|--------------------|---------------------------------------------------------|
+| Framework Frontend | Next.js 15 (App Router) + TypeScript 5.x                |
+| Framework Backend  | .NET 10 (C#) — ASP.NET Web API                          |
+| Banco de Dados     | PostgreSQL (produção) + IndexedDB Dexie.js (fallback)   |
+| ORM                | Entity Framework Core 10 + Npgsql                       |
+| Autenticação       | JWT + ASP.NET Core Identity                             |
+| Estado (FE)        | Zustand 5.x com persistência localStorage               |
+| UI (FE)            | shadcn/ui + Radix UI + Tailwind CSS 3.x                 |
+| Ícones             | Lucide React                                            |
+| Gráficos           | Recharts 2.x                                            |
+| Formulários        | react-hook-form + zod                                   |
+| Datas              | date-fns                                                |
+| Tema               | Sistema próprio com 3 temas (Normal, Dark Mega, Clean)  |
+| Infra              | Docker + Railway (deploy)                                |
 
 ## Arquitetura
 
-Aplicação **100% client-side** (SPA). Não há backend ou API remota. Todos os dados são armazenados no IndexedDB do navegador usando Dexie.js. O Next.js é usado apenas como framework de interface e roteamento (páginas estáticas geradas no build).
+Aplicação **full-stack** com frontend Next.js 15 e backend .NET 10 + PostgreSQL. O frontend se comunica com a API REST via fetch, utilizando JWT para autenticação. O IndexedDB (Dexie.js) existe como fallback offline para entidades que ainda não possuem backend.
 
 ```
-[ Navegador ] → [ Next.js (React) ] → [ Dexie.js ] → [ IndexedDB ]
+[ Navegador ] → [ Next.js (React) ] → [ API Repositories ] → HTTP → [ .NET API ] → [ EF Core ] → [ PostgreSQL ]
+                                                          ↘ fallback → [ Dexie.js ] → [ IndexedDB ]
 ```
 
 ## Principais Módulos
@@ -56,10 +60,14 @@ Aplicação **100% client-side** (SPA). Não há backend ou API remota. Todos os
 | Financeiro          | CRUD de transações realizadas (entradas/saídas)                        |
 | Previsão de Caixa   | Planejamento de recebimentos e pagamentos futuros                      |
 | Categorias          | Gerenciamento de categorias financeiras por tipo                       |
+| Indicadores         | Central de Inteligência Financeira (10 sub-abas)                       |
 | Relatórios          | Relatório anual com separação realizado/previsto                       |
 | Lixeira             | Sistema de exclusão temporária (30 dias) com restauração               |
 | Usuários            | Gestão de usuários com controle de acesso por papel                    |
 | Configurações       | Dados da empresa, logo, tema e alteração de senha                      |
+| Documentos          | Upload e gestão de documentos fiscais com reconhecimento automático     |
+| Pricing             | Precificação com insumos, custos fixos e margem                        |
+| Recibos             | Emissão de recibos com assinatura digital                              |
 
 ## Entidades Principais
 
@@ -73,8 +81,9 @@ Aplicação **100% client-side** (SPA). Não há backend ou API remota. Todos os
 
 ## Diferenciais Competitivos
 
-- **Offline-first**: funciona completamente offline (dados no navegador)
+- **Arquitetura full-stack**: Next.js + .NET + PostgreSQL — escalável e profissional
 - **Multiempresa**: suporte nativo a múltiplos CNPJs no mesmo sistema
+- **Fallback offline**: dados disponíveis mesmo sem conexão (via IndexedDB)
 - **Previsão de Caixa**: separação clara entre realizado e previsto
 - **Valor por Extenso**: geração automática do valor por extenso em português
 - **Indicador de Saúde**: score financeiro executivo baseado em saldo e margem
@@ -86,8 +95,8 @@ Aplicação **100% client-side** (SPA). Não há backend ou API remota. Todos os
 
 O LUCRAÍ evolui em 5 fases:
 
-1. **MVP** — Gestão financeira essencial (atual)
-2. **Pós-MVP** — Exportação, personalização, experiência aprimorada
+1. **MVP** — Gestão financeira essencial (concluído)
+2. **Pós-MVP** — Exportação, personalização, experiência aprimorada (em andamento)
 3. **Inteligência Financeira** — Métricas avançadas, alertas, projeções
 4. **CFO Digital** — Recomendações automatizadas, cenários, relatórios executivos
 5. **IA Financeira** — Detecção de anomalias, categorização automática, insights preditivos
