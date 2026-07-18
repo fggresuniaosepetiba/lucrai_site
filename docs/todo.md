@@ -157,6 +157,18 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - `app/pricing/page.tsx` — `seedDefaultCategories` removido
 - `app/login/page.tsx` — `seedAll` removido
 
+## Sprint 14 — Dev Experience + Docker Automation
+
+- [x] Endpoint `/api/health` (HealthController)
+- [x] Docker Compose com profiles (`full` para API em container)
+- [x] Healthcheck nos serviços (postgres + api)
+- [x] Script `scripts/wait-for-db.js` — aguarda PostgreSQL ficar pronto
+- [x] `npm run dev:all` aprimorado com wait + graceful shutdown
+- [x] `npm run dev:full` — stack completa em Docker
+- [x] Scripts `scripts/dev.ps1` (Windows) e `scripts/dev.sh` (Unix) com auto-start do Docker
+- [x] `docs/dev-guide.md` — guia de desenvolvimento local
+- [x] `docker-compose.yml` — curl adicionado ao Dockerfile para healthcheck
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários
