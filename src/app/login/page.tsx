@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuthStore } from "@/store/auth-store";
@@ -12,21 +12,12 @@ import { LogIn, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, mustChangePassword, login } = useAuthStore();
+  const { login } = useAuthStore();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    if (isLoading) return;
-    if (isAuthenticated) {
-      const returnUrl = sessionStorage.getItem("lucrai-return-url");
-      sessionStorage.removeItem("lucrai-return-url");
-      router.replace(returnUrl || (mustChangePassword ? "/trocar-senha" : "/dashboard"));
-    }
-  }, [isAuthenticated, isLoading, mustChangePassword, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

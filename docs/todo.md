@@ -169,6 +169,14 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] `docs/dev-guide.md` — guia de desenvolvimento local
 - [x] `docker-compose.yml` — curl adicionado ao Dockerfile para healthcheck
 
+## Sprint 15 — Segurança: Sessão + Timeout de Inatividade
+
+- [x] Token de sessão movido de `localStorage` para `sessionStorage`
+- [x] Race condition no logout corrigida (`await logout()` antes do redirect)
+- [x] Login page nunca auto-redireciona (sempre exige credenciais)
+- [x] InactivityTracker — timeout de 15 minutos com toast de warning
+- [x] Testes atualizados (mock sessionStorage)
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários

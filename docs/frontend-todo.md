@@ -136,6 +136,14 @@
 - [x] Animações de entrada (fade-in, slide-in)
 - [x] Sistema de notificações (toast)
 
+## Autenticação e Sessão (Sprint 15)
+
+- [x] Token de sessão movido de `localStorage` para `sessionStorage` (fechar aba = logout)
+- [x] Race condition no logout corrigida (`logout()` agora é awaitado antes do redirect)
+- [x] Login page nunca auto-redireciona — sempre exige credenciais
+- [x] InactivityTracker — timeout de 15 minutos com toast de warning aos 14 min
+- [x] Testes atualizados para `sessionStorage`
+
 ## Integração com API
 
 - [x] `src/services/api.ts` — cliente HTTP com Bearer token automático + refresh automático + error handling

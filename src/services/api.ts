@@ -23,7 +23,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!skipAuth) {
-    const token = typeof window !== "undefined" ? localStorage.getItem("lucrai-access-token") : null;
+    const token = typeof window !== "undefined" ? sessionStorage.getItem("lucrai-access-token") : null;
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
@@ -32,7 +32,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (res.status === 401 && !skipAuth) {
     const refreshed = await attemptRefresh();
     if (refreshed) {
-      const newToken = localStorage.getItem("lucrai-access-token");
+      const newToken = sessionStorage.getItem("lucrai-access-token");
       headers.set("Authorization", `Bearer ${newToken}`);
       res = await fetch(`${API_URL}${path}`, { ...fetchOptions, headers });
     } else {
@@ -54,7 +54,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 async function attemptRefresh(): Promise<boolean> {
-  const refreshToken = typeof window !== "undefined" ? localStorage.getItem("lucrai-refresh-token") : null;
+  const refreshToken = typeof window !== "undefined" ? sessionStorage.getItem("lucrai-refresh-token") : null;
   if (!refreshToken) return false;
 
   try {
@@ -65,8 +65,8 @@ async function attemptRefresh(): Promise<boolean> {
     });
     if (!res.ok) return false;
     const data = await res.json();
-    localStorage.setItem("lucrai-access-token", data.accessToken);
-    localStorage.setItem("lucrai-refresh-token", data.refreshToken);
+    sessionStorage.setItem("lucrai-access-token", data.accessToken);
+    sessionStorage.setItem("lucrai-refresh-token", data.refreshToken);
     return true;
   } catch {
     return false;
@@ -75,9 +75,9 @@ async function attemptRefresh(): Promise<boolean> {
 
 function clearAuth(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("lucrai-access-token");
-  localStorage.removeItem("lucrai-refresh-token");
-  localStorage.removeItem("lucrai-auth");
+  sessionStorage.removeItem("lucrai-access-token");
+  sessionStorage.removeItem("lucrai-refresh-token");
+  sessionStorage.removeItem("lucrai-auth");
 }
 
 export const api = {

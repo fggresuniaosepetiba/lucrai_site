@@ -98,8 +98,8 @@ export function Sidebar() {
   const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/icon-normal.png" : "/images/icon-oficial.png";
   const logoSrc = theme === "clean" ? "/images/light-oficial-sidebar.png" : "/images/lucrai/logo-lucrai-sidebar.png";
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/login");
   };
 

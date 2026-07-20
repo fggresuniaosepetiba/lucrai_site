@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { DocumentoRepositoryApi, type ConfirmarDocumentoRequest, type CleanupResponse } from "@/services/api-repositories/documents";
 import type { DocumentoFinanceiro, DocumentoLog, DocumentoTrashItem, DocumentoAprendizado, DocumentoConfiguracao, DocumentoStats } from "@/types";
 
-const localStorageMock: Storage = (() => {
+const storageMock: Storage = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: (key: string) => store[key] ?? null,
@@ -14,7 +14,8 @@ const localStorageMock: Storage = (() => {
   };
 })();
 
-Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
+Object.defineProperty(globalThis, "sessionStorage", { value: storageMock });
+Object.defineProperty(globalThis, "localStorage", { value: storageMock });
 Object.defineProperty(globalThis, "window", { value: globalThis, writable: true });
 
 if (typeof URL.createObjectURL === "undefined") {
@@ -104,7 +105,7 @@ function mockFetchBlob(blob: Blob) {
 describe("DocumentoRepositoryApi", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    localStorageMock.clear();
+    storageMock.clear();
   });
 
   // ── getAll ──
@@ -187,7 +188,7 @@ describe("DocumentoRepositoryApi", () => {
   // ── getDownloadUrl ──
   describe("getDownloadUrl", () => {
     beforeEach(() => {
-      localStorageMock.setItem("lucrai-access-token", token);
+      storageMock.setItem("lucrai-access-token", token);
     });
 
     it("deve gerar URL de download do documento", async () => {
@@ -216,7 +217,7 @@ describe("DocumentoRepositoryApi", () => {
     });
 
     it("deve fazer request sem token quando nao ha token", async () => {
-      localStorageMock.clear();
+      storageMock.clear();
       mockFetchBlob(new Blob());
 
       await DocumentoRepositoryApi.getDownloadUrl("doc-1");

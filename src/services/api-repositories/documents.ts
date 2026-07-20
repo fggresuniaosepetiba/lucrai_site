@@ -236,7 +236,7 @@ export const DocumentoRepositoryApi = {
   },
 
   async getDownloadUrl(id: string): Promise<string> {
-    const token = localStorage.getItem("lucrai-access-token");
+    const token = sessionStorage.getItem("lucrai-access-token");
     const res = await fetch(`${API_URL}/api/documentos/${id}/download`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });

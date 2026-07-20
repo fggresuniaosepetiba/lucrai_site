@@ -18,7 +18,7 @@ interface AuthState {
 
 function getStoredUser(): UserInfo | null {
   if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem("lucrai-auth");
+  const stored = sessionStorage.getItem("lucrai-auth");
   if (!stored) return null;
   try {
     return JSON.parse(stored);
@@ -29,7 +29,7 @@ function getStoredUser(): UserInfo | null {
 
 function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("lucrai-access-token");
+  return sessionStorage.getItem("lucrai-access-token");
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -41,9 +41,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (username: string, password: string) => {
     try {
       const data = await api.post<LoginResponse>("/api/auth/login", { email: username, password }, true);
-      localStorage.setItem("lucrai-access-token", data.accessToken);
-      localStorage.setItem("lucrai-refresh-token", data.refreshToken);
-      localStorage.setItem("lucrai-auth", JSON.stringify(data.user));
+      sessionStorage.setItem("lucrai-access-token", data.accessToken);
+      sessionStorage.setItem("lucrai-refresh-token", data.refreshToken);
+      sessionStorage.setItem("lucrai-auth", JSON.stringify(data.user));
       set({
         isAuthenticated: true,
         user: data.user,
@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const stored = getStoredUser();
       if (stored) {
         stored.mustChangePassword = false;
-        localStorage.setItem("lucrai-auth", JSON.stringify(stored));
+        sessionStorage.setItem("lucrai-auth", JSON.stringify(stored));
       }
       set({ mustChangePassword: false, user: stored });
       return true;
@@ -78,9 +78,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // Ignore logout errors
     }
-    localStorage.removeItem("lucrai-access-token");
-    localStorage.removeItem("lucrai-refresh-token");
-    localStorage.removeItem("lucrai-auth");
+    sessionStorage.removeItem("lucrai-access-token");
+    sessionStorage.removeItem("lucrai-refresh-token");
+    sessionStorage.removeItem("lucrai-auth");
     set({ isAuthenticated: false, user: null, isLoading: false, mustChangePassword: false });
   },
 
@@ -98,7 +98,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         plan: user.plan,
         mustChangePassword: user.mustChangePassword,
       };
-      localStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
+      sessionStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
       set({ user: userInfo, mustChangePassword: user.mustChangePassword });
     } catch {
       // silently fail
@@ -122,12 +122,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         plan: user.plan,
         mustChangePassword: user.mustChangePassword,
       };
-      localStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
+      sessionStorage.setItem("lucrai-auth", JSON.stringify(userInfo));
       set({ isAuthenticated: true, user: userInfo, isLoading: false, mustChangePassword: user.mustChangePassword });
     } catch {
-      localStorage.removeItem("lucrai-access-token");
-      localStorage.removeItem("lucrai-refresh-token");
-      localStorage.removeItem("lucrai-auth");
+      sessionStorage.removeItem("lucrai-access-token");
+      sessionStorage.removeItem("lucrai-refresh-token");
+      sessionStorage.removeItem("lucrai-auth");
       set({ isAuthenticated: false, user: null, isLoading: false, mustChangePassword: false });
     }
   },

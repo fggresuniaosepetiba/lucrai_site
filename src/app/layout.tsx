@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { AuthInitializer } from "@/components/layout/AuthInitializer";
+import { InactivityTracker } from "@/components/layout/InactivityTracker";
 import "./globals.css";
 
 const inter = Inter({
@@ -42,7 +43,9 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
-          <AuthInitializer>{children}</AuthInitializer>
+          <AuthInitializer>
+            <InactivityTracker>{children}</InactivityTracker>
+          </AuthInitializer>
         </ThemeProvider>
       </body>
     </html>
