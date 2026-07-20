@@ -141,7 +141,7 @@ function Calendar({
           "inline-flex items-center justify-center rounded-full text-sm font-normal",
           "h-9 w-9 p-0 aria-selected:opacity-100",
           "hover:bg-accent hover:text-accent-foreground",
-          "aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-disabled:hover:bg-transparent aria-disabled:hover:text-muted-foreground/30",
+          "disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground/30",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "transition-colors"
         ),
