@@ -177,6 +177,12 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] InactivityTracker — timeout de 15 minutos com toast de warning
 - [x] Testes atualizados (mock sessionStorage)
 
+## Sprint 16 — Calendário Financeiro: Bloqueio Visual + Validação Inline
+
+- [x] Datas futuras desabilitadas no calendário (`disabled={{ after: new Date() }}`)
+- [x] Validação inline ao selecionar data (erro aparece antes do submit)
+- [x] Mensagem clara: redireciona o usuário para Previsão de Caixa
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários

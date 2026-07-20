@@ -254,12 +254,17 @@ export function TransactionForm({
                     mode="single"
                     defaultMonth={date ? parseLocalDate(date) : undefined}
                     selected={date ? parseLocalDate(date) : undefined}
+                    disabled={{ after: new Date() }}
                     onSelect={(d) => {
                       if (d) {
-                        setDate(
-                          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-                        );
-                        setErrors((prev) => ({ ...prev, date: "" }));
+                        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                        setDate(dateStr);
+                        const dateCheck = validateTransactionDate(dateStr);
+                        if (!dateCheck.valid) {
+                          setErrors((prev) => ({ ...prev, date: dateCheck.message }));
+                        } else {
+                          setErrors((prev) => ({ ...prev, date: "" }));
+                        }
                         setCalendarOpen(false);
                       }
                     }}

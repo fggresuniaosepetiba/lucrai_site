@@ -144,6 +144,12 @@
 - [x] InactivityTracker — timeout de 15 minutos com toast de warning aos 14 min
 - [x] Testes atualizados para `sessionStorage`
 
+## Financeiro (Sprint 16) — Bloqueio Visual + Validação Inline
+
+- [x] Datas futuras desabilitadas no calendário (`disabled={{ after: new Date() }}`)
+- [x] Validação inline ao selecionar data (erro aparece antes do submit, via `validateTransactionDate`)
+- [x] Mensagem de erro orienta o usuário a usar Previsão de Caixa
+
 ## Integração com API
 
 - [x] `src/services/api.ts` — cliente HTTP com Bearer token automático + refresh automático + error handling
