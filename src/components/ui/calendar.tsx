@@ -135,12 +135,13 @@ function Calendar({
         week: "flex w-full mt-0.5",
         day: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
-          "h-9 w-9"
+          "h-9 w-9 rounded-full"
         ),
         day_button: cn(
           "inline-flex items-center justify-center rounded-full text-sm font-normal",
           "h-9 w-9 p-0 aria-selected:opacity-100",
           "hover:bg-accent hover:text-accent-foreground",
+          "aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-disabled:hover:bg-transparent aria-disabled:hover:text-muted-foreground/30",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "transition-colors"
         ),
