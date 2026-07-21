@@ -68,7 +68,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
         if (category != null)
         {
             _context.Categories.Remove(category);

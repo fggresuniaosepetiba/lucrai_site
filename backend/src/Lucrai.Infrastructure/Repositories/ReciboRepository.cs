@@ -25,7 +25,8 @@ public class ReciboRepository : IReciboRepository
 
     public async Task<Recibo?> GetByIdAsync(Guid id)
     {
-        return await _context.Recibos.FindAsync(id);
+        return await _context.Recibos
+            .FirstOrDefaultAsync(r => r.Id == id);
     }
 
     public async Task<Recibo> CreateAsync(Recibo recibo)
@@ -51,7 +52,8 @@ public class ReciboRepository : IReciboRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var recibo = await _context.Recibos.FindAsync(id);
+        var recibo = await _context.Recibos
+            .FirstOrDefaultAsync(r => r.Id == id);
         if (recibo != null)
         {
             _context.Recibos.Remove(recibo);
@@ -62,8 +64,7 @@ public class ReciboRepository : IReciboRepository
     public async Task<Recibo?> GetByLancamentoIdAsync(Guid lancamentoId)
     {
         return await _context.Recibos
-            .Where(r => r.LancamentoId == lancamentoId)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(r => r.LancamentoId == lancamentoId);
     }
 
     public async Task<string> GetProximoNumeroAsync(string company)

@@ -112,7 +112,7 @@ public class TransactionRepository : ITransactionRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var transaction = await _context.Transactions.FindAsync(id);
+        var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id);
         if (transaction != null)
         {
             _context.Transactions.Remove(transaction);

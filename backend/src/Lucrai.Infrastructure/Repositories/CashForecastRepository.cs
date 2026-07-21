@@ -96,7 +96,7 @@ public class CashForecastRepository : ICashForecastRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var forecast = await _context.CashForecasts.FindAsync(id);
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id);
         if (forecast != null)
         {
             _context.CashForecasts.Remove(forecast);
@@ -106,7 +106,7 @@ public class CashForecastRepository : ICashForecastRepository
 
     public async Task<CashForecast> MarkAsReceivedAsync(Guid id, string? userName)
     {
-        var forecast = await _context.CashForecasts.FindAsync(id)
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Previsão não encontrada");
 
         forecast.Status = ForecastStatus.Received;
@@ -145,7 +145,7 @@ public class CashForecastRepository : ICashForecastRepository
 
     public async Task<CashForecast> MarkAsPaidAsync(Guid id, string? userName)
     {
-        var forecast = await _context.CashForecasts.FindAsync(id)
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Previsão não encontrada");
 
         forecast.Status = ForecastStatus.Paid;
@@ -184,7 +184,7 @@ public class CashForecastRepository : ICashForecastRepository
 
     public async Task<CashForecast> MarkAsCancelledAsync(Guid id, string? reason, string? userName)
     {
-        var forecast = await _context.CashForecasts.FindAsync(id)
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id)
             ?? throw new InvalidOperationException("Previsão não encontrada");
 
         forecast.Status = ForecastStatus.Cancelled;

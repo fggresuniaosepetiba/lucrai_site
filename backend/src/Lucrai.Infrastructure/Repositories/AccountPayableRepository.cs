@@ -75,7 +75,7 @@ public class AccountPayableRepository : IAccountPayableRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var payable = await _context.AccountsPayable.FindAsync(id);
+        var payable = await _context.AccountsPayable.FirstOrDefaultAsync(a => a.Id == id);
         if (payable != null)
         {
             _context.AccountsPayable.Remove(payable);

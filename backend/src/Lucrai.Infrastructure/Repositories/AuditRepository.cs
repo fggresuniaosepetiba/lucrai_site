@@ -29,10 +29,12 @@ public class AuditRepository : IAuditRepository
         return await query.OrderByDescending(a => a.Timestamp).ToListAsync();
     }
 
-    public async Task<List<AuditLog>> GetByEntityAsync(Guid entityId)
+    public async Task<List<AuditLog>> GetByEntityAsync(Guid entityId, string? company)
     {
-        return await _context.AuditLogs
-            .Where(a => a.EntityId == entityId)
+        var query = _context.AuditLogs.Where(a => a.EntityId == entityId);
+        if (company != null)
+            query = query.Where(a => a.Company == company);
+        return await query
             .OrderByDescending(a => a.Timestamp)
             .ToListAsync();
     }

@@ -135,14 +135,14 @@ export default function SettingsPage() {
       return;
     }
 
-    try {
-      await SignatureRepositoryApi.save(assinatura);
-      toast("Assinatura salva", "Dados atualizados com sucesso", "success");
-    } catch (err) {
-      console.error("Erro ao salvar assinatura:", err);
-      toast("Erro", "Não foi possível salvar a assinatura", "destructive");
-    } finally {
-      setSaving(false);
+    if (assinatura.nomeResponsavel.trim() && assinatura.cargo.trim()) {
+      try {
+        await SignatureRepositoryApi.save(assinatura);
+        toast("Assinatura salva", "Dados atualizados com sucesso", "success");
+      } catch (err) {
+        console.error("Erro ao salvar assinatura:", err);
+        toast("Erro", "Não foi possível salvar a assinatura", "destructive");
+      }
     }
 
     await loadSettings();

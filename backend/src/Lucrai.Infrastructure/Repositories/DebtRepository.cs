@@ -75,7 +75,7 @@ public class DebtRepository : IDebtRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var debt = await _context.Debts.FindAsync(id);
+        var debt = await _context.Debts.FirstOrDefaultAsync(d => d.Id == id);
         if (debt != null)
         {
             _context.Debts.Remove(debt);

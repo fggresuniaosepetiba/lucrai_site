@@ -75,7 +75,7 @@ public class InvestmentRepository : IInvestmentRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var investment = await _context.Investments.FindAsync(id);
+        var investment = await _context.Investments.FirstOrDefaultAsync(i => i.Id == id);
         if (investment != null)
         {
             _context.Investments.Remove(investment);

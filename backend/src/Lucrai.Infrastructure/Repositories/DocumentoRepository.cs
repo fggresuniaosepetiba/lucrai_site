@@ -28,7 +28,8 @@ public class DocumentoRepository : IDocumentoRepository
 
     public async Task<DocumentoFinanceiro?> GetByIdAsync(Guid id)
     {
-        return await _context.Documentos.FindAsync(id);
+        return await _context.Documentos
+            .FirstOrDefaultAsync(d => d.Id == id);
     }
 
     public async Task<DocumentoFinanceiro> CreateAsync(DocumentoFinanceiro documento)
@@ -83,7 +84,7 @@ public class DocumentoRepository : IDocumentoRepository
 
     public async Task MoveToTrashAsync(Guid id, string motivo, string excluidoPor, string excluidoPorNome)
     {
-        var doc = await _context.Documentos.FindAsync(id)
+        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id)
             ?? throw new KeyNotFoundException("Documento não encontrado");
 
         var now = DateTime.UtcNow;
@@ -135,7 +136,7 @@ public class DocumentoRepository : IDocumentoRepository
 
     public async Task RestoreFromTrashAsync(Guid id)
     {
-        var doc = await _context.Documentos.FindAsync(id)
+        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id)
             ?? throw new KeyNotFoundException("Documento não encontrado");
 
         var trashItem = await _context.Set<DocumentoTrashItem>()
@@ -155,7 +156,7 @@ public class DocumentoRepository : IDocumentoRepository
 
     public async Task PermanentDeleteAsync(Guid id)
     {
-        var doc = await _context.Documentos.FindAsync(id);
+        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id);
         var trashItem = await _context.Set<DocumentoTrashItem>()
             .FirstOrDefaultAsync(t => t.DocumentoId == id);
 

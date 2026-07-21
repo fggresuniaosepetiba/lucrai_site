@@ -24,7 +24,7 @@ public class PricingRepository : IPricingRepository
 
     public async Task<PricingProduct?> GetByIdAsync(Guid id)
     {
-        return await _context.PricingProducts.FindAsync(id);
+        return await _context.PricingProducts.FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<PricingProduct> CreateAsync(PricingProduct product)
@@ -46,7 +46,7 @@ public class PricingRepository : IPricingRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var product = await _context.PricingProducts.FindAsync(id);
+        var product = await _context.PricingProducts.FirstOrDefaultAsync(p => p.Id == id);
         if (product != null)
         {
             _context.PricingProducts.Remove(product);

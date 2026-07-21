@@ -17,10 +17,12 @@ public class UsersController : ControllerBase
         _repo = repo;
     }
 
+    private string Company => HttpContext.Items["Company"] as string ?? "";
+
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var users = await _repo.GetAllAsync();
+        var users = await _repo.GetAllAsync(Company);
         var result = users.Select(u => new UserResponse(
             u.Id, u.Name, u.Email ?? "", u.Role.ToString(),
             u.Company, u.Plan.ToString(), u.MustChangePassword,
@@ -32,7 +34,7 @@ public class UsersController : ControllerBase
     [HttpGet("active")]
     public async Task<IActionResult> GetActive()
     {
-        var users = await _repo.GetActiveAsync();
+        var users = await _repo.GetActiveAsync(Company);
         var result = users.Select(u => new UserResponse(
             u.Id, u.Name, u.Email ?? "", u.Role.ToString(),
             u.Company, u.Plan.ToString(), u.MustChangePassword,
@@ -44,7 +46,7 @@ public class UsersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
-        var user = await _repo.GetByIdAsync(id);
+        var user = await _repo.GetByIdAsync(id, Company);
         if (user == null)
             return NotFound(new { error = "Usuário não encontrado" });
 
@@ -85,7 +87,7 @@ public class UsersController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateUserRequest request)
     {
-        var existing = await _repo.GetByIdAsync(id);
+        var existing = await _repo.GetByIdAsync(id, Company);
         if (existing == null)
             return NotFound(new { error = "Usuário não encontrado" });
 
@@ -106,12 +108,12 @@ public class UsersController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> SoftDelete(string id, [FromQuery] string? reason)
     {
-        var existing = await _repo.GetByIdAsync(id);
+        var existing = await _repo.GetByIdAsync(id, Company);
         if (existing == null)
             return NotFound(new { error = "Usuário não encontrado" });
 
         var deletedBy = HttpContext.Items["UserName"] as string ?? "";
-        await _repo.SoftDeleteAsync(id, reason, deletedBy);
+        await _repo.SoftDeleteAsync(id, reason, deletedBy, Company);
         return Ok(new { message = "Usuário desativado com sucesso" });
     }
 }

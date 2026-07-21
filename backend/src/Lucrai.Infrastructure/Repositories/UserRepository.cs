@@ -18,19 +18,24 @@ public class UserRepository : IUserRepository
         _userManager = userManager;
     }
 
-    public async Task<List<User>> GetAllAsync()
+    public async Task<List<User>> GetAllAsync(string company)
     {
-        return await _context.Users.OrderBy(u => u.Name).ToListAsync();
+        return await _context.Users
+            .Where(u => u.Company == company)
+            .OrderBy(u => u.Name).ToListAsync();
     }
 
-    public async Task<List<User>> GetActiveAsync()
+    public async Task<List<User>> GetActiveAsync(string company)
     {
-        return await _context.Users.Where(u => u.Active).OrderBy(u => u.Name).ToListAsync();
+        return await _context.Users
+            .Where(u => u.Company == company && u.Active)
+            .OrderBy(u => u.Name).ToListAsync();
     }
 
-    public async Task<User?> GetByIdAsync(string id)
+    public async Task<User?> GetByIdAsync(string id, string company)
     {
-        return await _context.Users.FindAsync(id);
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == id && u.Company == company);
     }
 
     public async Task<User?> FindByEmailAsync(string email)
@@ -58,9 +63,10 @@ public class UserRepository : IUserRepository
         return user;
     }
 
-    public async Task SoftDeleteAsync(string id, string? reason, string? deletedBy)
+    public async Task SoftDeleteAsync(string id, string? reason, string? deletedBy, string company)
     {
-        var user = await _context.Users.FindAsync(id)
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == id && u.Company == company)
             ?? throw new InvalidOperationException("Usuário não encontrado");
 
         user.Active = false;

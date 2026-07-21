@@ -48,15 +48,15 @@ public class SettingsController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Update([FromBody] SettingsRequest request)
     {
-        var existing = await _repo.GetAsync(Company);
-        if (existing == null)
-            return NotFound(new { error = "Configurações não encontradas" });
+        var settings = new CompanySettings
+        {
+            CompanyName = request.CompanyName,
+            LogoUrl = request.LogoUrl,
+            PrimaryColor = request.PrimaryColor,
+            Company = Company
+        };
 
-        existing.CompanyName = request.CompanyName;
-        existing.LogoUrl = request.LogoUrl;
-        existing.PrimaryColor = request.PrimaryColor;
-
-        var updated = await _repo.UpdateAsync(Company, existing);
+        var updated = await _repo.UpdateAsync(Company, settings);
         return Ok(new SettingsResponse(updated.Id, updated.CompanyName, updated.LogoUrl, updated.PrimaryColor, updated.Company));
     }
 }

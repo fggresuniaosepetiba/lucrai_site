@@ -24,7 +24,7 @@ public class InsumoRepository : IInsumoRepository
 
     public async Task<Insumo?> GetByIdAsync(Guid id)
     {
-        return await _context.Insumos.FindAsync(id);
+        return await _context.Insumos.FirstOrDefaultAsync(i => i.Id == id);
     }
 
     public async Task<Insumo> CreateAsync(Insumo insumo)
@@ -43,7 +43,7 @@ public class InsumoRepository : IInsumoRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        var insumo = await _context.Insumos.FindAsync(id);
+        var insumo = await _context.Insumos.FirstOrDefaultAsync(i => i.Id == id);
         if (insumo != null)
         {
             _context.Insumos.Remove(insumo);

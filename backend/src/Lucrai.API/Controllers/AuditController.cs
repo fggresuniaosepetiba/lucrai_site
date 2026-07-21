@@ -34,7 +34,7 @@ public class AuditController : ControllerBase
     [HttpGet("entity/{entityId:guid}")]
     public async Task<IActionResult> GetByEntity(Guid entityId)
     {
-        var logs = await _repo.GetByEntityAsync(entityId);
+        var logs = await _repo.GetByEntityAsync(entityId, Company);
         var result = logs.Select(l => new AuditResponse(
             l.Id, l.EntityId, l.EntityType, l.DisplayId,
             l.Action.ToString(), l.Description, l.User,

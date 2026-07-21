@@ -49,6 +49,7 @@ builder.Services.AddScoped<IBalanceAccountRepository, BalanceAccountRepository>(
 
 builder.Services.AddScoped<IDashboardIntelligenceService, DashboardIntelligenceService>();
 builder.Services.AddScoped<IAlertasService, AlertasService>();
+builder.Services.AddScoped<ITenantContext, TenantContext>();
 
 var dbProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
 builder.Services.AddDbContext<LucraiDbContext>(options =>
