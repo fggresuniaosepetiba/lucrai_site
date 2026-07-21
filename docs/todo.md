@@ -188,6 +188,19 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] Adicionado `laura.peixoto` ao `DataSeeder.cs` (Admin/SuperAdmin, Lucraí, senha `123`)
 - [x] `docs/dev-guide.md` atualizado com o novo usuário
 
+## Sprint 18 — Segurança Multi-Tenant + Bug de Configurações
+
+- [x] SettingsController: PUT não retorna mais 404 quando não existe CompanySettings
+- [x] LogoUrl: MaxLength 500 → 2048 (alinhado com validação)
+- [x] Frontend: assinatura só salva se nomeResponsavel e cargo preenchidos
+- [x] ITenantContext: serviço scoped com dados do tenant (Company, UserName, UserId, Plan)
+- [x] TenantContextMiddleware: agora também seta ITenantContext a partir do JWT
+- [x] LucraiDbContext: HasQueryFilter aplicado em todas as 23 entidades com campo Company
+- [x] UsersController + UserRepository: todos os endpoints filtram por empresa
+- [x] AuditController.GetByEntity: escopo por empresa adicionado
+- [x] Todos os `FindAsync(id)` substituídos por `FirstOrDefaultAsync` (14 repositórios)
+- [x] ContasController.GetAll mantido como admin-only (CompanyRegistration não tem Company)
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários
