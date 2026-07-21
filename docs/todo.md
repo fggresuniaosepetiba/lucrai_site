@@ -183,6 +183,11 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] Validação inline ao selecionar data (erro aparece antes do submit)
 - [x] Mensagem clara: redireciona o usuário para Previsão de Caixa
 
+## Sprint 17 — Novo Usuário Seed: Laura Peixoto
+
+- [x] Adicionado `laura.peixoto` ao `DataSeeder.cs` (Admin/SuperAdmin, Lucraí, senha `123`)
+- [x] `docs/dev-guide.md` atualizado com o novo usuário
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários

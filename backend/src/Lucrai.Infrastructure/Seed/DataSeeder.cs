@@ -72,6 +72,17 @@ public static class DataSeeder
                 Company = "Lucraí",
                 EmailConfirmed = true,
                 MustChangePassword = true
+            },
+            new User
+            {
+                UserName = "laura.peixoto",
+                Email = "laura.peixoto",
+                Name = "Laura Peixoto",
+                Role = UserRole.Admin,
+                Plan = UserPlan.SuperAdmin,
+                Company = "Lucraí",
+                EmailConfirmed = true,
+                MustChangePassword = true
             }
         };
 
