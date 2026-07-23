@@ -94,9 +94,9 @@ public class CashForecastRepository : ICashForecastRepository
         return forecast;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id);
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id && f.Company == company);
         if (forecast != null)
         {
             _context.CashForecasts.Remove(forecast);
@@ -104,9 +104,9 @@ public class CashForecastRepository : ICashForecastRepository
         }
     }
 
-    public async Task<CashForecast> MarkAsReceivedAsync(Guid id, string? userName)
+    public async Task<CashForecast> MarkAsReceivedAsync(Guid id, string company, string? userName)
     {
-        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id)
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id && f.Company == company)
             ?? throw new InvalidOperationException("Previsão não encontrada");
 
         forecast.Status = ForecastStatus.Received;
@@ -143,9 +143,9 @@ public class CashForecastRepository : ICashForecastRepository
         return forecast;
     }
 
-    public async Task<CashForecast> MarkAsPaidAsync(Guid id, string? userName)
+    public async Task<CashForecast> MarkAsPaidAsync(Guid id, string company, string? userName)
     {
-        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id)
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id && f.Company == company)
             ?? throw new InvalidOperationException("Previsão não encontrada");
 
         forecast.Status = ForecastStatus.Paid;
@@ -182,9 +182,9 @@ public class CashForecastRepository : ICashForecastRepository
         return forecast;
     }
 
-    public async Task<CashForecast> MarkAsCancelledAsync(Guid id, string? reason, string? userName)
+    public async Task<CashForecast> MarkAsCancelledAsync(Guid id, string company, string? reason, string? userName)
     {
-        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id)
+        var forecast = await _context.CashForecasts.FirstOrDefaultAsync(f => f.Id == id && f.Company == company)
             ?? throw new InvalidOperationException("Previsão não encontrada");
 
         forecast.Status = ForecastStatus.Cancelled;

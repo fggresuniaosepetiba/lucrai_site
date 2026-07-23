@@ -39,7 +39,7 @@ public class CategoriesController : ControllerBase
         if (c == null)
             return NotFound(new { error = "Categoria não encontrada" });
 
-        var count = await _repo.GetTransactionCountAsync(id);
+        var count = await _repo.GetTransactionCountAsync(id, Company);
         return Ok(new CategoryResponse(
             c.Id, c.Name, c.Color, c.Icon, c.Type.ToString(),
             c.Company, c.CreatedBy, c.CreatedAt, count
@@ -97,7 +97,7 @@ public class CategoriesController : ControllerBase
             existing.Type = tType;
 
         var updated = await _repo.UpdateAsync(existing);
-        var count = await _repo.GetTransactionCountAsync(id);
+        var count = await _repo.GetTransactionCountAsync(id, Company);
         return Ok(new CategoryResponse(
             updated.Id, updated.Name, updated.Color, updated.Icon,
             updated.Type.ToString(), updated.Company, updated.CreatedBy, updated.CreatedAt, count
@@ -111,11 +111,11 @@ public class CategoriesController : ControllerBase
         if (existing == null)
             return NotFound(new { error = "Categoria não encontrada" });
 
-        var hasTransactions = await _repo.HasTransactionsAsync(id);
+        var hasTransactions = await _repo.HasTransactionsAsync(id, Company);
         if (hasTransactions)
             return BadRequest(new { error = "Categoria não pode ser excluída pois possui transações vinculadas" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Categoria excluída com sucesso" });
     }
 

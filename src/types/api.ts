@@ -140,6 +140,7 @@ export interface ApiSettings {
   logoUrl: string | null;
   primaryColor: string;
   company: string;
+  userId: string;
 }
 
 // ============ USERS ============

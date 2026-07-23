@@ -30,5 +30,6 @@ function mapSettings(s: ApiSettings): AppSettings {
     logoUrl: s.logoUrl ?? undefined,
     primaryColor: s.primaryColor,
     company: s.company,
+    userId: s.userId,
   };
 }

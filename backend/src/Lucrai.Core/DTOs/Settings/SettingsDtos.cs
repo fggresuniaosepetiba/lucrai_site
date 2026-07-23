@@ -11,5 +11,6 @@ public record SettingsResponse(
     string CompanyName,
     string? LogoUrl,
     string PrimaryColor,
-    string Company
+    string Company,
+    string UserId
 );

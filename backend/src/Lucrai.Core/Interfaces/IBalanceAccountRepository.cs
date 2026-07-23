@@ -10,5 +10,5 @@ public interface IBalanceAccountRepository
     Task<List<BalanceAccount>> GetByNatureAsync(AccountNature nature, string? company, int? year = null, int? month = null);
     Task<BalanceAccount> CreateAsync(BalanceAccount account, string? userName);
     Task<BalanceAccount> UpdateAsync(BalanceAccount account, string? userName);
-    Task DeleteAsync(Guid id);
+    Task DeleteAsync(Guid id, string company);
 }

@@ -89,9 +89,9 @@ public class BalanceAccountRepository : IBalanceAccountRepository
         return account;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var account = await _context.BalanceAccounts.FirstOrDefaultAsync(a => a.Id == id);
+        var account = await _context.BalanceAccounts.FirstOrDefaultAsync(a => a.Id == id && a.Company == company);
         if (account != null)
         {
             _context.BalanceAccounts.Remove(account);

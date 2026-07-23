@@ -66,9 +66,9 @@ public class CategoryRepository : ICategoryRepository
         return category;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+        var category = await _context.Categories.FirstOrDefaultAsync(c => c.Id == id && c.Company == company);
         if (category != null)
         {
             _context.Categories.Remove(category);
@@ -76,14 +76,14 @@ public class CategoryRepository : ICategoryRepository
         }
     }
 
-    public async Task<bool> HasTransactionsAsync(Guid categoryId)
+    public async Task<bool> HasTransactionsAsync(Guid categoryId, string company)
     {
-        return await _context.Transactions.AnyAsync(t => t.CategoryId == categoryId);
+        return await _context.Transactions.AnyAsync(t => t.CategoryId == categoryId && t.Company == company);
     }
 
-    public async Task<int> GetTransactionCountAsync(Guid categoryId)
+    public async Task<int> GetTransactionCountAsync(Guid categoryId, string company)
     {
-        return await _context.Transactions.CountAsync(t => t.CategoryId == categoryId);
+        return await _context.Transactions.CountAsync(t => t.CategoryId == categoryId && t.Company == company);
     }
 
     public async Task<List<IGrouping<string, Category>>> FindDuplicatesAsync(string? company)
@@ -115,7 +115,7 @@ public class CategoryRepository : ICategoryRepository
             foreach (var dup in toRemove)
             {
                 var transactions = await _context.Transactions
-                    .Where(t => t.CategoryId == dup.Id)
+                    .Where(t => t.CategoryId == dup.Id && t.Company == dup.Company)
                     .ToListAsync();
 
                 foreach (var tx in transactions)

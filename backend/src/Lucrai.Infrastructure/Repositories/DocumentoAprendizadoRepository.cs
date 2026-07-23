@@ -57,9 +57,9 @@ public class DocumentoAprendizadoRepository : IDocumentoAprendizadoRepository
         return aprendizado;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var item = await _context.Set<DocumentoAprendizado>().FirstOrDefaultAsync(a => a.Id == id);
+        var item = await _context.Set<DocumentoAprendizado>().FirstOrDefaultAsync(a => a.Id == id && a.Company == company);
         if (item != null)
         {
             _context.Set<DocumentoAprendizado>().Remove(item);

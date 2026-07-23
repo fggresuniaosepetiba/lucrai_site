@@ -73,9 +73,9 @@ public class InvestmentRepository : IInvestmentRepository
         return investment;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var investment = await _context.Investments.FirstOrDefaultAsync(i => i.Id == id);
+        var investment = await _context.Investments.FirstOrDefaultAsync(i => i.Id == id && i.Company == company);
         if (investment != null)
         {
             _context.Investments.Remove(investment);

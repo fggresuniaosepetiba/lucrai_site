@@ -44,6 +44,7 @@ export interface AppSettings {
   logoUrl?: string;
   primaryColor: string;
   company: string;
+  userId: string;
 }
 
 export interface DeletedTransaction {

@@ -157,7 +157,7 @@ public class TransactionsController : ControllerBase
             RestoreUntil = DateTime.UtcNow.AddDays(30),
         }, UserName);
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Transação excluída com sucesso" });
     }
 

@@ -8,7 +8,7 @@ public interface IInvestmentRepository
     Task<Investment?> GetByIdAsync(Guid id, string? company);
     Task<Investment> CreateAsync(Investment investment, string? userName);
     Task<Investment> UpdateAsync(Investment investment, string? userName);
-    Task DeleteAsync(Guid id);
+    Task DeleteAsync(Guid id, string company);
     Task<string> GetNextDisplayIdAsync(string? company);
     Task<(decimal TotalInvestido, int ProjetosAtivos, decimal? ROIMedio)> GetSummaryAsync(string? company);
 }

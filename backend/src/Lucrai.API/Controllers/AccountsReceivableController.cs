@@ -110,7 +110,7 @@ public class AccountsReceivableController : ControllerBase
         if (existing == null)
             return NotFound(new { error = "Conta a Receber não encontrada" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Conta a Receber excluída com sucesso" });
     }
 

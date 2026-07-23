@@ -18,21 +18,28 @@ public class SettingsController : ControllerBase
         _repo = repo;
     }
 
-    private string Company => HttpContext.Items["Company"] as string ?? "";
+    private string Company => HttpContext.Items["Company"] as string;
+    private string UserId => HttpContext.Items["UserId"] as string;
 
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var settings = await _repo.GetAsync(Company);
+        if (string.IsNullOrEmpty(Company) || string.IsNullOrEmpty(UserId))
+            return Unauthorized();
+
+        var settings = await _repo.GetAsync(Company, UserId);
         if (settings == null)
             return NotFound(new { error = "Configurações não encontradas" });
 
-        return Ok(new SettingsResponse(settings.Id, settings.CompanyName, settings.LogoUrl, settings.PrimaryColor, settings.Company));
+        return Ok(new SettingsResponse(settings.Id, settings.CompanyName, settings.LogoUrl, settings.PrimaryColor, settings.Company, settings.UserId));
     }
 
     [HttpPost]
     public async Task<IActionResult> Save([FromBody] SettingsRequest request)
     {
+        if (string.IsNullOrEmpty(Company) || string.IsNullOrEmpty(UserId))
+            return Unauthorized();
+
         var settings = new CompanySettings
         {
             CompanyName = request.CompanyName,
@@ -41,13 +48,16 @@ public class SettingsController : ControllerBase
             Company = Company
         };
 
-        var saved = await _repo.SaveAsync(settings);
-        return Ok(new SettingsResponse(saved.Id, saved.CompanyName, saved.LogoUrl, saved.PrimaryColor, saved.Company));
+        var saved = await _repo.SaveAsync(settings, UserId);
+        return Ok(new SettingsResponse(saved.Id, saved.CompanyName, saved.LogoUrl, saved.PrimaryColor, saved.Company, saved.UserId));
     }
 
     [HttpPut]
     public async Task<IActionResult> Update([FromBody] SettingsRequest request)
     {
+        if (string.IsNullOrEmpty(Company) || string.IsNullOrEmpty(UserId))
+            return Unauthorized();
+
         var settings = new CompanySettings
         {
             CompanyName = request.CompanyName,
@@ -56,7 +66,7 @@ public class SettingsController : ControllerBase
             Company = Company
         };
 
-        var updated = await _repo.UpdateAsync(Company, settings);
-        return Ok(new SettingsResponse(updated.Id, updated.CompanyName, updated.LogoUrl, updated.PrimaryColor, updated.Company));
+        var updated = await _repo.UpdateAsync(Company, UserId, settings);
+        return Ok(new SettingsResponse(updated.Id, updated.CompanyName, updated.LogoUrl, updated.PrimaryColor, updated.Company, updated.UserId));
     }
 }

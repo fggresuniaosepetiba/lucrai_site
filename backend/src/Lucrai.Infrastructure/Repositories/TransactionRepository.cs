@@ -110,9 +110,9 @@ public class TransactionRepository : ITransactionRepository
         return transaction;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id);
+        var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.Company == company);
         if (transaction != null)
         {
             _context.Transactions.Remove(transaction);

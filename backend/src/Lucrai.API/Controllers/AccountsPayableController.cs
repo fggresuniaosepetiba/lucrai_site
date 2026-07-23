@@ -110,7 +110,7 @@ public class AccountsPayableController : ControllerBase
         if (existing == null)
             return NotFound(new { error = "Conta a Pagar não encontrada" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Conta a Pagar excluída com sucesso" });
     }
 

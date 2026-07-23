@@ -208,9 +208,10 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(s => s.CompanyName).HasMaxLength(200).IsRequired();
             entity.Property(s => s.LogoUrl).HasColumnType("text");
             entity.Property(s => s.PrimaryColor).HasMaxLength(9).IsRequired();
+            entity.Property(s => s.UserId).HasMaxLength(200).IsRequired();
             entity.Property(s => s.Company).HasMaxLength(200).IsRequired();
 
-            entity.HasIndex(s => s.Company).IsUnique();
+            entity.HasIndex(s => new { s.UserId, s.Company }).IsUnique();
         });
 
         builder.Entity<CompanyRegistration>(entity =>
@@ -523,28 +524,28 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
 
     private void ApplyTenantFilters(ModelBuilder builder)
     {
-        builder.Entity<Transaction>().HasQueryFilter(t => CurrentCompany == null || t.Company == CurrentCompany);
-        builder.Entity<Category>().HasQueryFilter(c => CurrentCompany == null || c.Company == CurrentCompany);
-        builder.Entity<CashForecast>().HasQueryFilter(f => CurrentCompany == null || f.Company == CurrentCompany);
-        builder.Entity<PricingProduct>().HasQueryFilter(p => CurrentCompany == null || p.Company == CurrentCompany);
-        builder.Entity<DeletedItem>().HasQueryFilter(d => CurrentCompany == null || d.Company == CurrentCompany);
-        builder.Entity<AuditLog>().HasQueryFilter(a => CurrentCompany == null || a.Company == CurrentCompany);
-        builder.Entity<CompanySettings>().HasQueryFilter(s => CurrentCompany == null || s.Company == CurrentCompany);
-        builder.Entity<DismissedAlert>().HasQueryFilter(d => CurrentCompany == null || d.Company == CurrentCompany);
-        builder.Entity<DocumentoFinanceiro>().HasQueryFilter(d => CurrentCompany == null || d.Company == CurrentCompany);
-        builder.Entity<DocumentoTrashItem>().HasQueryFilter(t => CurrentCompany == null || t.Company == CurrentCompany);
-        builder.Entity<DocumentoLog>().HasQueryFilter(l => CurrentCompany == null || l.Company == CurrentCompany);
-        builder.Entity<DocumentoAprendizado>().HasQueryFilter(a => CurrentCompany == null || a.Company == CurrentCompany);
-        builder.Entity<DocumentoConfiguracao>().HasQueryFilter(c => CurrentCompany == null || c.Company == CurrentCompany);
-        builder.Entity<SignatureConfig>().HasQueryFilter(s => CurrentCompany == null || s.Company == CurrentCompany);
-        builder.Entity<FixedCost>().HasQueryFilter(f => CurrentCompany == null || f.Company == CurrentCompany);
-        builder.Entity<Insumo>().HasQueryFilter(i => CurrentCompany == null || i.Company == CurrentCompany);
-        builder.Entity<Recibo>().HasQueryFilter(r => CurrentCompany == null || r.Company == CurrentCompany);
-        builder.Entity<AccountReceivable>().HasQueryFilter(a => CurrentCompany == null || a.Company == CurrentCompany);
-        builder.Entity<AccountPayable>().HasQueryFilter(a => CurrentCompany == null || a.Company == CurrentCompany);
-        builder.Entity<Debt>().HasQueryFilter(d => CurrentCompany == null || d.Company == CurrentCompany);
-        builder.Entity<Investment>().HasQueryFilter(i => CurrentCompany == null || i.Company == CurrentCompany);
-        builder.Entity<BalanceAccount>().HasQueryFilter(b => CurrentCompany == null || b.Company == CurrentCompany);
+        builder.Entity<Transaction>().HasQueryFilter(t => t.Company == CurrentCompany);
+        builder.Entity<Category>().HasQueryFilter(c => c.Company == CurrentCompany);
+        builder.Entity<CashForecast>().HasQueryFilter(f => f.Company == CurrentCompany);
+        builder.Entity<PricingProduct>().HasQueryFilter(p => p.Company == CurrentCompany);
+        builder.Entity<DeletedItem>().HasQueryFilter(d => d.Company == CurrentCompany);
+        builder.Entity<AuditLog>().HasQueryFilter(a => a.Company == CurrentCompany);
+        builder.Entity<CompanySettings>().HasQueryFilter(s => s.Company == CurrentCompany);
+        builder.Entity<DismissedAlert>().HasQueryFilter(d => d.Company == CurrentCompany);
+        builder.Entity<DocumentoFinanceiro>().HasQueryFilter(d => d.Company == CurrentCompany);
+        builder.Entity<DocumentoTrashItem>().HasQueryFilter(t => t.Company == CurrentCompany);
+        builder.Entity<DocumentoLog>().HasQueryFilter(l => l.Company == CurrentCompany);
+        builder.Entity<DocumentoAprendizado>().HasQueryFilter(a => a.Company == CurrentCompany);
+        builder.Entity<DocumentoConfiguracao>().HasQueryFilter(c => c.Company == CurrentCompany);
+        builder.Entity<SignatureConfig>().HasQueryFilter(s => s.Company == CurrentCompany);
+        builder.Entity<FixedCost>().HasQueryFilter(f => f.Company == CurrentCompany);
+        builder.Entity<Insumo>().HasQueryFilter(i => i.Company == CurrentCompany);
+        builder.Entity<Recibo>().HasQueryFilter(r => r.Company == CurrentCompany);
+        builder.Entity<AccountReceivable>().HasQueryFilter(a => a.Company == CurrentCompany);
+        builder.Entity<AccountPayable>().HasQueryFilter(a => a.Company == CurrentCompany);
+        builder.Entity<Debt>().HasQueryFilter(d => d.Company == CurrentCompany);
+        builder.Entity<Investment>().HasQueryFilter(i => i.Company == CurrentCompany);
+        builder.Entity<BalanceAccount>().HasQueryFilter(b => b.Company == CurrentCompany);
         builder.Entity<User>().HasQueryFilter(u => CurrentCompany == null || u.Company == CurrentCompany);
     }
 }

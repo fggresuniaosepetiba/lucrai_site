@@ -73,9 +73,9 @@ public class DebtRepository : IDebtRepository
         return debt;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var debt = await _context.Debts.FirstOrDefaultAsync(d => d.Id == id);
+        var debt = await _context.Debts.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         if (debt != null)
         {
             _context.Debts.Remove(debt);

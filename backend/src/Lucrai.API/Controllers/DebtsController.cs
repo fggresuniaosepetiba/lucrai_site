@@ -119,7 +119,7 @@ public class DebtsController : ControllerBase
         if (existing == null)
             return NotFound(new { error = "Dívida não encontrada" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Dívida excluída com sucesso" });
     }
 

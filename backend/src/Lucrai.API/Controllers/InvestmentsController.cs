@@ -127,7 +127,7 @@ public class InvestmentsController : ControllerBase
         if (existing == null)
             return NotFound(new { error = "Investimento não encontrado" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Investimento excluído com sucesso" });
     }
 

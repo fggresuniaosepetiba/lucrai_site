@@ -61,7 +61,7 @@ public class DocumentoAprendizadoController : ControllerBase
         if (match == null)
             return NotFound(new { error = "Regra de aprendizado não encontrada" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Regra de aprendizado removida" });
     }
 }

@@ -73,9 +73,9 @@ public class AccountReceivableRepository : IAccountReceivableRepository
         return receivable;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var receivable = await _context.AccountsReceivable.FirstOrDefaultAsync(a => a.Id == id);
+        var receivable = await _context.AccountsReceivable.FirstOrDefaultAsync(a => a.Id == id && a.Company == company);
         if (receivable != null)
         {
             _context.AccountsReceivable.Remove(receivable);

@@ -136,7 +136,7 @@ public class CashForecastsController : ControllerBase
             RestoreUntil = DateTime.UtcNow.AddDays(30),
         }, UserName);
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Previsão excluída com sucesso" });
     }
 
@@ -147,7 +147,7 @@ public class CashForecastsController : ControllerBase
         if (f == null)
             return NotFound(new { error = "Previsão não encontrada" });
 
-        var updated = await _repo.MarkAsReceivedAsync(id, UserName);
+        var updated = await _repo.MarkAsReceivedAsync(id, Company, UserName);
         return Ok(new MarkActionResponse(updated.Id, updated.Status.ToString(), "Marcada como recebida"));
     }
 
@@ -158,7 +158,7 @@ public class CashForecastsController : ControllerBase
         if (f == null)
             return NotFound(new { error = "Previsão não encontrada" });
 
-        var updated = await _repo.MarkAsPaidAsync(id, UserName);
+        var updated = await _repo.MarkAsPaidAsync(id, Company, UserName);
         return Ok(new MarkActionResponse(updated.Id, updated.Status.ToString(), "Marcada como paga"));
     }
 
@@ -169,7 +169,7 @@ public class CashForecastsController : ControllerBase
         if (f == null)
             return NotFound(new { error = "Previsão não encontrada" });
 
-        var updated = await _repo.MarkAsCancelledAsync(id, reason, UserName);
+        var updated = await _repo.MarkAsCancelledAsync(id, Company, reason, UserName);
         return Ok(new MarkActionResponse(updated.Id, updated.Status.ToString(), "Marcada como cancelada"));
     }
 

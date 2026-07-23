@@ -140,7 +140,7 @@ public class DocumentoRepository : IDocumentoRepository
             ?? throw new KeyNotFoundException("Documento não encontrado");
 
         var trashItem = await _context.Set<DocumentoTrashItem>()
-            .FirstOrDefaultAsync(t => t.DocumentoId == id)
+            .FirstOrDefaultAsync(t => t.DocumentoId == id && t.Company == company)
             ?? throw new KeyNotFoundException("Item não encontrado na lixeira");
 
         var now = DateTime.UtcNow;
@@ -158,7 +158,7 @@ public class DocumentoRepository : IDocumentoRepository
     {
         var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         var trashItem = await _context.Set<DocumentoTrashItem>()
-            .FirstOrDefaultAsync(t => t.DocumentoId == id);
+            .FirstOrDefaultAsync(t => t.DocumentoId == id && t.Company == company);
 
         if (doc != null)
             _context.Documentos.Remove(doc);

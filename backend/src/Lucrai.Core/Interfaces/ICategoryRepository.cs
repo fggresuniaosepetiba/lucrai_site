@@ -9,9 +9,9 @@ public interface ICategoryRepository
     Task<Category?> GetByIdAsync(Guid id, string? company, string? userId = null);
     Task<Category> CreateAsync(Category category);
     Task<Category> UpdateAsync(Category category);
-    Task DeleteAsync(Guid id);
-    Task<bool> HasTransactionsAsync(Guid categoryId);
-    Task<int> GetTransactionCountAsync(Guid categoryId);
+    Task DeleteAsync(Guid id, string company);
+    Task<bool> HasTransactionsAsync(Guid categoryId, string company);
+    Task<int> GetTransactionCountAsync(Guid categoryId, string company);
     Task<List<IGrouping<string, Category>>> FindDuplicatesAsync(string? company);
     Task<int> RemoveDuplicatesAsync(string? company);
 }

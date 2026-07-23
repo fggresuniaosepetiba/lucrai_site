@@ -139,7 +139,7 @@ public class BalanceAccountsController : ControllerBase
         if (existing == null)
             return NotFound(new { error = "Conta patrimonial não encontrada" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Conta patrimonial excluída com sucesso" });
     }
 }
