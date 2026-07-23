@@ -201,6 +201,17 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] Todos os `FindAsync(id)` substituídos por `FirstOrDefaultAsync` (14 repositórios)
 - [x] ContasController.GetAll mantido como admin-only (CompanyRegistration não tem Company)
 
+## Sprint 19 — Correção Crítica: ApplyTenantFilters Nunca Aplicava
+
+- [x] Removido guard `if (string.IsNullOrEmpty(CurrentCompany)) return;` em ApplyTenantFilters
+- [x] HasQueryFilter alterado para `CurrentCompany == null || entity.Company == CurrentCompany`
+- [x] ReciboRepository: GetByIdAsync/DeleteAsync/GetByLancamentoIdAsync com company filter
+- [x] InsumoRepository: GetByIdAsync/DeleteAsync com company filter
+- [x] PricingRepository: GetByIdAsync/DeleteAsync com company filter
+- [x] DocumentoRepository: GetByIdAsync/MoveToTrashAsync/RestoreFromTrashAsync/PermanentDeleteAsync/GetTrashItemAsync com company filter
+- [x] DocumentoLogRepository: GetByDocumentoAsync com company filter
+- [x] Controllers: fetch-then-verify removido (redundante com filtro no repositório)
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários
