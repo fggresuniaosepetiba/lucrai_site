@@ -43,20 +43,15 @@ async function main() {
     process.exit(0);
   }
 
-  console.log("🐳 Docker Desktop not running. Starting Docker service...");
-
-  try {
-    execSync("net start com.docker.service", { stdio: "pipe", windowsHide: true });
-  } catch {
-    const dockerPath = findDockerDesktop();
-    if (dockerPath) {
-      console.log("   Starting Docker Desktop GUI...");
-      execSync(`"${dockerPath}"`, { stdio: "ignore", windowsHide: true });
-    } else {
-      console.error("❌ Docker Desktop not found. Please start Docker Desktop manually.");
-      process.exit(1);
-    }
+  const dockerPath = findDockerDesktop();
+  if (!dockerPath) {
+    console.error("❌ Docker Desktop not found. Please install Docker Desktop.");
+    console.error("   https://www.docker.com/products/docker-desktop/");
+    process.exit(1);
   }
+
+  console.log("🐳 Docker Desktop not running. Starting it...");
+  execSync(`"${dockerPath}"`, { stdio: "ignore", windowsHide: true });
 
   console.log("⏳ Waiting for Docker to start (up to 120s)...");
   const ready = await waitForDocker();
