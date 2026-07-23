@@ -212,6 +212,15 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] DocumentoLogRepository: GetByDocumentoAsync com company filter
 - [x] Controllers: fetch-then-verify removido (redundante com filtro no repositório)
 
+## Sprint 20 — Componente DatePicker Unificado
+
+- [x] Criado `src/components/ui/date-picker.tsx` — componente reutilizável Popover+Calendar
+- [x] transaction-form.tsx: inline Popover+Calendar → DatePicker
+- [x] recibo-form.tsx: `<Input type="date">` → DatePicker
+- [x] cash-forecast/page.tsx: ambos os date inputs → DatePicker
+- [x] documentos/conferencia/page.tsx: `<Input type="date">` → DatePicker
+- [x] Removidos states e imports de Popover/Calendar/CalendarIcon não utilizados
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários

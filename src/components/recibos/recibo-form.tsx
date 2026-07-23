@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatCurrencyInput, parseCurrencyInput, todayStr } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import { valorPorExtenso } from "@/services/recibos/valorPorExtenso";
 import { validarDocumento, formatarDocumento, validarEmail, detectarTipoDocumento } from "@/services/recibos/cpfCnpjValidator";
 import type { ReciboTipo, ReciboOrigem, SignatureConfig } from "@/types";
@@ -397,12 +398,12 @@ export function ReciboForm({ open, onClose, onSubmit, prefill, assinatura }: Rec
                 <Label htmlFor="data" className="flex items-center gap-1">
                   Data <span className="text-red-400">*</span>
                 </Label>
-                <Input
+                <DatePicker
                   id="data"
-                  type="date"
                   value={data}
-                  onChange={(e) => { setData(e.target.value); setErrors((p) => ({ ...p, data: "" })); }}
-                  className={inputStyle("data")}
+                  onChange={(v) => { setData(v); setErrors((p) => ({ ...p, data: "" })); }}
+                  error={errors.data}
+                  disabled={{ after: new Date() }}
                 />
                 {errors.data && <p className="text-xs text-red-400">{errors.data}</p>}
               </div>

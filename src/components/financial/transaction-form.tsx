@@ -20,16 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/cn";
 import type { Transaction, Category } from "@/types";
-import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate, formatDate, parseLocalDate } from "@/lib/utils";
+import { formatCurrencyInput, parseCurrencyInput, valorPorExtenso, validateTransactionDate } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/components/ui/toast";
 
 interface TransactionFormProps {
@@ -71,7 +64,6 @@ export function TransactionForm({
   const [date, setDate] = useState(
     transaction?.date ? transaction.date.split("T")[0] : ""
   );
-  const [calendarOpen, setCalendarOpen] = useState(false);
   const [observation, setObservation] = useState(transaction?.observation || "");
   const [submitting, setSubmitting] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -234,45 +226,21 @@ export function TransactionForm({
                 Data
                 <span className="text-red-400">*</span>
               </Label>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="date"
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal h-9",
-                      !date && "text-muted-foreground",
-                      errors.date && "border-red-400"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? formatDate(date) : <span>Selecionar data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 shadow-lg overflow-hidden" align="start">
-                  <Calendar
-                    mode="single"
-                    defaultMonth={date ? parseLocalDate(date) : undefined}
-                    selected={date ? parseLocalDate(date) : undefined}
-                    disabled={{ after: new Date() }}
-                    onSelect={(d) => {
-                      if (d) {
-                        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                        setDate(dateStr);
-                        const dateCheck = validateTransactionDate(dateStr);
-                        if (!dateCheck.valid) {
-                          setErrors((prev) => ({ ...prev, date: dateCheck.message }));
-                        } else {
-                          setErrors((prev) => ({ ...prev, date: "" }));
-                        }
-                        setCalendarOpen(false);
-                      }
-                    }}
-                    required
-                    autoFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <DatePicker
+                id="date"
+                value={date}
+                onChange={(v) => {
+                  setDate(v);
+                  const dateCheck = validateTransactionDate(v);
+                  if (!dateCheck.valid) {
+                    setErrors((prev) => ({ ...prev, date: dateCheck.message }));
+                  } else {
+                    setErrors((prev) => ({ ...prev, date: "" }));
+                  }
+                }}
+                error={errors.date}
+                disabled={{ after: new Date() }}
+              />
               {errors.date && <p className="text-xs text-red-400">{errors.date}</p>}
             </div>
           </div>

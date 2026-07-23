@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { todayStr } from "@/lib/utils";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   ArrowLeft, ArrowRight, Check, X, FileText, Brain,
   AlertTriangle, Lightbulb, Plus, Calendar,
@@ -593,11 +594,10 @@ export default function ConferenciaPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="data">Data *</Label>
-                      <Input
+                      <DatePicker
                         id="data"
-                        type="date"
                         value={formData.data}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, data: e.target.value }))}
+                        onChange={(v) => setFormData((prev) => ({ ...prev, data: v }))}
                       />
                       {isFutureDate && (
                         <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 p-2 flex items-start gap-2 mt-1">

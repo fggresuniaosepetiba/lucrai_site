@@ -22,9 +22,8 @@ import { formatCurrency, formatDate, formatCurrencyInput, parseCurrencyInput, va
 import {
   TrendingUp, TrendingDown, DollarSign, CalendarCheck, Plus,
   AlertTriangle, Search, Pencil, CheckCircle2, XCircle, Trash2,
-  Target, BarChart3, History, Clock, Wallet, Repeat, CalendarIcon,
+  Target, BarChart3, History, Clock, Wallet, Repeat,
 } from "lucide-react";
-import { cn } from "@/lib/cn";
 import {
   Dialog,
   DialogContent,
@@ -40,12 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -88,7 +82,6 @@ function CashForecastContent() {
   const [formDate, setFormDate] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [formRecurring, setFormRecurring] = useState(false);
-  const [formCalendarOpen, setFormCalendarOpen] = useState(false);
   const [formRecurrenceType, setFormRecurrenceType] = useState("monthly");
   const [formRecurrenceEndType, setFormRecurrenceEndType] = useState("never");
   const [formRecurrenceEndDate, setFormRecurrenceEndDate] = useState("");
@@ -947,38 +940,11 @@ function CashForecastContent() {
                   <Label htmlFor="date" className="flex items-center gap-1">
                     Data Prevista <span className="text-red-400">*</span>
                   </Label>
-                  <Popover open={formCalendarOpen} onOpenChange={setFormCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="date"
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal h-9",
-                          !formDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {formDate ? formatDate(formDate) : <span>Selecionar data</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 shadow-lg overflow-hidden" align="start">
-                      <Calendar
-                        mode="single"
-                        defaultMonth={formDate ? parseLocalDate(formDate) : undefined}
-                        selected={formDate ? parseLocalDate(formDate) : undefined}
-                        onSelect={(d) => {
-                          if (d) {
-                            setFormDate(
-                              `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-                            );
-                            setFormCalendarOpen(false);
-                          }
-                        }}
-                        required
-                        autoFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <DatePicker
+                    id="date"
+                    value={formDate}
+                    onChange={(v) => setFormDate(v)}
+                  />
                 </div>
               </div>
               {!editingItem && (
@@ -1038,10 +1004,9 @@ function CashForecastContent() {
                     </div>
                     {formRecurrenceEndType === "date" && (
                       <div className="pt-1">
-                        <Input
-                          type="date"
+                        <DatePicker
                           value={formRecurrenceEndDate}
-                          onChange={(e) => setFormRecurrenceEndDate(e.target.value)}
+                          onChange={(v) => setFormRecurrenceEndDate(v)}
                           placeholder="Data final"
                         />
                       </div>
