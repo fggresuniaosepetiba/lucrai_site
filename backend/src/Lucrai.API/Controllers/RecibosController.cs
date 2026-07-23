@@ -39,8 +39,8 @@ public class RecibosController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var r = await _repo.GetByIdAsync(id);
-        if (r == null || r.Company != Company)
+        var r = await _repo.GetByIdAsync(id, Company);
+        if (r == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
         return Ok(MapToResponse(r));
@@ -101,8 +101,8 @@ public class RecibosController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateReciboRequest request)
     {
-        var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        var existing = await _repo.GetByIdAsync(id, Company);
+        if (existing == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
         if (existing.Status == ReciboStatus.Cancelado)
@@ -149,8 +149,8 @@ public class RecibosController : ControllerBase
     [HttpPost("{id:guid}/cancelar")]
     public async Task<IActionResult> Cancelar(Guid id, [FromBody] CancelarReciboRequest request)
     {
-        var recibo = await _repo.GetByIdAsync(id);
-        if (recibo == null || recibo.Company != Company)
+        var recibo = await _repo.GetByIdAsync(id, Company);
+        if (recibo == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
         if (recibo.Status == ReciboStatus.Cancelado)
@@ -186,8 +186,8 @@ public class RecibosController : ControllerBase
     [HttpPost("{id:guid}/audit")]
     public async Task<IActionResult> CreateAudit(Guid id, [FromBody] CreateAuditRequest request)
     {
-        var recibo = await _repo.GetByIdAsync(id);
-        if (recibo == null || recibo.Company != Company)
+        var recibo = await _repo.GetByIdAsync(id, Company);
+        if (recibo == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
         if (!Enum.TryParse<AuditAction>(request.Action, true, out var action))
@@ -210,11 +210,11 @@ public class RecibosController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        var existing = await _repo.GetByIdAsync(id, Company);
+        if (existing == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Recibo excluído com sucesso" });
     }
 

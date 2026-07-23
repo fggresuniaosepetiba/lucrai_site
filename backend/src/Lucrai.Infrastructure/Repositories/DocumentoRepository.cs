@@ -26,10 +26,10 @@ public class DocumentoRepository : IDocumentoRepository
             .ToListAsync();
     }
 
-    public async Task<DocumentoFinanceiro?> GetByIdAsync(Guid id)
+    public async Task<DocumentoFinanceiro?> GetByIdAsync(Guid id, string company)
     {
         return await _context.Documentos
-            .FirstOrDefaultAsync(d => d.Id == id);
+            .FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
     }
 
     public async Task<DocumentoFinanceiro> CreateAsync(DocumentoFinanceiro documento)
@@ -82,9 +82,9 @@ public class DocumentoRepository : IDocumentoRepository
             .ToListAsync();
     }
 
-    public async Task MoveToTrashAsync(Guid id, string motivo, string excluidoPor, string excluidoPorNome)
+    public async Task MoveToTrashAsync(Guid id, string motivo, string excluidoPor, string excluidoPorNome, string company)
     {
-        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id)
+        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id && d.Company == company)
             ?? throw new KeyNotFoundException("Documento não encontrado");
 
         var now = DateTime.UtcNow;
@@ -134,9 +134,9 @@ public class DocumentoRepository : IDocumentoRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task RestoreFromTrashAsync(Guid id)
+    public async Task RestoreFromTrashAsync(Guid id, string company)
     {
-        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id)
+        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id && d.Company == company)
             ?? throw new KeyNotFoundException("Documento não encontrado");
 
         var trashItem = await _context.Set<DocumentoTrashItem>()
@@ -154,9 +154,9 @@ public class DocumentoRepository : IDocumentoRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task PermanentDeleteAsync(Guid id)
+    public async Task PermanentDeleteAsync(Guid id, string company)
     {
-        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id);
+        var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         var trashItem = await _context.Set<DocumentoTrashItem>()
             .FirstOrDefaultAsync(t => t.DocumentoId == id);
 
@@ -178,10 +178,10 @@ public class DocumentoRepository : IDocumentoRepository
             .ToListAsync();
     }
 
-    public async Task<DocumentoTrashItem?> GetTrashItemAsync(Guid documentoId)
+    public async Task<DocumentoTrashItem?> GetTrashItemAsync(Guid documentoId, string company)
     {
         return await _context.Set<DocumentoTrashItem>()
-            .FirstOrDefaultAsync(t => t.DocumentoId == documentoId);
+            .FirstOrDefaultAsync(t => t.DocumentoId == documentoId && t.Company == company);
     }
 
     public async Task<int> CleanupTrashAsync(string? company = null)

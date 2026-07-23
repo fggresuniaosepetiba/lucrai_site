@@ -37,8 +37,8 @@ public class DocumentosController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var doc = await _repo.GetByIdAsync(id);
-        if (doc == null || doc.Company != Company)
+        var doc = await _repo.GetByIdAsync(id, Company);
+        if (doc == null)
             return NotFound(new { error = "Documento não encontrado" });
         return Ok(MapToResponse(doc));
     }
@@ -46,8 +46,8 @@ public class DocumentosController : ControllerBase
     [HttpGet("{id:guid}/download")]
     public async Task<IActionResult> Download(Guid id)
     {
-        var doc = await _repo.GetByIdAsync(id);
-        if (doc == null || (doc.Company != Company))
+        var doc = await _repo.GetByIdAsync(id, Company);
+        if (doc == null)
             return NotFound(new { error = "Documento não encontrado" });
 
         if (doc.ArquivoData == null || doc.ArquivoData.Length == 0)
@@ -150,11 +150,11 @@ public class DocumentosController : ControllerBase
     [HttpPost("{id:guid}/excluir")]
     public async Task<IActionResult> Excluir(Guid id, [FromBody] ExcluirRequest request)
     {
-        var doc = await _repo.GetByIdAsync(id);
-        if (doc == null || (doc.Company != Company))
+        var doc = await _repo.GetByIdAsync(id, Company);
+        if (doc == null)
             return NotFound(new { error = "Documento não encontrado" });
 
-        await _repo.MoveToTrashAsync(id, request.Motivo, UserId, UserName);
+        await _repo.MoveToTrashAsync(id, request.Motivo, UserId, UserName, Company);
 
         await _logRepo.CreateAsync(new DocumentoLog
         {
@@ -172,11 +172,11 @@ public class DocumentosController : ControllerBase
     [HttpPost("{id:guid}/restaurar")]
     public async Task<IActionResult> Restaurar(Guid id)
     {
-        var trashItem = await _repo.GetTrashItemAsync(id);
-        if (trashItem == null || (trashItem.Company != Company))
+        var trashItem = await _repo.GetTrashItemAsync(id, Company);
+        if (trashItem == null)
             return NotFound(new { error = "Item não encontrado na lixeira" });
 
-        await _repo.RestoreFromTrashAsync(id);
+        await _repo.RestoreFromTrashAsync(id, Company);
 
         await _logRepo.CreateAsync(new DocumentoLog
         {
@@ -194,11 +194,11 @@ public class DocumentosController : ControllerBase
     [HttpDelete("{id:guid}/permanente")]
     public async Task<IActionResult> ExcluirPermanente(Guid id)
     {
-        var trashItem = await _repo.GetTrashItemAsync(id);
-        if (trashItem == null || (trashItem.Company != Company))
+        var trashItem = await _repo.GetTrashItemAsync(id, Company);
+        if (trashItem == null)
             return NotFound(new { error = "Item não encontrado na lixeira" });
 
-        await _repo.PermanentDeleteAsync(id);
+        await _repo.PermanentDeleteAsync(id, Company);
 
         await _logRepo.CreateAsync(new DocumentoLog
         {
@@ -227,8 +227,8 @@ public class DocumentosController : ControllerBase
     [HttpPost("{id:guid}/confirmar")]
     public async Task<IActionResult> Confirmar(Guid id, [FromBody] ConfirmarRequest request)
     {
-        var doc = await _repo.GetByIdAsync(id);
-        if (doc == null || (doc.Company != Company))
+        var doc = await _repo.GetByIdAsync(id, Company);
+        if (doc == null)
             return NotFound(new { error = "Documento não encontrado" });
 
         if (request.ValorExtraido.HasValue)
@@ -268,8 +268,8 @@ public class DocumentosController : ControllerBase
     [HttpPost("{id:guid}/rejeitar")]
     public async Task<IActionResult> Rejeitar(Guid id, [FromBody] RejeitarRequest request)
     {
-        var doc = await _repo.GetByIdAsync(id);
-        if (doc == null || (doc.Company != Company))
+        var doc = await _repo.GetByIdAsync(id, Company);
+        if (doc == null)
             return NotFound(new { error = "Documento não encontrado" });
 
         doc.Status = "REJEITADO";
@@ -299,8 +299,8 @@ public class DocumentosController : ControllerBase
     [HttpPost("{id:guid}/reprocessar")]
     public async Task<IActionResult> Reprocessar(Guid id)
     {
-        var doc = await _repo.GetByIdAsync(id);
-        if (doc == null || (doc.Company != Company))
+        var doc = await _repo.GetByIdAsync(id, Company);
+        if (doc == null)
             return NotFound(new { error = "Documento não encontrado" });
 
         doc.Status = "NOVO";
@@ -333,11 +333,11 @@ public class DocumentosController : ControllerBase
     [HttpGet("{id:guid}/logs")]
     public async Task<IActionResult> GetLogs(Guid id)
     {
-        var doc = await _repo.GetByIdAsync(id);
-        if (doc == null || (doc.Company != Company))
+        var doc = await _repo.GetByIdAsync(id, Company);
+        if (doc == null)
             return NotFound(new { error = "Documento não encontrado" });
 
-        var logs = await _logRepo.GetByDocumentoAsync(id);
+        var logs = await _logRepo.GetByDocumentoAsync(id, Company);
         var result = logs.Select(l => new DocumentoLogResponse(
             l.Id, l.DocumentoId, l.Acao, l.Descricao,
             l.UsuarioNome, l.CriadoEm, l.Detalhes

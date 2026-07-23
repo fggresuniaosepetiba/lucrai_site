@@ -36,8 +36,8 @@ public class InsumosController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var i = await _repo.GetByIdAsync(id);
-        if (i == null || i.Company != Company)
+        var i = await _repo.GetByIdAsync(id, Company);
+        if (i == null)
             return NotFound(new { error = "Insumo não encontrado" });
 
         return Ok(new InsumoResponse(
@@ -79,8 +79,8 @@ public class InsumosController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInsumoRequest request)
     {
-        var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        var existing = await _repo.GetByIdAsync(id, Company);
+        if (existing == null)
             return NotFound(new { error = "Insumo não encontrado" });
 
         if (request.Nome != null) existing.Nome = request.Nome;
@@ -106,11 +106,11 @@ public class InsumosController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        var existing = await _repo.GetByIdAsync(id, Company);
+        if (existing == null)
             return NotFound(new { error = "Insumo não encontrado" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Insumo excluído com sucesso" });
     }
 }

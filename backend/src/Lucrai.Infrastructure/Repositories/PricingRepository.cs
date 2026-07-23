@@ -22,9 +22,9 @@ public class PricingRepository : IPricingRepository
         return await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
     }
 
-    public async Task<PricingProduct?> GetByIdAsync(Guid id)
+    public async Task<PricingProduct?> GetByIdAsync(Guid id, string company)
     {
-        return await _context.PricingProducts.FirstOrDefaultAsync(p => p.Id == id);
+        return await _context.PricingProducts.FirstOrDefaultAsync(p => p.Id == id && p.Company == company);
     }
 
     public async Task<PricingProduct> CreateAsync(PricingProduct product)
@@ -44,9 +44,9 @@ public class PricingRepository : IPricingRepository
         return product;
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string company)
     {
-        var product = await _context.PricingProducts.FirstOrDefaultAsync(p => p.Id == id);
+        var product = await _context.PricingProducts.FirstOrDefaultAsync(p => p.Id == id && p.Company == company);
         if (product != null)
         {
             _context.PricingProducts.Remove(product);

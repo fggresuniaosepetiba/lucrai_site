@@ -23,10 +23,10 @@ public class DocumentoLogRepository : IDocumentoLogRepository
         return log;
     }
 
-    public async Task<List<DocumentoLog>> GetByDocumentoAsync(Guid documentoId)
+    public async Task<List<DocumentoLog>> GetByDocumentoAsync(Guid documentoId, string company)
     {
         return await _context.Set<DocumentoLog>()
-            .Where(l => l.DocumentoId == documentoId)
+            .Where(l => l.DocumentoId == documentoId && l.Company == company)
             .OrderByDescending(l => l.CriadoEm)
             .ToListAsync();
     }

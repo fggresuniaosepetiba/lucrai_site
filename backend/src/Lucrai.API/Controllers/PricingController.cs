@@ -32,8 +32,8 @@ public class PricingController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var p = await _repo.GetByIdAsync(id);
-        if (p == null || p.Company != Company)
+        var p = await _repo.GetByIdAsync(id, Company);
+        if (p == null)
             return NotFound(new { error = "Produto não encontrado" });
 
         return Ok(ToResponse(p));
@@ -78,8 +78,8 @@ public class PricingController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePricingRequest request)
     {
-        var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        var existing = await _repo.GetByIdAsync(id, Company);
+        if (existing == null)
             return NotFound(new { error = "Produto não encontrado" });
 
         if (request.Name != null) existing.Name = request.Name;
@@ -114,11 +114,11 @@ public class PricingController : ControllerBase
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var existing = await _repo.GetByIdAsync(id);
-        if (existing == null || existing.Company != Company)
+        var existing = await _repo.GetByIdAsync(id, Company);
+        if (existing == null)
             return NotFound(new { error = "Produto não encontrado" });
 
-        await _repo.DeleteAsync(id);
+        await _repo.DeleteAsync(id, Company);
         return Ok(new { message = "Produto excluído com sucesso" });
     }
 
