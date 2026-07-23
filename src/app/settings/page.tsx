@@ -94,6 +94,11 @@ export default function SettingsPage() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast("Arquivo muito grande", "O limite é de 10MB", "destructive");
+      e.target.value = "";
+      return;
+    }
     setLogoFile(file);
     const reader = new FileReader();
     reader.onload = (event) => {

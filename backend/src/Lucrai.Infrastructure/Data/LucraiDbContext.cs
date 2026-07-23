@@ -206,7 +206,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
         {
             entity.HasKey(s => s.Id);
             entity.Property(s => s.CompanyName).HasMaxLength(200).IsRequired();
-            entity.Property(s => s.LogoUrl).HasMaxLength(2048);
+            entity.Property(s => s.LogoUrl).HasColumnType("text");
             entity.Property(s => s.PrimaryColor).HasMaxLength(9).IsRequired();
             entity.Property(s => s.Company).HasMaxLength(200).IsRequired();
 

@@ -1,6 +1,7 @@
 using System.Text;
 using DotNetEnv;
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Lucrai.API.Middleware;
 using Lucrai.Core.Entities;
 using Lucrai.Core.Interfaces;
@@ -22,6 +23,7 @@ if (envDir != null)
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();

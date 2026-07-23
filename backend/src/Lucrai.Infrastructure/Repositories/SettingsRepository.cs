@@ -47,9 +47,9 @@ public class SettingsRepository : ISettingsRepository
             return await SaveAsync(settings);
         }
 
-        existing.CompanyName = settings.CompanyName ?? existing.CompanyName;
-        existing.LogoUrl = settings.LogoUrl ?? existing.LogoUrl;
-        existing.PrimaryColor = settings.PrimaryColor ?? existing.PrimaryColor;
+        existing.CompanyName = settings.CompanyName;
+        existing.LogoUrl = settings.LogoUrl;
+        existing.PrimaryColor = settings.PrimaryColor;
 
         _context.CompanySettings.Update(existing);
         await _context.SaveChangesAsync();
