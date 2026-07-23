@@ -4,8 +4,8 @@ const fs = require("fs");
 
 function isDockerRunning() {
   try {
-    execSync("docker info", { encoding: "utf8", stdio: "pipe" });
-    return true;
+    const out = execSync("docker version --format '{{.Server.Version}}'", { encoding: "utf8", stdio: "pipe" });
+    return out.trim().length > 0;
   } catch {
     return false;
   }
