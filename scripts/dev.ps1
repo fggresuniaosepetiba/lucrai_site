@@ -17,24 +17,19 @@ if (-not $NoDockerCheck) {
   }
 
   if (-not $dockerOk) {
-    Write-Host "🐳 Docker not running. Starting it..." -ForegroundColor Yellow
-    try {
-      net start com.docker.service 2>&1 | Out-Null
-    } catch {
-      $dockerPath = @(
-        "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
-        "${env:ProgramFiles(x86)}\Docker\Docker\Docker Desktop.exe"
-      ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+    Write-Host "🐳 Docker Desktop not running. Starting it..." -ForegroundColor Yellow
+    $dockerPath = @(
+      "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
+      "${env:ProgramFiles(x86)}\Docker\Docker\Docker Desktop.exe"
+    ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-      if (-not $dockerPath) {
-        Write-Host "❌ Docker Desktop not found. Please install Docker Desktop first." -ForegroundColor Red
-        Write-Host "   https://www.docker.com/products/docker-desktop/"
-        exit 1
-      }
-
-      Write-Host "   Starting Docker Desktop silently..." -ForegroundColor Yellow
-      Start-Process $dockerPath -WindowStyle Hidden
+    if (-not $dockerPath) {
+      Write-Host "❌ Docker Desktop not found. Please install Docker Desktop first."
+      Write-Host "   https://www.docker.com/products/docker-desktop/"
+      exit 1
     }
+
+    Start-Process $dockerPath
     Write-Host "⏳ Waiting for Docker to start..." -ForegroundColor Yellow
 
     $timeout = 120
@@ -55,7 +50,7 @@ if (-not $NoDockerCheck) {
       Write-Host "   Try starting Docker Desktop manually and run again."
       exit 1
     }
-    Write-Host "`n✅ Docker is ready!" -ForegroundColor Green
+    Write-Host "`n✅ Docker Desktop is ready!" -ForegroundColor Green
   } else {
     Write-Host "✅ Docker Desktop is running." -ForegroundColor Green
   }
