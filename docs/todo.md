@@ -211,6 +211,7 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] DocumentoRepository: GetByIdAsync/MoveToTrashAsync/RestoreFromTrashAsync/PermanentDeleteAsync/GetTrashItemAsync com company filter
 - [x] DocumentoLogRepository: GetByDocumentoAsync com company filter
 - [x] Controllers: fetch-then-verify removido (redundante com filtro no repositório)
+- [x] `dev:db` agora auto-inicia Docker Desktop via `scripts/ensure-docker.js`
 
 ## Pendentes
 
