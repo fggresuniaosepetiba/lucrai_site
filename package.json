@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:db": "node scripts/ensure-docker.js && docker compose up postgres -d",
+    "dev:db": "docker compose up postgres -d",
     "dev:api": "dotnet watch run --project backend/src/Lucrai.API",
     "dev:wait-db": "node scripts/wait-for-db.js",
     "dev:all": "npm run dev:db && npm run dev:wait-db && concurrently -n api,web -c cyan,green \"npm run dev:api\" \"npm run dev\"",
