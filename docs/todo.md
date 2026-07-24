@@ -108,6 +108,7 @@
 - [x] Exclusão permanente
 - [x] Limpeza automática de itens expirados ao carregar
 - [x] Badges visuais para itens próximos do vencimento
+- [x] Aba "Recibos" na Lixeira (restaurar e excluir permanentemente)
 
 ## Configurações
 
@@ -220,6 +221,18 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] cash-forecast/page.tsx: ambos os date inputs → DatePicker
 - [x] documentos/conferencia/page.tsx: `<Input type="date">` → DatePicker
 - [x] Removidos states e imports de Popover/Calendar/CalendarIcon não utilizados
+
+## Sprint 21 — Exclusão de Recibos com Lixeira
+
+- [x] Recibo.cs: campos ExcluidoEm, ExcluidoPor, ExpiracaoEm
+- [x] DbContext + migration AddSoftDeleteToRecibo
+- [x] IReciboRepository + ReciboRepository: soft-delete, trash methods, cleanup
+- [x] RecibosController: DELETE verifica cancelado, endpoints trash/restore/permanent
+- [x] Frontend types: ApiRecibo + Receipt com campos de exclusão
+- [x] API service: getTrash/restore/permanentDelete
+- [x] RecibosList: menu "Excluir" para cancelados
+- [x] Recibos page: modal de confirmação de exclusão
+- [x] Trash page: aba "Recibos" com cards, restore e exclusão permanente
 
 ## Pendentes
 
