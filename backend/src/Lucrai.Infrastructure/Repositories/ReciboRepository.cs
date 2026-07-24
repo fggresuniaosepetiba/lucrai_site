@@ -18,7 +18,7 @@ public class ReciboRepository : IReciboRepository
     public async Task<List<Recibo>> GetAllAsync(string company)
     {
         return await _context.Recibos
-            .Where(r => r.Company == company)
+            .Where(r => r.Company == company && r.ExcluidoEm == null)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
     }
@@ -26,7 +26,7 @@ public class ReciboRepository : IReciboRepository
     public async Task<Recibo?> GetByIdAsync(Guid id, string company)
     {
         return await _context.Recibos
-            .FirstOrDefaultAsync(r => r.Id == id && r.Company == company);
+            .FirstOrDefaultAsync(r => r.Id == id && r.Company == company && r.ExcluidoEm == null);
     }
 
     public async Task<Recibo> CreateAsync(Recibo recibo)
@@ -50,21 +50,67 @@ public class ReciboRepository : IReciboRepository
         return recibo;
     }
 
-    public async Task DeleteAsync(Guid id, string company)
+    public async Task DeleteAsync(Guid id, string company, string? deletedBy = null)
     {
         var recibo = await _context.Recibos
             .FirstOrDefaultAsync(r => r.Id == id && r.Company == company);
-        if (recibo != null)
-        {
-            _context.Recibos.Remove(recibo);
-            await _context.SaveChangesAsync();
-        }
+        if (recibo == null) return;
+
+        var now = DateTime.UtcNow;
+        recibo.ExcluidoEm = now;
+        recibo.ExcluidoPor = deletedBy;
+        recibo.ExpiracaoEm = now.AddDays(30);
+        recibo.UpdatedAt = now;
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Recibo?> GetByLancamentoIdAsync(Guid lancamentoId, string company)
     {
         return await _context.Recibos
             .FirstOrDefaultAsync(r => r.LancamentoId == lancamentoId && r.Company == company);
+    }
+
+    public async Task<List<Recibo>> GetTrashAsync(string company)
+    {
+        return await _context.Recibos
+            .Where(r => r.Company == company && r.ExcluidoEm != null)
+            .OrderByDescending(r => r.ExcluidoEm)
+            .ToListAsync();
+    }
+
+    public async Task<Recibo?> GetByIdIncludingDeletedAsync(Guid id, string company)
+    {
+        return await _context.Recibos
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(r => r.Id == id && r.Company == company);
+    }
+
+    public async Task RestoreFromTrashAsync(Recibo recibo)
+    {
+        recibo.ExcluidoEm = null;
+        recibo.ExcluidoPor = null;
+        recibo.ExpiracaoEm = null;
+        recibo.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task PermanentDeleteAsync(Recibo recibo)
+    {
+        _context.Recibos.Remove(recibo);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task CleanupTrashAsync()
+    {
+        var expired = await _context.Recibos
+            .Where(r => r.ExpiracaoEm != null && r.ExpiracaoEm <= DateTime.UtcNow)
+            .ToListAsync();
+
+        if (expired.Count > 0)
+        {
+            _context.Recibos.RemoveRange(expired);
+            await _context.SaveChangesAsync();
+        }
     }
 
     public async Task<string> GetProximoNumeroAsync(string company)

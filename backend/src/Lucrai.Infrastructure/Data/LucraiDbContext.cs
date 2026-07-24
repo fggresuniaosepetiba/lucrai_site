@@ -410,10 +410,14 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(r => r.Estado).HasMaxLength(2);
             entity.Property(r => r.CriadoPor).HasMaxLength(200).IsRequired();
             entity.Property(r => r.Cancelamento).HasMaxLength(1000);
+            entity.Property(r => r.ExcluidoEm);
+            entity.Property(r => r.ExcluidoPor).HasMaxLength(200);
+            entity.Property(r => r.ExpiracaoEm);
 
             entity.HasIndex(r => new { r.Company, r.Numero }).IsUnique();
             entity.HasIndex(r => new { r.Company, r.Data });
             entity.HasIndex(r => new { r.Company, r.Status });
+            entity.HasIndex(r => new { r.Company, r.ExcluidoEm });
             entity.HasIndex(r => r.LancamentoId);
         });
 

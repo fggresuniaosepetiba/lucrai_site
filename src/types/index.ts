@@ -326,6 +326,9 @@ export interface Receipt {
   criadoPor: string;
   atualizadoEm: string;
   cancelamento?: CancelamentoRecibo | null;
+  excluidoEm?: string | null;
+  excluidoPor?: string | null;
+  expiracaoEm?: string | null;
 }
 
 export interface SignatureConfig {

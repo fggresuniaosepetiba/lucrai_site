@@ -17,6 +17,7 @@ import {
   Download,
   Printer,
   Ban,
+  Trash2,
   ArrowUpRight,
   ArrowDownRight,
   Hash,
@@ -32,6 +33,7 @@ interface RecibosListProps {
   onDownloadPdf: (recibo: Receipt) => void;
   onPrint: (recibo: Receipt) => void;
   onCancel: (recibo: Receipt) => void;
+  onDelete: (recibo: Receipt) => void;
   onVerLancamento: (lancamentoId: string) => void;
 }
 
@@ -42,6 +44,7 @@ export function RecibosList({
   onDownloadPdf,
   onPrint,
   onCancel,
+  onDelete,
   onVerLancamento,
 }: RecibosListProps) {
   if (recibos.length === 0) {
@@ -173,6 +176,12 @@ export function RecibosList({
                             <DropdownMenuItem onClick={() => onCancel(recibo)} className="gap-2 text-red-400">
                               <Ban className="h-4 w-4" />
                               Cancelar
+                            </DropdownMenuItem>
+                          )}
+                          {isCancelado && (
+                            <DropdownMenuItem onClick={() => onDelete(recibo)} className="gap-2 text-red-400">
+                              <Trash2 className="h-4 w-4" />
+                              Excluir
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>

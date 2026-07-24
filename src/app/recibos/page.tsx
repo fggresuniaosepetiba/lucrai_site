@@ -18,8 +18,16 @@ import { downloadPdf, printRecibo } from "@/services/recibos/reciboPdfService";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Trash2 } from "lucide-react";
 import type { Receipt, SignatureConfig, AppSettings } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function RecibosPageWrapper() {
   return (
@@ -40,6 +48,7 @@ function RecibosPage() {
   const [formPrefill, setFormPrefill] = useState<Partial<ReciboFormData> | undefined>(undefined);
   const [viewRecibo, setViewRecibo] = useState<Receipt | null>(null);
   const [cancelRecibo, setCancelRecibo] = useState<Receipt | null>(null);
+  const [deleteRecibo, setDeleteRecibo] = useState<Receipt | null>(null);
   const [editRecibo, setEditRecibo] = useState<Receipt | null>(null);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [assinatura, setAssinatura] = useState<SignatureConfig | null>(null);
@@ -224,6 +233,19 @@ function RecibosPage() {
     await RecibosRepositoryApi.createAudit(recibo.id, "Printed", `Recibo ${recibo.numero} impresso`, userName);
   }, [appSettings, assinatura, userName]);
 
+  const handleDelete = async () => {
+    if (!deleteRecibo) return;
+    try {
+      await RecibosRepositoryApi.delete(deleteRecibo.id);
+      toast("Recibo excluído", `Recibo ${deleteRecibo.numero} movido para a lixeira`, "success");
+      setDeleteRecibo(null);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      toast("Erro", "Não foi possível excluir o recibo", "destructive");
+    }
+  };
+
   const handleVerLancamento = (lancamentoId: string) => {
     router.push(`/financial?lancamento=${lancamentoId}`);
   };
@@ -309,6 +331,7 @@ function RecibosPage() {
           onDownloadPdf={handleDownloadPdf}
           onPrint={handlePrint}
           onCancel={setCancelRecibo}
+          onDelete={setDeleteRecibo}
           onVerLancamento={handleVerLancamento}
         />
 
@@ -343,6 +366,48 @@ function RecibosPage() {
             onConfirm={handleCancel}
           />
         )}
+
+        {/* Delete confirmation dialog */}
+        <Dialog open={!!deleteRecibo} onOpenChange={(open) => { if (!open) setDeleteRecibo(null); }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+                  <Trash2 className="h-5 w-5 text-red-400" />
+                </div>
+                <div>
+                  <DialogTitle>Excluir Recibo</DialogTitle>
+                  <DialogDescription>
+                    Esta ação moverá o recibo para a lixeira. Após 30 dias ele será excluído automaticamente.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{deleteRecibo?.numero}</span>
+                  <span className="text-xs text-muted-foreground">— {deleteRecibo?.nomePagador} / {deleteRecibo?.nomeRecebedor}</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {deleteRecibo?.referente}
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-center">
+                Tem certeza que deseja excluir este recibo?
+              </p>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setDeleteRecibo(null)}>
+                Cancelar
+              </Button>
+              <Button variant="destructive" onClick={handleDelete} className="gap-2">
+                <Trash2 className="h-4 w-4" />
+                Excluir
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Shell>
   );

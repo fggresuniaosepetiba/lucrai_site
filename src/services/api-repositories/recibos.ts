@@ -40,6 +40,9 @@ function mapRecibo(r: ApiRecibo): Receipt {
           canceladoPor: r.cancelamento.canceladoPor,
         }
       : null,
+    excluidoEm: r.excluidoEm ?? null,
+    excluidoPor: r.excluidoPor ?? null,
+    expiracaoEm: r.expiracaoEm ?? null,
   };
 }
 
@@ -141,6 +144,19 @@ export const RecibosRepositoryApi = {
 
   async delete(id: string): Promise<void> {
     await api.delete(`/api/recibos/${id}`);
+  },
+
+  async getTrash(): Promise<Receipt[]> {
+    const data = await api.get<ApiRecibo[]>("/api/recibos/trash");
+    return data.map(mapRecibo);
+  },
+
+  async restore(id: string): Promise<void> {
+    await api.post(`/api/recibos/${id}/restore`);
+  },
+
+  async permanentDelete(id: string): Promise<void> {
+    await api.delete(`/api/recibos/${id}/permanent`);
   },
 
   async createAudit(id: string, action: string, description: string, user: string): Promise<void> {

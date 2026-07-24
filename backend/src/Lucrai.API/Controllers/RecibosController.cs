@@ -214,8 +214,83 @@ public class RecibosController : ControllerBase
         if (existing == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
-        await _repo.DeleteAsync(id, Company);
-        return Ok(new { message = "Recibo excluído com sucesso" });
+        if (existing.Status != ReciboStatus.Cancelado)
+            return BadRequest(new { error = "Apenas recibos cancelados podem ser excluídos" });
+
+        await _repo.DeleteAsync(id, Company, UserName);
+
+        await _auditRepo.LogAsync(new AuditLog
+        {
+            EntityId = existing.Id,
+            EntityType = "Receipt",
+            DisplayId = existing.DisplayId,
+            Action = AuditAction.MovedToTrash,
+            Description = $"Recibo {existing.Numero} movido para lixeira",
+            User = UserName,
+            Company = Company,
+        });
+
+        return Ok(new { message = "Recibo movido para lixeira" });
+    }
+
+    [HttpGet("trash")]
+    public async Task<IActionResult> GetTrash()
+    {
+        var recibos = await _repo.GetTrashAsync(Company);
+        var result = recibos.Select(MapToResponse);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/restore")]
+    public async Task<IActionResult> Restore(Guid id)
+    {
+        var recibo = await _repo.GetByIdIncludingDeletedAsync(id, Company);
+        if (recibo == null)
+            return NotFound(new { error = "Recibo não encontrado" });
+
+        if (recibo.ExcluidoEm == null)
+            return BadRequest(new { error = "Recibo não está na lixeira" });
+
+        await _repo.RestoreFromTrashAsync(recibo);
+
+        await _auditRepo.LogAsync(new AuditLog
+        {
+            EntityId = recibo.Id,
+            EntityType = "Receipt",
+            DisplayId = recibo.DisplayId,
+            Action = AuditAction.Restored,
+            Description = $"Recibo {recibo.Numero} restaurado da lixeira",
+            User = UserName,
+            Company = Company,
+        });
+
+        return Ok(new { message = "Recibo restaurado da lixeira" });
+    }
+
+    [HttpDelete("{id:guid}/permanent")]
+    public async Task<IActionResult> PermanentDelete(Guid id)
+    {
+        var recibo = await _repo.GetByIdIncludingDeletedAsync(id, Company);
+        if (recibo == null)
+            return NotFound(new { error = "Recibo não encontrado" });
+
+        if (recibo.ExcluidoEm == null)
+            return BadRequest(new { error = "Recibo não está na lixeira" });
+
+        await _repo.PermanentDeleteAsync(recibo);
+
+        await _auditRepo.LogAsync(new AuditLog
+        {
+            EntityId = recibo.Id,
+            EntityType = "Receipt",
+            DisplayId = recibo.DisplayId,
+            Action = AuditAction.Deleted,
+            Description = $"Recibo {recibo.Numero} excluído permanentemente",
+            User = UserName,
+            Company = Company,
+        });
+
+        return Ok(new { message = "Recibo excluído permanentemente" });
     }
 
     private static ReciboResponse MapToResponse(Recibo r)
@@ -236,6 +311,7 @@ public class RecibosController : ControllerBase
             r.Telefone, r.Email, r.Cidade, r.Estado,
             r.ExibirAssinatura, r.ParcelaAtual, r.ParcelasTotal,
             r.LancamentoId, r.CriadoPor, cancelamento,
+            r.ExcluidoEm, r.ExcluidoPor, r.ExpiracaoEm,
             r.CreatedAt, r.UpdatedAt
         );
     }

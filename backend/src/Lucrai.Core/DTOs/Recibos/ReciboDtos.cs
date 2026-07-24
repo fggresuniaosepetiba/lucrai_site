@@ -84,6 +84,9 @@ public record ReciboResponse(
     Guid? LancamentoId,
     string CriadoPor,
     CancelamentoInfo? Cancelamento,
+    DateTime? ExcluidoEm,
+    string? ExcluidoPor,
+    DateTime? ExpiracaoEm,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );

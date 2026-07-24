@@ -7,7 +7,8 @@ import { Shell } from "@/components/layout/shell";
 import { TrashRepositoryApi } from "@/services/api-repositories/trash";
 import { DocumentoRepositoryApi } from "@/services/api-repositories/documents";
 import { DocumentoService } from "@/services/documentos/documentos.service";
-import type { DeletedTransaction, DocumentoTrashItem } from "@/types";
+import { RecibosRepositoryApi } from "@/services/api-repositories/recibos";
+import type { DeletedTransaction, DocumentoTrashItem, Receipt } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ export default function TrashPage() {
   const { isAuthenticated, user } = useAuthStore();
   const [items, setItems] = useState<DeletedTransaction[]>([]);
   const [docItems, setDocItems] = useState<DocumentoTrashItem[]>([]);
+  const [reciboItems, setReciboItems] = useState<Receipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoreTarget, setRestoreTarget] = useState<DeletedTransaction | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeletedTransaction | null>(null);
@@ -39,6 +41,8 @@ export default function TrashPage() {
   const [docDeleteTarget, setDocDeleteTarget] = useState<DocumentoTrashItem | null>(null);
   const [docDeleteReason, setDocDeleteReason] = useState("");
   const [docDeleting, setDocDeleting] = useState(false);
+  const [reciboRestoreTarget, setReciboRestoreTarget] = useState<Receipt | null>(null);
+  const [reciboDeleteTarget, setReciboDeleteTarget] = useState<Receipt | null>(null);
   const company = user?.company ?? "";
   const userName = user?.name ?? "Sistema";
   const usuario_id = user?.email ?? "";
@@ -55,12 +59,14 @@ export default function TrashPage() {
     try {
       await TrashRepositoryApi.cleanup();
       await DocumentoRepositoryApi.cleanupTrash();
-      const [data, docData] = await Promise.all([
+      const [data, docData, reciboData] = await Promise.all([
         TrashRepositoryApi.getAll(),
         DocumentoRepositoryApi.getTrash(),
+        RecibosRepositoryApi.getTrash(),
       ]);
       setItems(data);
       setDocItems(docData);
+      setReciboItems(reciboData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -105,6 +111,30 @@ export default function TrashPage() {
       load();
     } catch {
       toast("Erro", "Não foi possível restaurar o documento", "destructive");
+    }
+  };
+
+  const handleReciboRestore = async () => {
+    if (!reciboRestoreTarget) return;
+    try {
+      await RecibosRepositoryApi.restore(reciboRestoreTarget.id);
+      toast("Recibo restaurado", "Voltou ao status Cancelado", "success");
+      setReciboRestoreTarget(null);
+      load();
+    } catch {
+      toast("Erro", "Não foi possível restaurar o recibo", "destructive");
+    }
+  };
+
+  const handleReciboPermanentDelete = async () => {
+    if (!reciboDeleteTarget) return;
+    try {
+      await RecibosRepositoryApi.permanentDelete(reciboDeleteTarget.id);
+      toast("Recibo excluído permanentemente", "", "success");
+      setReciboDeleteTarget(null);
+      load();
+    } catch {
+      toast("Erro", "Não foi possível excluir permanentemente", "destructive");
     }
   };
 
@@ -162,7 +192,7 @@ export default function TrashPage() {
           </div>
         </div>
 
-        {items.length === 0 && docItems.length === 0 ? (
+        {items.length === 0 && docItems.length === 0 && reciboItems.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
               <div className="rounded-full bg-muted p-4 mb-4">
@@ -178,13 +208,16 @@ export default function TrashPage() {
           <Tabs defaultValue="all">
             <TabsList>
               <TabsTrigger value="all">
-                Todos ({items.length + docItems.length})
+                Todos ({items.length + docItems.length + reciboItems.length})
               </TabsTrigger>
               <TabsTrigger value="financial">
                 Financeiro ({items.length})
               </TabsTrigger>
               <TabsTrigger value="documents">
                 Documentos ({docItems.length})
+              </TabsTrigger>
+              <TabsTrigger value="receipts">
+                Recibos ({reciboItems.length})
               </TabsTrigger>
             </TabsList>
 
@@ -204,6 +237,15 @@ export default function TrashPage() {
                   item={item}
                   onRestore={() => setDocRestoreTarget(item)}
                   onDelete={() => setDocDeleteTarget(item)}
+                  getDaysRemaining={getDaysRemaining}
+                />
+              ))}
+              {reciboItems.map((item) => (
+                <ReciboTrashItemCard
+                  key={item.id}
+                  item={item}
+                  onRestore={() => setReciboRestoreTarget(item)}
+                  onDelete={() => setReciboDeleteTarget(item)}
                   getDaysRemaining={getDaysRemaining}
                 />
               ))}
@@ -232,6 +274,20 @@ export default function TrashPage() {
                   item={item}
                   onRestore={() => setDocRestoreTarget(item)}
                   onDelete={() => setDocDeleteTarget(item)}
+                  getDaysRemaining={getDaysRemaining}
+                />
+              ))}
+            </TabsContent>
+
+            <TabsContent value="receipts" className="space-y-3 mt-4">
+              {reciboItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum recibo na lixeira</p>
+              ) : reciboItems.map((item) => (
+                <ReciboTrashItemCard
+                  key={item.id}
+                  item={item}
+                  onRestore={() => setReciboRestoreTarget(item)}
+                  onDelete={() => setReciboDeleteTarget(item)}
                   getDaysRemaining={getDaysRemaining}
                 />
               ))}
@@ -451,6 +507,93 @@ export default function TrashPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Restore dialog (recibos) */}
+      <Dialog open={!!reciboRestoreTarget} onOpenChange={(open) => { if (!open) setReciboRestoreTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
+                <RotateCcw className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div>
+                <DialogTitle>Restaurar Recibo</DialogTitle>
+                <DialogDescription>
+                  O recibo {reciboRestoreTarget?.numero} será restaurado para o status Cancelado.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{reciboRestoreTarget?.nomePagador} / {reciboRestoreTarget?.nomeRecebedor}</span>
+                <span className="text-xs text-muted-foreground">{reciboRestoreTarget?.referente}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>{formatDate(reciboRestoreTarget?.data ?? "")}</span>
+                <span className={`font-semibold ${
+                  reciboRestoreTarget?.tipo === "recebimento" ? "text-emerald-400" : "text-red-400"
+                }`}>
+                  {reciboRestoreTarget?.tipo === "recebimento" ? "+" : "-"}{reciboRestoreTarget ? formatCurrency(reciboRestoreTarget.valor) : ""}
+                </span>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-center">Deseja restaurar este recibo?</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setReciboRestoreTarget(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleReciboRestore} className="gap-2">
+              <RotateCcw className="h-4 w-4" />
+              Restaurar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permanent delete dialog (recibos) */}
+      <Dialog open={!!reciboDeleteTarget} onOpenChange={(open) => { if (!open) setReciboDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+                <Trash2 className="h-5 w-5 text-red-400" />
+              </div>
+              <div>
+                <DialogTitle>Excluir Recibo Permanentemente</DialogTitle>
+                <DialogDescription>
+                  Esta ação não pode ser desfeita. O recibo será removido permanentemente.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{reciboDeleteTarget?.nomePagador} / {reciboDeleteTarget?.nomeRecebedor}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>{reciboDeleteTarget?.numero}</span>
+                <span>{formatDate(reciboDeleteTarget?.data ?? "")}</span>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-center text-red-400">
+              Deseja excluir permanentemente este recibo?
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setReciboDeleteTarget(null)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleReciboPermanentDelete} className="gap-2">
+              <Trash2 className="h-4 w-4" />
+              Excluir Permanentemente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Shell>
   );
 }
@@ -501,6 +644,69 @@ function TrashItemCard({
                 <p className="text-xs text-amber-300 font-medium">Motivo da exclusão:</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{item.reason}</p>
               </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span className={days <= 5 ? "text-amber-400 font-medium" : "text-muted-foreground"}>
+                {days} dia{days !== 1 ? "s" : ""} restante{days !== 1 ? "s" : ""} para restaurar
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0 mt-1">
+            <Button variant="outline" size="sm" onClick={onRestore} className="gap-1.5 text-xs">
+              <RotateCcw className="h-3.5 w-3.5" />
+              Restaurar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onDelete} className="gap-1.5 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10">
+              Excluir
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReciboTrashItemCard({
+  item, onRestore, onDelete, getDaysRemaining,
+}: {
+  item: Receipt;
+  onRestore: () => void;
+  onDelete: () => void;
+  getDaysRemaining: (restoreUntil: string) => number;
+}) {
+  const days = item.expiracaoEm ? getDaysRemaining(item.expiracaoEm) : 0;
+  return (
+    <Card key={item.id} className="group hover:shadow-md transition-all border-border/50">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] gap-1">
+                <FileText className="h-3 w-3" />
+                Recibo
+              </Badge>
+              <span className="text-xs font-mono text-muted-foreground">{item.numero}</span>
+              <Badge variant={item.tipo === "recebimento" ? "success" : "destructive"} className="gap-1 text-[10px]">
+                {item.tipo === "recebimento" ? (
+                  <ArrowUpRight className="h-3 w-3" />
+                ) : (
+                  <ArrowDownRight className="h-3 w-3" />
+                )}
+                {item.tipo === "recebimento" ? "Recebimento" : "Pagamento"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="font-medium text-base">{item.nomePagador} / {item.nomeRecebedor}</span>
+              <span className={`text-base font-semibold ${
+                item.tipo === "recebimento" ? "text-emerald-400" : "text-red-400"
+              }`}>
+                {item.tipo === "recebimento" ? "+" : "-"}{formatCurrency(item.valor)}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span>{item.referente}</span>
+              <span>{formatDate(item.data)}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs">
               <Clock className="h-3 w-3 text-muted-foreground" />

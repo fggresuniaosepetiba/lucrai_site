@@ -276,6 +276,9 @@ export interface ApiRecibo {
   lancamentoId: string | null;
   criadoPor: string;
   cancelamento: ApiCancelamentoRecibo | null;
+  excluidoEm: string | null;
+  excluidoPor: string | null;
+  expiracaoEm: string | null;
   createdAt: string;
   updatedAt: string;
 }

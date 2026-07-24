@@ -33,6 +33,9 @@ public class Recibo
     public Guid? LancamentoId { get; set; }
     public string CriadoPor { get; set; } = string.Empty;
     public string? Cancelamento { get; set; }
+    public DateTime? ExcluidoEm { get; set; }
+    public string? ExcluidoPor { get; set; }
+    public DateTime? ExpiracaoEm { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

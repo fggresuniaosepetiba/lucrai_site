@@ -8,7 +8,12 @@ public interface IReciboRepository
     Task<Recibo?> GetByIdAsync(Guid id, string company);
     Task<Recibo> CreateAsync(Recibo recibo);
     Task<Recibo> UpdateAsync(Recibo recibo);
-    Task DeleteAsync(Guid id, string company);
+    Task DeleteAsync(Guid id, string company, string? deletedBy = null);
     Task<Recibo?> GetByLancamentoIdAsync(Guid lancamentoId, string company);
     Task<string> GetProximoNumeroAsync(string company);
+    Task<List<Recibo>> GetTrashAsync(string company);
+    Task<Recibo?> GetByIdIncludingDeletedAsync(Guid id, string company);
+    Task RestoreFromTrashAsync(Recibo recibo);
+    Task PermanentDeleteAsync(Recibo recibo);
+    Task CleanupTrashAsync();
 }
