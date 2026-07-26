@@ -109,7 +109,7 @@ public class ContasController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Owner")]
     public async Task<IActionResult> GetAll()
     {
         var registrations = await _context.CompanyRegistrations

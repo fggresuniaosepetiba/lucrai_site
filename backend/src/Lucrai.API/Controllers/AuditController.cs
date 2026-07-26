@@ -7,7 +7,7 @@ namespace Lucrai.API.Controllers;
 
 [ApiController]
 [Route("api/audit")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Owner")]
 public class AuditController : ControllerBase
 {
     private readonly IAuditRepository _repo;

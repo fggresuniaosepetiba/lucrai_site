@@ -7,7 +7,7 @@ namespace Lucrai.API.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Owner")]
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _repo;
