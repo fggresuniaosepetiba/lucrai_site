@@ -130,9 +130,9 @@ O `DataSeeder` roda automático no startup da API e cria usuários com senha `12
 
 | Usuário | Papel |
 |---|---|
-| lucrai.adm | Admin |
+| lucrai.adm | Owner |
 | joao.ribeiro | Owner |
 | vitoria.justo | Admin |
-| fellype.gabriel | Admin |
+| fellype.gabriel | Owner |
 | eduardo.contador | Admin |
 | laura.peixoto | Admin |

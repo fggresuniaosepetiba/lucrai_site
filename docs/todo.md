@@ -234,6 +234,11 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] Recibos page: modal de confirmação de exclusão
 - [x] Trash page: aba "Recibos" com cards, restore e exclusão permanente
 
+## Sprint 22 — Ajuste de Cargos dos Usuários Seed
+
+- [x] `lucrai.adm`: Nome alterado para "Lucraí Admin", cargo alterado para Owner
+- [x] `fellype.gabriel`: Cargo alterado para Owner
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários
