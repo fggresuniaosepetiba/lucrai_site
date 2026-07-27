@@ -11,32 +11,42 @@ namespace Lucrai.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Remove existing duplicates before applying unique index.
-            // Keep oldest category per (LOWER(TRIM(Name)), Type, Company),
-            // reassign transactions to it, then delete the rest.
+            // For each (Type, Company, normalized Name) group with >1 row,
+            // keep the oldest (MIN Id), reassign its transactions, delete the rest.
             migrationBuilder.Sql(@"
-                UPDATE ""Transactions"" t
-                SET ""CategoryId"" = k.keep_id,
-                    ""CategoryName"" = k.keep_name
-                FROM (
-                    SELECT c2.""Id"" AS dup_id,
-                           MIN(c3.""Id"") AS keep_id,
-                           MIN(c3.""Name"") AS keep_name
-                    FROM ""Categories"" c2
-                    INNER JOIN ""Categories"" c3
-                        ON LOWER(TRIM(c3.""Name"")) = LOWER(TRIM(c2.""Name""))
-                        AND c3.""Type"" = c2.""Type""
-                        AND c3.""Company"" = c2.""Company""
-                    GROUP BY c2.""Id""
-                    HAVING COUNT(*) > 1 AND c2.""Id"" <> MIN(c3.""Id"")
-                ) k
-                WHERE t.""CategoryId"" = k.dup_id;
+                DO $$
+                DECLARE
+                    rec RECORD;
+                BEGIN
+                    FOR rec IN
+                        SELECT MIN(c.""Id"") AS keep_id,
+                               MIN(c.""Name"") AS keep_name,
+                               c.""Type"",
+                               c.""Company"",
+                               LOWER(TRIM(c.""Name"")) AS norm_name
+                        FROM ""Categories"" c
+                        GROUP BY c.""Type"", c.""Company"", LOWER(TRIM(c.""Name""))
+                        HAVING COUNT(*) > 1
+                    LOOP
+                        UPDATE ""Transactions""
+                        SET ""CategoryId"" = rec.keep_id,
+                            ""CategoryName"" = rec.keep_name
+                        WHERE ""CategoryId"" IN (
+                            SELECT c2.""Id""
+                            FROM ""Categories"" c2
+                            WHERE LOWER(TRIM(c2.""Name"")) = rec.norm_name
+                              AND c2.""Type"" = rec.""Type""
+                              AND c2.""Company"" = rec.""Company""
+                              AND c2.""Id"" <> rec.keep_id
+                        );
 
-                DELETE FROM ""Categories"" c
-                WHERE c.""Id"" NOT IN (
-                    SELECT MIN(c2.""Id"")
-                    FROM ""Categories"" c2
-                    GROUP BY LOWER(TRIM(c2.""Name"")), c2.""Type"", c2.""Company""
-                );
+                        DELETE FROM ""Categories"" c2
+                        WHERE LOWER(TRIM(c2.""Name"")) = rec.norm_name
+                          AND c2.""Type"" = rec.""Type""
+                          AND c2.""Company"" = rec.""Company""
+                          AND c2.""Id"" <> rec.keep_id;
+                    END LOOP;
+                END $$;
             ");
 
             migrationBuilder.DropIndex(
