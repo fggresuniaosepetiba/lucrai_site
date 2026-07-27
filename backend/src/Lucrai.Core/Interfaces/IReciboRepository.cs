@@ -15,5 +15,5 @@ public interface IReciboRepository
     Task<Recibo?> GetByIdIncludingDeletedAsync(Guid id, string company);
     Task RestoreFromTrashAsync(Recibo recibo);
     Task PermanentDeleteAsync(Recibo recibo);
-    Task CleanupTrashAsync();
+    Task CleanupTrashAsync(string company);
 }

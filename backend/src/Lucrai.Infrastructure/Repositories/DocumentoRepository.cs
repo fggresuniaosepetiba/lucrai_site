@@ -197,7 +197,7 @@ public class DocumentoRepository : IDocumentoRepository
 
         var docIds = expired.Select(t => t.DocumentoId).ToList();
         var docs = await _context.Documentos
-            .Where(d => docIds.Contains(d.Id))
+            .Where(d => docIds.Contains(d.Id) && d.Company == company)
             .ToListAsync();
 
         _context.Documentos.RemoveRange(docs);

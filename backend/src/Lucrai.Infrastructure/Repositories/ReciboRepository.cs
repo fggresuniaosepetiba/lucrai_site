@@ -100,10 +100,10 @@ public class ReciboRepository : IReciboRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task CleanupTrashAsync()
+    public async Task CleanupTrashAsync(string company)
     {
         var expired = await _context.Recibos
-            .Where(r => r.ExpiracaoEm != null && r.ExpiracaoEm <= DateTime.UtcNow)
+            .Where(r => r.Company == company && r.ExpiracaoEm != null && r.ExpiracaoEm <= DateTime.UtcNow)
             .ToListAsync();
 
         if (expired.Count > 0)

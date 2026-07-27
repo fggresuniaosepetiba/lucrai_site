@@ -15,22 +15,21 @@ public class TrashRepository : ITrashRepository
         _context = context;
     }
 
-    public async Task<List<DeletedItem>> GetAllAsync(string? company)
+    public async Task<List<DeletedItem>> GetAllAsync(string company)
     {
         var now = DateTime.UtcNow;
-        var query = _context.DeletedItems.Where(d => d.RestoreUntil > now);
-        if (company != null)
-            query = query.Where(d => d.Company == company);
-        return await query.OrderByDescending(d => d.DeletedAt).ToListAsync();
+        return await _context.DeletedItems
+            .Where(d => d.Company == company && d.RestoreUntil > now)
+            .OrderByDescending(d => d.DeletedAt)
+            .ToListAsync();
     }
 
-    public async Task<List<DeletedItem>> GetAllExpiredAsync(string? company = null)
+    public async Task<List<DeletedItem>> GetAllExpiredAsync(string company)
     {
         var now = DateTime.UtcNow;
-        var query = _context.DeletedItems.Where(d => d.RestoreUntil <= now);
-        if (company != null)
-            query = query.Where(d => d.Company == company);
-        return await query.ToListAsync();
+        return await _context.DeletedItems
+            .Where(d => d.Company == company && d.RestoreUntil <= now)
+            .ToListAsync();
     }
 
     public async Task MoveToTrashAsync(DeletedItem item, string? userName)
@@ -52,9 +51,9 @@ public class TrashRepository : ITrashRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<DeletedItem?> RestoreAsync(Guid id, string? userName, string? company = null)
+    public async Task<DeletedItem?> RestoreAsync(Guid id, string? userName, string company)
     {
-        var deleted = await _context.DeletedItems.FirstOrDefaultAsync(d => d.Id == id && (company == null || d.Company == company));
+        var deleted = await _context.DeletedItems.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         if (deleted == null) return null;
 
         if (deleted.EntryType == EntryType.Transaction)
@@ -112,9 +111,9 @@ public class TrashRepository : ITrashRepository
         return deleted;
     }
 
-    public async Task PermanentlyDeleteAsync(Guid id, string? userName, string? company = null)
+    public async Task PermanentlyDeleteAsync(Guid id, string? userName, string company)
     {
-        var deleted = await _context.DeletedItems.FirstOrDefaultAsync(d => d.Id == id && (company == null || d.Company == company));
+        var deleted = await _context.DeletedItems.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         if (deleted == null) return;
 
         _context.DeletedItems.Remove(deleted);
@@ -133,7 +132,7 @@ public class TrashRepository : ITrashRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<int> CleanupAsync(string? company = null)
+    public async Task<int> CleanupAsync(string company)
     {
         var expired = await GetAllExpiredAsync(company);
         if (expired.Count == 0) return 0;
