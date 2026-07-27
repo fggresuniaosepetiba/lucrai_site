@@ -53,6 +53,14 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category> CreateAsync(Category category)
     {
+        var existing = await _context.Categories
+            .FirstOrDefaultAsync(c =>
+                c.Name == category.Name &&
+                c.Type == category.Type &&
+                c.Company == category.Company);
+        if (existing != null)
+            return existing;
+
         category.CreatedAt = DateTime.UtcNow;
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();

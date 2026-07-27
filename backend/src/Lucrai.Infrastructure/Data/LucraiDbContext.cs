@@ -100,7 +100,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(c => c.CreatedBy).HasMaxLength(200).IsRequired();
 
             entity.HasIndex(c => new { c.Company, c.Type });
-            entity.HasIndex(c => new { c.Company, c.Name });
+            entity.HasIndex(c => new { c.Name, c.Type, c.Company }).IsUnique();
         });
 
         builder.Entity<CashForecast>(entity =>

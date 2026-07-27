@@ -239,6 +239,14 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] `lucrai.adm`: Nome alterado para "Lucraí Admin", cargo alterado para Owner
 - [x] `fellype.gabriel`: Cargo alterado para Owner
 
+## Sprint 23 — Correção de Duplicação de Categorias
+
+- [x] DbContext: unique index em `(Name, Type, Company)` + migration com cleanup de duplicatas
+- [x] CategoryRepository.CreateAsync: verifica duplicata antes de criar
+- [x] `transaction-form.tsx`: dedup de categorias por nome via useMemo
+- [x] `conferencia/page.tsx`: dedup de categorias por nome via useMemo
+- [x] `cash-forecast/page.tsx`: dedup de categorias + uso de `uniqueCategories` no select
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários

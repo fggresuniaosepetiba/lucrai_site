@@ -178,6 +178,16 @@ function CashForecastContent() {
     [categories, company, user?.id]
   );
 
+  const uniqueCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return userCategories.filter((c) => {
+      const key = `${c.type}:${c.name.toLowerCase().trim()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [userCategories]);
+
   const availableYears = useMemo(() => {
     const years = new Set<number>();
     items.forEach((i) => {
@@ -1046,7 +1056,7 @@ function CashForecastContent() {
                 <Label htmlFor="cat" className="flex items-center gap-1">
                   Categoria <span className="text-red-400">*</span>
                 </Label>
-                {userCategories.filter((c) => c.type === formType).length > 0 ? (
+                {uniqueCategories.filter((c) => c.type === formType).length > 0 ? (
                   <Select
                     key={formType + (editingItem?.id || "new")}
                     value={formCategory}
@@ -1056,7 +1066,7 @@ function CashForecastContent() {
                       <SelectValue placeholder="Selecionar categoria" />
                     </SelectTrigger>
                     <SelectContent position="popper" className="max-h-60">
-                      {userCategories
+                      {uniqueCategories
                         .filter((c) => c.type === formType)
                         .map((cat) => (
                           <SelectItem key={cat.id} value={cat.name}>

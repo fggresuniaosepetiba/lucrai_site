@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Shell } from "@/components/layout/shell";
@@ -265,6 +265,27 @@ export default function ConferenciaPage() {
     }
   };
 
+  const incomeCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return categorias.filter((c) => {
+      if (c.type !== "income") return false;
+      const key = c.name.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [categorias]);
+  const expenseCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return categorias.filter((c) => {
+      if (c.type !== "expense") return false;
+      const key = c.name.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [categorias]);
+
   if (loading) {
     return (
       <Shell>
@@ -278,8 +299,6 @@ export default function ConferenciaPage() {
 
   if (!doc) return null;
 
-  const incomeCategories = categorias.filter((c) => c.type === "income");
-  const expenseCategories = categorias.filter((c) => c.type === "expense");
   const filteredCats = formData.tipo_movimentacao === "RECEITA" ? incomeCategories
     : formData.tipo_movimentacao === "DESPESA" ? expenseCategories
     : categorias;

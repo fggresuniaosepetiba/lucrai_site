@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -76,7 +76,16 @@ export function TransactionForm({
     setLocalCategories(categories);
   }, [categories]);
 
-  const filteredCategories = localCategories.filter((c) => c.type === type);
+  const filteredCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return localCategories.filter((c) => {
+      if (c.type !== type) return false;
+      const key = c.name.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [localCategories, type]);
 
   const amountValue = valueDisplay ? parseCurrencyInput(valueDisplay) : 0;
 
