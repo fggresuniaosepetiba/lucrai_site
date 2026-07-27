@@ -22,6 +22,7 @@ Categorias estavam aparecendo multiplicadas nos selects de categoria em três lu
    - Reatribui transações das categorias duplicadas para a mantida
    - Remove as categorias duplicadas
 3. **`CategoryRepository.CreateAsync`**: Verifica se já existe categoria com `(Name, Type, Company)` antes de criar — se existir, retorna a existente
+4. **`DataSeeder.cs`**: `.IgnoreQueryFilters()` no `AnyAsync(c => c.Company == company)` — o tenant query filter (`HasQueryFilter`) filtrava por `CurrentCompany` (null durante o seed), fazendo `AnyAsync` sempre retornar false. Isso fazia o seeder tentar inserir as 12 categorias padrão a cada restart, o que antes criava duplicatas silenciosas e depois da unique constraint quebrava o startup com erro 23505.
 
 ### Frontend
 

@@ -246,6 +246,7 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] `transaction-form.tsx`: dedup de categorias por nome via useMemo
 - [x] `conferencia/page.tsx`: dedup de categorias por nome via useMemo
 - [x] `cash-forecast/page.tsx`: dedup de categorias + uso de `uniqueCategories` no select
+- [x] `DataSeeder.cs`: `.IgnoreQueryFilters()` no `AnyAsync` de categorias — tenant filter fazia seeder tentar inserir duplicatas a cada restart, quebrando o startup com violação da unique constraint
 
 ## Pendentes
 
