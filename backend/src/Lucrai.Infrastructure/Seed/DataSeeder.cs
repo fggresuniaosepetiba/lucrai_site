@@ -143,7 +143,7 @@ public static class DataSeeder
 
         foreach (var company in companies)
         {
-            if (!await context.Categories.AnyAsync(c => c.Company == company))
+            if (!await context.Categories.IgnoreQueryFilters().AnyAsync(c => c.Company == company))
             {
                 var incomeCategories = new[]
                 {
