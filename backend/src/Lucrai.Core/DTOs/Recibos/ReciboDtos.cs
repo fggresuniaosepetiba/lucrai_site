@@ -21,8 +21,7 @@ public record CreateReciboRequest(
     bool ExibirAssinatura,
     int? ParcelaAtual,
     int? ParcelasTotal,
-    Guid? LancamentoId,
-    string CriadoPor
+    Guid? LancamentoId
 );
 
 public record UpdateReciboRequest(
@@ -82,7 +81,7 @@ public record ReciboResponse(
     int? ParcelaAtual,
     int? ParcelasTotal,
     Guid? LancamentoId,
-    string CriadoPor,
+    string? CreatedBy,
     CancelamentoInfo? Cancelamento,
     DateTime? ExcluidoEm,
     string? ExcluidoPor,

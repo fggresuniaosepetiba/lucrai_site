@@ -4,7 +4,7 @@ public class DocumentoFinanceiro
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Company { get; set; } = string.Empty;
-    public string UserUploadId { get; set; } = string.Empty;
+    public string CreatedBy { get; set; } = string.Empty;
     public string NomeArquivoOriginal { get; set; } = string.Empty;
     public string NomeArquivoStorage { get; set; } = string.Empty;
     public string PathStorage { get; set; } = string.Empty;

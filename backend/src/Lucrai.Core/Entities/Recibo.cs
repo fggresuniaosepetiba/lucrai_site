@@ -31,7 +31,7 @@ public class Recibo
     public int? ParcelaAtual { get; set; }
     public int? ParcelasTotal { get; set; }
     public Guid? LancamentoId { get; set; }
-    public string CriadoPor { get; set; } = string.Empty;
+    public string? CreatedBy { get; set; }
     public string? Cancelamento { get; set; }
     public DateTime? ExcluidoEm { get; set; }
     public string? ExcluidoPor { get; set; }

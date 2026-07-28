@@ -8,4 +8,5 @@ public class SignatureConfig
     public string NomeResponsavel { get; set; } = string.Empty;
     public string Cargo { get; set; } = string.Empty;
     public bool PermitirUso { get; set; }
+    public string? CreatedBy { get; set; }
 }

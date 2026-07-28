@@ -22,7 +22,6 @@ public class CreateReciboRequestValidator : AbstractValidator<CreateReciboReques
         RuleFor(x => x.Email).MaximumLength(200);
         RuleFor(x => x.Cidade).MaximumLength(100);
         RuleFor(x => x.Estado).MaximumLength(2);
-        RuleFor(x => x.CriadoPor).NotEmpty().MaximumLength(200);
     }
 }
 

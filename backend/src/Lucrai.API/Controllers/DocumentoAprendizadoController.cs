@@ -43,7 +43,7 @@ public class DocumentoAprendizadoController : ControllerBase
             TipoMovimentacao = request.TipoMovimentacao,
             ConfiancaMinima = request.ConfiancaMinima ?? 70,
             Ativo = request.Ativo ?? true,
-            CriadoPor = UserId
+            CreatedBy = UserId
         };
 
         var result = await _repo.UpsertAsync(aprendizado);

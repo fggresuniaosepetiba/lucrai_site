@@ -11,5 +11,5 @@ public class DocumentoAprendizado
     public bool Ativo { get; set; } = true;
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
     public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
-    public string CriadoPor { get; set; } = string.Empty;
+    public string CreatedBy { get; set; } = string.Empty;
 }

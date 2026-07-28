@@ -17,6 +17,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
     }
 
     private string? CurrentCompany => _tenantContext.Company;
+    private string? CurrentUserId => _tenantContext.UserId;
 
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Category> Categories => Set<Category>();
@@ -194,6 +195,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(a => a.Action).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(a => a.Description).HasMaxLength(500).IsRequired();
             entity.Property(a => a.User).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.UserId).HasMaxLength(200);
             entity.Property(a => a.Company).HasMaxLength(200).IsRequired();
             entity.Property(a => a.Details).HasMaxLength(2000);
 
@@ -260,7 +262,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
         {
             entity.HasKey(d => d.Id);
             entity.Property(d => d.Company).HasMaxLength(200).IsRequired();
-            entity.Property(d => d.UserUploadId).HasMaxLength(200).IsRequired();
+            entity.Property(d => d.CreatedBy).HasMaxLength(200).IsRequired();
             entity.Property(d => d.NomeArquivoOriginal).HasMaxLength(500).IsRequired();
             entity.Property(d => d.NomeArquivoStorage).HasMaxLength(500).IsRequired();
             entity.Property(d => d.PathStorage).HasMaxLength(1000).IsRequired();
@@ -326,7 +328,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(a => a.Chave).HasMaxLength(500).IsRequired();
             entity.Property(a => a.CategoriaId).HasMaxLength(100);
             entity.Property(a => a.TipoMovimentacao).HasMaxLength(20);
-            entity.Property(a => a.CriadoPor).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.CreatedBy).HasMaxLength(200).IsRequired();
 
             entity.HasIndex(a => new { a.Company, a.Chave }).IsUnique();
             entity.HasIndex(a => new { a.Company, a.Ativo });
@@ -336,6 +338,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Company).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.CreatedBy).HasMaxLength(200);
 
             entity.HasIndex(c => c.Company).IsUnique();
         });
@@ -347,6 +350,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(s => s.NomeResponsavel).HasMaxLength(200).IsRequired();
             entity.Property(s => s.Cargo).HasMaxLength(200).IsRequired();
             entity.Property(s => s.PermitirUso).IsRequired();
+            entity.Property(s => s.CreatedBy).HasMaxLength(200);
 
             entity.HasIndex(s => s.Company).IsUnique();
         });
@@ -367,6 +371,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(f => f.Limpeza).HasColumnType("decimal(18,2)");
             entity.Property(f => f.Outros).HasColumnType("decimal(18,2)");
             entity.Property(f => f.Total).HasColumnType("decimal(18,2)");
+            entity.Property(f => f.CreatedBy).HasMaxLength(200);
 
             entity.HasIndex(f => f.Company).IsUnique();
         });
@@ -381,6 +386,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(i => i.QuantidadeComprada).HasColumnType("decimal(18,2)");
             entity.Property(i => i.ValorPago).HasColumnType("decimal(18,2)");
             entity.Property(i => i.CustoPorUnidade).HasColumnType("decimal(18,2)");
+            entity.Property(i => i.CreatedBy).HasMaxLength(200);
 
             entity.HasIndex(i => new { i.Company, i.Nome });
         });
@@ -408,7 +414,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(r => r.Email).HasMaxLength(200);
             entity.Property(r => r.Cidade).HasMaxLength(100);
             entity.Property(r => r.Estado).HasMaxLength(2);
-            entity.Property(r => r.CriadoPor).HasMaxLength(200).IsRequired();
+            entity.Property(r => r.CreatedBy).HasMaxLength(200);
             entity.Property(r => r.Cancelamento).HasMaxLength(1000);
             entity.Property(r => r.ExcluidoEm);
             entity.Property(r => r.ExcluidoPor).HasMaxLength(200);
@@ -528,28 +534,28 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
 
     private void ApplyTenantFilters(ModelBuilder builder)
     {
-        builder.Entity<Transaction>().HasQueryFilter(t => t.Company == CurrentCompany);
-        builder.Entity<Category>().HasQueryFilter(c => c.Company == CurrentCompany);
-        builder.Entity<CashForecast>().HasQueryFilter(f => f.Company == CurrentCompany);
-        builder.Entity<PricingProduct>().HasQueryFilter(p => p.Company == CurrentCompany);
-        builder.Entity<DeletedItem>().HasQueryFilter(d => d.Company == CurrentCompany);
-        builder.Entity<AuditLog>().HasQueryFilter(a => a.Company == CurrentCompany);
-        builder.Entity<CompanySettings>().HasQueryFilter(s => s.Company == CurrentCompany);
+        builder.Entity<Transaction>().HasQueryFilter(t => t.Company == CurrentCompany && (t.CreatedBy == null || t.CreatedBy == CurrentUserId));
+        builder.Entity<Category>().HasQueryFilter(c => c.Company == CurrentCompany && (c.CreatedBy == "" || c.CreatedBy == CurrentUserId));
+        builder.Entity<CashForecast>().HasQueryFilter(f => f.Company == CurrentCompany && (f.CreatedBy == null || f.CreatedBy == CurrentUserId));
+        builder.Entity<PricingProduct>().HasQueryFilter(p => p.Company == CurrentCompany && (p.CreatedBy == null || p.CreatedBy == CurrentUserId));
+        builder.Entity<DeletedItem>().HasQueryFilter(d => d.Company == CurrentCompany && (d.CreatedBy == null || d.CreatedBy == CurrentUserId));
+        builder.Entity<AuditLog>().HasQueryFilter(a => a.Company == CurrentCompany && (a.UserId == null || a.UserId == CurrentUserId));
+        builder.Entity<CompanySettings>().HasQueryFilter(s => s.Company == CurrentCompany && s.UserId == CurrentUserId);
         builder.Entity<DismissedAlert>().HasQueryFilter(d => d.Company == CurrentCompany);
-        builder.Entity<DocumentoFinanceiro>().HasQueryFilter(d => d.Company == CurrentCompany);
-        builder.Entity<DocumentoTrashItem>().HasQueryFilter(t => t.Company == CurrentCompany);
-        builder.Entity<DocumentoLog>().HasQueryFilter(l => l.Company == CurrentCompany);
-        builder.Entity<DocumentoAprendizado>().HasQueryFilter(a => a.Company == CurrentCompany);
-        builder.Entity<DocumentoConfiguracao>().HasQueryFilter(c => c.Company == CurrentCompany);
-        builder.Entity<SignatureConfig>().HasQueryFilter(s => s.Company == CurrentCompany);
-        builder.Entity<FixedCost>().HasQueryFilter(f => f.Company == CurrentCompany);
-        builder.Entity<Insumo>().HasQueryFilter(i => i.Company == CurrentCompany);
-        builder.Entity<Recibo>().HasQueryFilter(r => r.Company == CurrentCompany);
-        builder.Entity<AccountReceivable>().HasQueryFilter(a => a.Company == CurrentCompany);
-        builder.Entity<AccountPayable>().HasQueryFilter(a => a.Company == CurrentCompany);
-        builder.Entity<Debt>().HasQueryFilter(d => d.Company == CurrentCompany);
-        builder.Entity<Investment>().HasQueryFilter(i => i.Company == CurrentCompany);
-        builder.Entity<BalanceAccount>().HasQueryFilter(b => b.Company == CurrentCompany);
+        builder.Entity<DocumentoFinanceiro>().HasQueryFilter(d => d.Company == CurrentCompany && (d.CreatedBy == null || d.CreatedBy == CurrentUserId));
+        builder.Entity<DocumentoTrashItem>().HasQueryFilter(t => t.Company == CurrentCompany && t.ExcluidoPor == CurrentUserId);
+        builder.Entity<DocumentoLog>().HasQueryFilter(l => l.Company == CurrentCompany && l.UsuarioId == CurrentUserId);
+        builder.Entity<DocumentoAprendizado>().HasQueryFilter(a => a.Company == CurrentCompany && (a.CreatedBy == null || a.CreatedBy == CurrentUserId));
+        builder.Entity<DocumentoConfiguracao>().HasQueryFilter(c => c.Company == CurrentCompany && (c.CreatedBy == null || c.CreatedBy == CurrentUserId));
+        builder.Entity<SignatureConfig>().HasQueryFilter(s => s.Company == CurrentCompany && (s.CreatedBy == null || s.CreatedBy == CurrentUserId));
+        builder.Entity<FixedCost>().HasQueryFilter(f => f.Company == CurrentCompany && (f.CreatedBy == null || f.CreatedBy == CurrentUserId));
+        builder.Entity<Insumo>().HasQueryFilter(i => i.Company == CurrentCompany && (i.CreatedBy == null || i.CreatedBy == CurrentUserId));
+        builder.Entity<Recibo>().HasQueryFilter(r => r.Company == CurrentCompany && (r.CreatedBy == null || r.CreatedBy == CurrentUserId));
+        builder.Entity<AccountReceivable>().HasQueryFilter(a => a.Company == CurrentCompany && (a.CreatedBy == null || a.CreatedBy == CurrentUserId));
+        builder.Entity<AccountPayable>().HasQueryFilter(a => a.Company == CurrentCompany && (a.CreatedBy == null || a.CreatedBy == CurrentUserId));
+        builder.Entity<Debt>().HasQueryFilter(d => d.Company == CurrentCompany && (d.CreatedBy == null || d.CreatedBy == CurrentUserId));
+        builder.Entity<Investment>().HasQueryFilter(i => i.Company == CurrentCompany && (i.CreatedBy == null || i.CreatedBy == CurrentUserId));
+        builder.Entity<BalanceAccount>().HasQueryFilter(b => b.Company == CurrentCompany && (b.CreatedBy == null || b.CreatedBy == CurrentUserId));
         builder.Entity<User>().HasQueryFilter(u => CurrentCompany == null || u.Company == CurrentCompany);
     }
 }

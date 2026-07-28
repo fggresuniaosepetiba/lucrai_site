@@ -78,11 +78,16 @@ public class ReciboRepository : IReciboRepository
             .ToListAsync();
     }
 
-    public async Task<Recibo?> GetByIdIncludingDeletedAsync(Guid id, string company)
+    public async Task<Recibo?> GetByIdIncludingDeletedAsync(Guid id, string company, string? userId = null)
     {
-        return await _context.Recibos
+        var query = _context.Recibos
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(r => r.Id == id && r.Company == company);
+            .Where(r => r.Id == id && r.Company == company);
+
+        if (!string.IsNullOrEmpty(userId))
+            query = query.Where(r => r.CreatedBy == null || r.CreatedBy == userId);
+
+        return await query.FirstOrDefaultAsync();
     }
 
     public async Task RestoreFromTrashAsync(Recibo recibo)

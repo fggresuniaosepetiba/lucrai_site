@@ -11,6 +11,7 @@ public class AuditLog
     public AuditAction Action { get; set; }
     public string Description { get; set; } = string.Empty;
     public string User { get; set; } = string.Empty;
+    public string? UserId { get; set; }
     public string Company { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public string? Details { get; set; }

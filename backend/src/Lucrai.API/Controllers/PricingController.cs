@@ -19,7 +19,7 @@ public class PricingController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
-    private string UserName => HttpContext.Items["UserName"] as string ?? "";
+    private string UserId => HttpContext.Items["UserId"] as string ?? "";
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
@@ -68,7 +68,7 @@ public class PricingController : ControllerBase
             PremiumPrice = basePrice * 1.2m,
             NetMargin = request.DesiredMargin,
             Company = Company,
-            CreatedBy = UserName
+            CreatedBy = UserId
         };
 
         var created = await _repo.CreateAsync(product);

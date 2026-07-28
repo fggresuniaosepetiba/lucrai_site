@@ -24,6 +24,7 @@ public class RecibosController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
+    private string UserId => HttpContext.Items["UserId"] as string ?? "";
     private string UserName => User.FindFirst(ClaimTypes.Name)?.Value
         ?? User.FindFirst("name")?.Value
         ?? "Sistema";
@@ -79,7 +80,7 @@ public class RecibosController : ControllerBase
             ParcelaAtual = request.ParcelaAtual,
             ParcelasTotal = request.ParcelasTotal,
             LancamentoId = request.LancamentoId,
-            CriadoPor = request.CriadoPor,
+            CreatedBy = UserId,
         };
 
         var created = await _repo.CreateAsync(recibo);
@@ -91,7 +92,8 @@ public class RecibosController : ControllerBase
             DisplayId = created.DisplayId,
             Action = AuditAction.Created,
             Description = $"Recibo {created.Numero} criado",
-            User = request.CriadoPor,
+            User = UserName,
+            UserId = UserId,
             Company = Company,
         });
 
@@ -140,6 +142,7 @@ public class RecibosController : ControllerBase
             Action = AuditAction.Edited,
             Description = $"Recibo {updated.Numero} editado",
             User = UserName,
+            UserId = UserId,
             Company = Company,
         });
 
@@ -177,6 +180,7 @@ public class RecibosController : ControllerBase
             Action = AuditAction.Cancelled,
             Description = $"Recibo {recibo.Numero} cancelado: {request.Motivo}",
             User = UserName,
+            UserId = UserId,
             Company = Company,
         });
 
@@ -200,7 +204,8 @@ public class RecibosController : ControllerBase
             DisplayId = recibo.DisplayId,
             Action = action,
             Description = request.Description,
-            User = request.User,
+            User = UserName,
+            UserId = UserId,
             Company = Company,
         });
 
@@ -227,6 +232,7 @@ public class RecibosController : ControllerBase
             Action = AuditAction.MovedToTrash,
             Description = $"Recibo {existing.Numero} movido para lixeira",
             User = UserName,
+            UserId = UserId,
             Company = Company,
         });
 
@@ -244,7 +250,7 @@ public class RecibosController : ControllerBase
     [HttpPost("{id:guid}/restore")]
     public async Task<IActionResult> Restore(Guid id)
     {
-        var recibo = await _repo.GetByIdIncludingDeletedAsync(id, Company);
+        var recibo = await _repo.GetByIdIncludingDeletedAsync(id, Company, UserId);
         if (recibo == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
@@ -261,6 +267,7 @@ public class RecibosController : ControllerBase
             Action = AuditAction.Restored,
             Description = $"Recibo {recibo.Numero} restaurado da lixeira",
             User = UserName,
+            UserId = UserId,
             Company = Company,
         });
 
@@ -270,7 +277,7 @@ public class RecibosController : ControllerBase
     [HttpDelete("{id:guid}/permanent")]
     public async Task<IActionResult> PermanentDelete(Guid id)
     {
-        var recibo = await _repo.GetByIdIncludingDeletedAsync(id, Company);
+        var recibo = await _repo.GetByIdIncludingDeletedAsync(id, Company, UserId);
         if (recibo == null)
             return NotFound(new { error = "Recibo não encontrado" });
 
@@ -287,6 +294,7 @@ public class RecibosController : ControllerBase
             Action = AuditAction.Deleted,
             Description = $"Recibo {recibo.Numero} excluído permanentemente",
             User = UserName,
+            UserId = UserId,
             Company = Company,
         });
 
@@ -310,7 +318,7 @@ public class RecibosController : ControllerBase
             r.Referente, r.FormaPagamento, r.Observacoes,
             r.Telefone, r.Email, r.Cidade, r.Estado,
             r.ExibirAssinatura, r.ParcelaAtual, r.ParcelasTotal,
-            r.LancamentoId, r.CriadoPor, cancelamento,
+            r.LancamentoId, r.CreatedBy, cancelamento,
             r.ExcluidoEm, r.ExcluidoPor, r.ExpiracaoEm,
             r.CreatedAt, r.UpdatedAt
         );

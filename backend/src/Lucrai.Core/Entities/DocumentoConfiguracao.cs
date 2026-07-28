@@ -9,4 +9,5 @@ public class DocumentoConfiguracao
     public int DiasRetencaoLixeira { get; set; } = 30;
     public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
     public DateTime AtualizadoEm { get; set; } = DateTime.UtcNow;
+    public string? CreatedBy { get; set; }
 }

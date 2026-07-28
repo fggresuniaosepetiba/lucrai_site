@@ -3,7 +3,7 @@ namespace Lucrai.Core.DTOs.Documentos;
 public record DocumentoResponse(
     Guid Id,
     string Company,
-    string UserUploadId,
+    string CreatedBy,
     string NomeArquivoOriginal,
     string NomeArquivoStorage,
     string PathStorage,

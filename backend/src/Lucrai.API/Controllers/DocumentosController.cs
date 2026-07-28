@@ -115,7 +115,7 @@ public class DocumentosController : ControllerBase
             var doc = new DocumentoFinanceiro
             {
                 Company = Company,
-                UserUploadId = HttpContext.Items["UserId"] as string ?? "",
+                CreatedBy = HttpContext.Items["UserId"] as string ?? "",
                 NomeArquivoOriginal = file.FileName,
                 NomeArquivoStorage = storageName,
                 PathStorage = storagePath,
@@ -350,7 +350,7 @@ public class DocumentosController : ControllerBase
     private static DocumentoResponse MapToResponse(DocumentoFinanceiro d)
     {
         return new DocumentoResponse(
-            d.Id, d.Company, d.UserUploadId, d.NomeArquivoOriginal,
+            d.Id, d.Company, d.CreatedBy, d.NomeArquivoOriginal,
             d.NomeArquivoStorage, d.PathStorage,
             d.TipoArquivo, d.TamanhoBytes, d.Status,
             d.TipoDocumentoDetectado, d.ValorExtraido, d.DataExtraida,

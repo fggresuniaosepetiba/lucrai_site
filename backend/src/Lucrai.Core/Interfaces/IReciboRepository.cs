@@ -12,7 +12,7 @@ public interface IReciboRepository
     Task<Recibo?> GetByLancamentoIdAsync(Guid lancamentoId, string company);
     Task<string> GetProximoNumeroAsync(string company);
     Task<List<Recibo>> GetTrashAsync(string company);
-    Task<Recibo?> GetByIdIncludingDeletedAsync(Guid id, string company);
+    Task<Recibo?> GetByIdIncludingDeletedAsync(Guid id, string company, string? userId = null);
     Task RestoreFromTrashAsync(Recibo recibo);
     Task PermanentDeleteAsync(Recibo recibo);
     Task CleanupTrashAsync(string company);
