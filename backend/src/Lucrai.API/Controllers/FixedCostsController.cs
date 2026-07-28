@@ -19,6 +19,7 @@ public class FixedCostsController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
+    private string UserId => HttpContext.Items["UserId"] as string ?? "";
 
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -42,6 +43,7 @@ public class FixedCostsController : ControllerBase
         var entity = new FixedCost
         {
             Company = Company,
+            CreatedBy = UserId,
             Aluguel = request.Aluguel,
             Energia = request.Energia,
             Agua = request.Agua,

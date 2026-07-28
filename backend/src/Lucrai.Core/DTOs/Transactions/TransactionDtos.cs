@@ -3,7 +3,7 @@ namespace Lucrai.Core.DTOs.Transactions;
 public record CreateTransactionRequest(
     string Type,
     decimal Value,
-    Guid CategoryId,
+    Guid? CategoryId,
     string CategoryName,
     string Description,
     DateTime Date,

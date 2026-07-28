@@ -140,6 +140,7 @@ public class DocumentoRepository : IDocumentoRepository
             ?? throw new KeyNotFoundException("Documento não encontrado");
 
         var trashItem = await _context.Set<DocumentoTrashItem>()
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.DocumentoId == id && t.Company == company)
             ?? throw new KeyNotFoundException("Item não encontrado na lixeira");
 
@@ -158,6 +159,7 @@ public class DocumentoRepository : IDocumentoRepository
     {
         var doc = await _context.Documentos.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         var trashItem = await _context.Set<DocumentoTrashItem>()
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.DocumentoId == id && t.Company == company);
 
         if (doc != null)
@@ -170,7 +172,7 @@ public class DocumentoRepository : IDocumentoRepository
 
     public async Task<List<DocumentoTrashItem>> GetAllTrashItemsAsync(string? company)
     {
-        var query = _context.Set<DocumentoTrashItem>().AsQueryable();
+        var query = _context.Set<DocumentoTrashItem>().IgnoreQueryFilters().AsQueryable();
         if (company != null)
             query = query.Where(t => t.Company == company);
         return await query
@@ -181,6 +183,7 @@ public class DocumentoRepository : IDocumentoRepository
     public async Task<DocumentoTrashItem?> GetTrashItemAsync(Guid documentoId, string company)
     {
         return await _context.Set<DocumentoTrashItem>()
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(t => t.DocumentoId == documentoId && t.Company == company);
     }
 

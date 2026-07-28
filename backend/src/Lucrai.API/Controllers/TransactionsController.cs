@@ -14,11 +14,13 @@ public class TransactionsController : ControllerBase
 {
     private readonly ITransactionRepository _repo;
     private readonly ITrashRepository _trashRepo;
+    private readonly ICategoryRepository _categoryRepo;
 
-    public TransactionsController(ITransactionRepository repo, ITrashRepository trashRepo)
+    public TransactionsController(ITransactionRepository repo, ITrashRepository trashRepo, ICategoryRepository categoryRepo)
     {
         _repo = repo;
         _trashRepo = trashRepo;
+        _categoryRepo = categoryRepo;
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
@@ -84,12 +86,34 @@ public class TransactionsController : ControllerBase
         if (!Enum.TryParse<Core.Enums.TransactionType>(request.Type, true, out var tType))
             return BadRequest(new { error = "Tipo inválido. Use 'Income' ou 'Expense'" });
 
+        Guid transactionCategoryId;
+        string transactionCategoryName;
+        if (request.CategoryId == null || request.CategoryId.Value == Guid.Empty)
+        {
+            var cat = await _categoryRepo.CreateAsync(new Category
+            {
+                Name = request.CategoryName,
+                Color = "#6366f1",
+                Icon = "file-text",
+                Type = tType,
+                Company = Company,
+                CreatedBy = UserId
+            });
+            transactionCategoryId = cat.Id;
+            transactionCategoryName = cat.Name;
+        }
+        else
+        {
+            transactionCategoryId = request.CategoryId.Value;
+            transactionCategoryName = request.CategoryName;
+        }
+
         var transaction = new Transaction
         {
             Type = tType,
             Value = request.Value,
-            CategoryId = request.CategoryId,
-            CategoryName = request.CategoryName,
+            CategoryId = transactionCategoryId,
+            CategoryName = transactionCategoryName,
             Description = request.Description,
             Date = DateTime.SpecifyKind(request.Date, DateTimeKind.Unspecified),
             Observation = request.Observation,

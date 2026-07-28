@@ -53,7 +53,9 @@ public class TrashRepository : ITrashRepository
 
     public async Task<DeletedItem?> RestoreAsync(Guid id, string? userName, string company)
     {
-        var deleted = await _context.DeletedItems.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
+        var deleted = await _context.DeletedItems
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         if (deleted == null) return null;
 
         if (deleted.EntryType == EntryType.Transaction)
@@ -113,7 +115,9 @@ public class TrashRepository : ITrashRepository
 
     public async Task PermanentlyDeleteAsync(Guid id, string? userName, string company)
     {
-        var deleted = await _context.DeletedItems.FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
+        var deleted = await _context.DeletedItems
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(d => d.Id == id && d.Company == company);
         if (deleted == null) return;
 
         _context.DeletedItems.Remove(deleted);

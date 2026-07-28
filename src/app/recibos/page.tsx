@@ -155,7 +155,7 @@ function RecibosPage() {
         const lancamento = await TransactionRepositoryApi.create({
           type: data.tipo === "recebimento" ? "income" : "expense",
           value: data.valor,
-          categoryId: "",
+          categoryId: null as any,
           categoryName: "Recibo",
           description: `Recibo ${recibo.numero} - ${data.referente}`,
           date: data.data,

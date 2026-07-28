@@ -20,6 +20,7 @@ public class InsumosController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
+    private string UserId => HttpContext.Items["UserId"] as string ?? "";
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
@@ -65,7 +66,8 @@ public class InsumosController : ControllerBase
             QuantidadeComprada = request.QuantidadeComprada,
             ValorPago = request.ValorPago,
             CustoPorUnidade = custoPorUnidade,
-            Company = Company
+            Company = Company,
+            CreatedBy = UserId
         };
 
         var created = await _repo.CreateAsync(insumo);

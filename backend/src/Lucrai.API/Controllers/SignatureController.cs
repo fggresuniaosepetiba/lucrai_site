@@ -19,6 +19,7 @@ public class SignatureController : ControllerBase
     }
 
     private string Company => HttpContext.Items["Company"] as string ?? "";
+    private string UserId => HttpContext.Items["UserId"] as string ?? "";
 
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -39,7 +40,8 @@ public class SignatureController : ControllerBase
             NomeResponsavel = request.NomeResponsavel,
             Cargo = request.Cargo,
             PermitirUso = request.PermitirUso,
-            Company = Company
+            Company = Company,
+            CreatedBy = UserId
         };
 
         var saved = await _repo.SaveAsync(config);
