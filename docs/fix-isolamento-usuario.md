@@ -103,9 +103,33 @@ builder.Entity<Transaction>().HasQueryFilter(t =>
 
 ---
 
+## Fixes Posteriores (2026-07-28 #2)
+
+Após QA encontrar 3 bugs de isolamento/restore, foram aplicados:
+
+### Controllers sem `CreatedBy` 
+- `FixedCostsController` — adicionado `UserId`, seta `CreatedBy = UserId` no Save()
+- `InsumosController` — adicionado `UserId`, seta `CreatedBy = UserId` no Create()
+- `SignatureController` — adicionado `UserId`, seta `CreatedBy = UserId` no Save()
+
+### Restore da Lixeira com `.IgnoreQueryFilters()`
+- `TrashRepository.RestoreAsync()` — adicionado `.IgnoreQueryFilters()` para encontrar DeletedItems
+- `TrashRepository.PermanentlyDeleteAsync()` — idem
+- `DocumentoRepository.RestoreFromTrashAsync()` — adicionado `.IgnoreQueryFilters()` no DocumentoTrashItem
+- `DocumentoRepository.PermanentDeleteAsync()` — idem
+- `DocumentoRepository.GetAllTrashItemsAsync()` — idem
+- `DocumentoRepository.GetTrashItemAsync()` — idem
+
+### Erro ao criar Lançamento Financeiro do Recibo
+- `CreateTransactionRequest.CategoryId` mudou de `Guid` para `Guid?`
+- Quando `CategoryId` é null/empty, o controller cria (ou reusa) uma categoria "Recibo" via `ICategoryRepository`
+- Frontend (`recibos/page.tsx`) envia `null` em vez de `""`
+
+---
+
 ## Testes
 
-87 testes no total (85 originais + 2 novos):
+87 testes no total:
 
 | Teste | O que verifica |
 |---|---|
