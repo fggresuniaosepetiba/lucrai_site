@@ -47,12 +47,12 @@ export const TransactionRepositoryApi = {
   },
 
   async create(
-    data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company" | "createdBy">,
+    data: Omit<Transaction, "id" | "displayId" | "createdAt" | "updatedAt" | "company" | "createdBy" | "categoryId"> & { categoryId?: string | null },
   ): Promise<Transaction> {
     const created = await api.post<ApiTransaction>("/api/transactions", {
       type: data.type === "income" ? "Income" : "Expense",
       value: data.value,
-      categoryId: data.categoryId,
+      categoryId: data.categoryId ?? null,
       categoryName: data.categoryName,
       description: data.description,
       date: `${data.date}T00:00:00`,
