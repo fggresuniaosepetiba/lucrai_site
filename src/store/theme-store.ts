@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-export type ThemeMode = "normal" | "dark-mega" | "clean";
+export type ThemeMode = "normal" | "dark-mega";
 
 interface ThemeState {
   theme: ThemeMode;
@@ -12,7 +12,7 @@ interface ThemeState {
 function getInitialTheme(): ThemeMode {
   if (typeof window === "undefined") return "normal";
   const stored = localStorage.getItem("lucrai-theme") as ThemeMode | null;
-  if (stored && ["normal", "dark-mega", "clean"].includes(stored)) return stored;
+  if (stored && ["normal", "dark-mega"].includes(stored)) return stored;
   return "normal";
 }
 

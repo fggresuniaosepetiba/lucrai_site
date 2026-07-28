@@ -95,8 +95,8 @@ export function Sidebar() {
   const isPricingRoute = pathname === "/pricing" || pathname.startsWith("/pricing/");
   const isPricingActive = isPricingRoute;
 
-  const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/icon-normal.png" : "/images/icon-oficial.png";
-  const logoSrc = theme === "clean" ? "/images/light-oficial-sidebar.png" : "/images/lucrai/logo-lucrai-sidebar.png";
+  const iconSrc = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : "/images/icon-oficial.png";
+  const logoSrc = "/images/lucrai/logo-lucrai-sidebar.png";
 
   const handleLogout = async () => {
     await logout();

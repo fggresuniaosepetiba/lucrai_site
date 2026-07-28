@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useSidebarStore } from "@/store/sidebar-store";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore, type ThemeMode } from "@/store/theme-store";
-import { Bell, Menu, Moon, Sun, Monitor, Check } from "lucide-react";
+import { Menu, Moon, Monitor, Check } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   DropdownMenu,
@@ -32,9 +32,8 @@ const pageTitles: Record<string, string> = {
 const dashRoutes = ["/dashboard", "/dashboard/alertas", "/dashboard/projecoes", "/dashboard/resumo-cfo", "/dashboard/indicadores"];
 
 const themes: { value: ThemeMode; label: string; icon: typeof Moon }[] = [
-  { value: "normal", label: "Normal", icon: Monitor },
+  { value: "normal", label: "Sistema", icon: Monitor },
   { value: "dark-mega", label: "Dark Mega", icon: Moon },
-  { value: "clean", label: "Clean", icon: Sun },
 ];
 
 export function Header() {
@@ -46,7 +45,7 @@ export function Header() {
 
   const isDashboard = dashRoutes.includes(pathname) || pathname.startsWith("/dashboard/");
 
-  const mobileIcon = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : theme === "clean" ? "/images/lucrai/icon-clean.png" : "/images/lucrai/icon-normal.png";
+  const mobileIcon = theme === "dark-mega" ? "/images/lucrai/icon-dark.png" : "/images/lucrai/icon-normal.png";
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-xl px-4 lg:px-6">
@@ -73,9 +72,7 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="rounded-lg p-2 hover:bg-accent transition-colors">
-              {theme === "clean" ? (
-                <Sun className="h-5 w-5 text-muted-foreground" />
-              ) : theme === "dark-mega" ? (
+              {theme === "dark-mega" ? (
                 <Moon className="h-5 w-5 text-muted-foreground" />
               ) : (
                 <Monitor className="h-5 w-5 text-muted-foreground" />
@@ -100,11 +97,6 @@ export function Header() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <button className="relative rounded-lg p-2 hover:bg-accent transition-colors">
-          <Bell className="h-5 w-5 text-muted-foreground" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-        </button>
 
         <div className="flex items-center gap-2 border-l border-border/50 pl-3">
           <div className="text-right hidden sm:block">

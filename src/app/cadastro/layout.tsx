@@ -12,7 +12,7 @@ export default function CadastroLayout({
   children: React.ReactNode
 }) {
   return (
-    <div data-theme="clean" className="min-h-screen bg-background">
+    <div data-theme="normal" className="min-h-screen bg-background">
       {children}
     </div>
   )

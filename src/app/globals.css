@@ -108,45 +108,6 @@
     --sidebar-logo-bg: rgba(255,255,255,0.03);
   }
 
-  [data-theme="clean"] {
-    --background: 0 0% 98%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 199 89% 48%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 20% 94%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 20% 94%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 20% 94%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 88%;
-    --input: 214.3 31.8% 88%;
-    --ring: 199 89% 48%;
-    --radius: 0.75rem;
-    --chart-1: 142 71% 45%;
-    --chart-2: 199 89% 48%;
-    --chart-3: 48 96% 45%;
-    --chart-4: 271 81% 56%;
-    --chart-5: 0 72% 51%;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 94%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-border: 214.3 31.8% 88%;
-    --sidebar-ring: 199 89% 48%;
-    --income: 142 71% 40%;
-    --expense: 0 72% 51%;
-    --sidebar-logo-bg: rgba(0,0,0,0.03);
-  }
-
   * {
     @apply border-border;
   }
