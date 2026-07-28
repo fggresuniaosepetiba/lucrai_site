@@ -125,6 +125,10 @@ Após QA encontrar 3 bugs de isolamento/restore, foram aplicados:
 - Quando `CategoryId` é null/empty, o controller cria (ou reusa) uma categoria "Recibo" via `ICategoryRepository`
 - Frontend (`recibos/page.tsx`) envia `null` em vez de `""`
 
+### Frontend Cleanup (2026-07-28 #3)
+- **Sino de notificação removido** — botão com `Bell` icon no header
+- **Tema light ("Clean") removido** — `ThemeMode` agora só `"normal" | "dark-mega"`; opções: "Sistema" (Monitor) e "Dark Mega" (Moon)
+
 ---
 
 ## Testes
