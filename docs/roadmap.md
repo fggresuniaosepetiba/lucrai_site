@@ -21,7 +21,7 @@
 - [x] Valor por extenso automático em português (até bilhões)
 - [x] Formatação de moeda brasileira (R$ 1.234,56) com máscara em tempo real
 - [x] Abreviação inteligente de valores (R$ 1,5 Mi, R$ 2 Bi)
-- [x] 3 temas visuais (Normal, Dark Mega, Clean)
+- [x] 2 temas visuais (Normal/Sistema, Dark Mega) — tema claro removido
 - [x] Sidebar colapsável com navegação completa
 - [x] Multiempresa: dados segregados por company
 - [x] Suporte a datas retroativas ilimitadas no financeiro

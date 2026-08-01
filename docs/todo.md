@@ -127,7 +127,7 @@
 
 ## Tema e Interface
 
-- [x] 3 temas: Normal (escuro), Dark Mega (ultra escuro), Clean (claro)
+- [x] 2 temas: Normal/Sistema (escuro) e Dark Mega (ultra escuro) — tema claro removido
 - [x] Troca de tema via dropdown no header
 - [x] Sidebar colapsável com navegação
 - [x] Responsividade básica (grid adaptável)
@@ -247,6 +247,15 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] `conferencia/page.tsx`: dedup de categorias por nome via useMemo
 - [x] `cash-forecast/page.tsx`: dedup de categorias + uso de `uniqueCategories` no select
 - [x] `DataSeeder.cs`: `.IgnoreQueryFilters()` no `AnyAsync` de categorias — tenant filter fazia seeder tentar inserir duplicatas a cada restart, quebrando o startup com violação da unique constraint
+
+## Sprint 24 — Docker CLI-only + Automação
+
+- [x] Scripts `dev.ps1`/`dev.sh` sem auto-start do Docker Desktop (CLI-only) — daemon parado exibe erro e sai
+- [x] `dev:reset-db` agora aguarda o banco ficar pronto (`dev:wait-db`)
+- [x] `frontend.Dockerfile` (Next.js standalone) + serviço `web` no docker-compose (profile `full`)
+- [x] Job `docker` no CI (GitHub Actions) que valida o build das Dockerfiles (backend + frontend)
+- [x] Scripts de deploy via Railway CLI (`scripts/deploy-railway.ps1` / `.sh`)
+- [x] `DOCUMENTOS_MODULO.md` reescrito para a arquitetura backend (remoção de referências Dexie)
 
 ## Pendentes
 

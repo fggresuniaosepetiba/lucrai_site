@@ -26,21 +26,21 @@ Isso inicia PostgreSQL (Docker), aguarda o banco ficar pronto, sobe a API com `d
 | `npm run dev:api` | API apenas (`dotnet watch` em `localhost:5000`) |
 | `npm run dev:wait-db` | Aguarda PostgreSQL ficar pronto |
 | **`npm run dev:all`** | PostgreSQL + API + Frontend (uso diário) |
-| `npm run dev:full` | API em container + Frontend nativo |
+| `npm run dev:full` | Stack completa em container (Postgres + API + Frontend) |
 | `npm run dev:stop` | Para o container PostgreSQL |
-| `npm run dev:reset-db` | Reseta o banco (apaga volumes e recria) |
+| `npm run dev:reset-db` | Reseta o banco (apaga volumes, recria e aguarda ficar pronto) |
 
 ---
 
 ## Scripts Avançados
 
-### Windows (auto-start Docker Desktop)
+### Windows (CLI-only, não abre Docker Desktop)
 
 ```powershell
 .\scripts\dev.ps1
 ```
 
-Detecta se Docker Desktop está rodando; se não, inicia e aguarda. Depois executa `npm run dev:all`.
+Verifica se o daemon Docker está rodando via CLI; se não estiver, exibe erro e sai **sem abrir o Docker Desktop**. Depois executa `npm run dev:all`.
 
 ```powershell
 .\scripts\dev.ps1 -Full    # usa docker compose --profile full
@@ -51,6 +51,19 @@ Detecta se Docker Desktop está rodando; se não, inicia e aguarda. Depois execu
 ```bash
 ./scripts/dev.sh
 ./scripts/dev.sh full      # perfil full
+```
+
+---
+
+## Deploy da API via Railway CLI
+
+```bash
+# Redeploy do último deploy (projeto sincere-creation / serviço lucrai_site):
+.\scripts\deploy-railway.ps1          # Windows
+./scripts/deploy-railway.sh           # Linux/macOS
+
+# Enviar o código atual (railway up):
+.\scripts\deploy-railway.ps1 up
 ```
 
 ---
@@ -83,10 +96,10 @@ Usado pelo healthcheck do Docker Compose e para debug.
 
 ```bash
 docker compose up                   # só PostgreSQL (padrão)
-docker compose --profile full up    # PostgreSQL + API em container
+docker compose --profile full up    # PostgreSQL + API + Frontend em container
 ```
 
-O profile `full` sobe a API dentro do Docker (útil para testar o comportamento em container). No dia a dia, prefira `npm run dev:all` que roda a API nativamente com hot reload.
+O profile `full` sobe a API e o Frontend dentro do Docker (útil para testar o comportamento em container). No dia a dia, prefira `npm run dev:all` que roda a API nativamente com hot reload.
 
 ---
 
@@ -94,11 +107,11 @@ O profile `full` sobe a API dentro do Docker (útil para testar o comportamento 
 
 ### Docker não está rodando
 ```bash
-# Windows: Abrir Docker Desktop manualmente ou usar:
-.\scripts\dev.ps1   # inicia automaticamente
-
-# Linux: sudo systemctl start docker
-# macOS: open -a Docker
+# Os scripts NÃO abrem o Docker Desktop automaticamente:
+# Windows: Abrir Docker Desktop manualmente
+# Linux:   sudo systemctl start docker
+# macOS:   open -a Docker
+# Depois rode: .\scripts\dev.ps1  (ou npm run dev:all)
 ```
 
 ### Porta 5433 ocupada
@@ -116,7 +129,17 @@ dotnet run --project backend/src/Lucrai.API --urls=http://localhost:5001
 
 ### Resetar banco de dados
 ```bash
-npm run dev:reset-db    # apaga tudo e recria com seed automático
+npm run dev:reset-db    # apaga tudo, recria com seed automático e aguarda o banco ficar pronto
+```
+
+> A API roda migrations + seed no startup. Depois de resetar, reinicie a API (`npm run dev:all`) para recriar usuários e categorias padrão.
+
+### Docker Desktop não inicia / daemon parado
+```bash
+# Os scripts NÃO abrem o Docker Desktop. Inicie o Docker manualmente e rode de novo:
+# Windows: Docker Desktop
+# Linux:   sudo systemctl start docker
+# macOS:   open -a Docker
 ```
 
 ### Erro "dotnet não encontrado"

@@ -40,12 +40,12 @@ LUCRAÍ se posiciona como a camada de inteligência financeira entre o controle 
 | Gráficos           | Recharts 2.x                                            |
 | Formulários        | react-hook-form + zod                                   |
 | Datas              | date-fns                                                |
-| Tema               | Sistema próprio com 3 temas (Normal, Dark Mega, Clean)  |
+| Tema               | Sistema próprio com 2 temas (Normal, Dark Mega)         |
 | Infra              | Docker + Railway (deploy)                                |
 
 ## Arquitetura
 
-Aplicação **full-stack** com frontend Next.js 15 e backend .NET 10 + PostgreSQL. O frontend se comunica com a API REST via fetch, utilizando JWT para autenticação. O IndexedDB (Dexie.js) existe como fallback offline para entidades que ainda não possuem backend.
+Aplicação **full-stack** com frontend Next.js 15 e backend .NET 10 + PostgreSQL. O frontend se comunica com a API REST via fetch, utilizando JWT para autenticação.
 
 ```
 [ Navegador ] → [ Next.js (React) ] → [ API Repositories ] → HTTP → [ .NET API ] → [ EF Core ] → [ PostgreSQL ]
@@ -83,11 +83,10 @@ Aplicação **full-stack** com frontend Next.js 15 e backend .NET 10 + PostgreSQ
 
 - **Arquitetura full-stack**: Next.js + .NET + PostgreSQL — escalável e profissional
 - **Multiempresa**: suporte nativo a múltiplos CNPJs no mesmo sistema
-- **Fallback offline**: dados disponíveis mesmo sem conexão (via IndexedDB)
 - **Previsão de Caixa**: separação clara entre realizado e previsto
 - **Valor por Extenso**: geração automática do valor por extenso em português
 - **Indicador de Saúde**: score financeiro executivo baseado em saldo e margem
-- **Temas visuais**: 3 temas (Normal, Dark Mega, Clean) para conforto visual
+- **Temas visuais**: 2 temas (Normal, Dark Mega) para conforto visual
 - **Auditoria completa**: rastreamento de todas as ações com usuário responsável
 - **Display ID**: identificação #001, #002 amigável para o usuário
 

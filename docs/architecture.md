@@ -282,12 +282,11 @@ User ← Re-render ← Page Component ← API Repository ← HTTP Response
 
 ## Temas
 
-Três temas visuais controlados pelo atributo `data-theme` no `<html>`:
+Dois temas visuais controlados pelo atributo `data-theme` no `<html>`:
 
 | Tema       | data-theme   | Perfil                          |
 |------------|--------------|---------------------------------|
 | Normal     | `"normal"`   | Escuro padrão (fundo #0a0f1e)   |
 | Dark Mega  | `"dark-mega"`| Ultra escuro (fundo #0a0b0d)    |
-| Clean      | `"clean"`    | Claro (fundo branco)            |
 
 Cada tema define ~30 variáveis CSS customizadas. A troca é feita via `theme-store.ts` que atualiza o atributo no `<html>` e persiste a escolha.

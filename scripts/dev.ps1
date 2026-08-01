@@ -5,55 +5,24 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# ─── Docker Desktop check ───────────────────────────────────────────────
+# ─── Docker daemon check (CLI-only, never opens Docker Desktop) ─────────
 if (-not $NoDockerCheck) {
-  Write-Host "🔍 Checking Docker Desktop..." -ForegroundColor Cyan
+  Write-Host "🔍 Checking Docker daemon..." -ForegroundColor Cyan
   $dockerOk = $false
   try {
-    $info = docker info 2>&1
+    docker info 2>&1 | Out-Null
     $dockerOk = $LASTEXITCODE -eq 0
   } catch {
     $dockerOk = $false
   }
 
   if (-not $dockerOk) {
-    Write-Host "🐳 Docker Desktop not running. Starting it..." -ForegroundColor Yellow
-    $dockerPath = @(
-      "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
-      "${env:ProgramFiles(x86)}\Docker\Docker\Docker Desktop.exe"
-    ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-    if (-not $dockerPath) {
-      Write-Host "❌ Docker Desktop not found. Please install Docker Desktop first."
-      Write-Host "   https://www.docker.com/products/docker-desktop/"
-      exit 1
-    }
-
-    Start-Process $dockerPath
-    Write-Host "⏳ Waiting for Docker to start..." -ForegroundColor Yellow
-
-    $timeout = 120
-    $elapsed = 0
-    do {
-      Start-Sleep -Seconds 3
-      $elapsed += 3
-      try {
-        docker info 2>&1 | Out-Null
-        $ready = $LASTEXITCODE -eq 0
-      } catch { $ready = $false }
-      if ($ready) { break }
-      Write-Host "." -NoNewline -ForegroundColor Yellow
-    } while ($elapsed -lt $timeout)
-
-    if (-not $ready) {
-      Write-Host "`n❌ Docker did not start within $timeout seconds."
-      Write-Host "   Try starting Docker Desktop manually and run again."
-      exit 1
-    }
-    Write-Host "`n✅ Docker Desktop is ready!" -ForegroundColor Green
-  } else {
-    Write-Host "✅ Docker Desktop is running." -ForegroundColor Green
+    Write-Host "❌ Docker daemon is not running." -ForegroundColor Red
+    Write-Host "   Start Docker manually (e.g. Docker Desktop or dockerd) and run again."
+    Write-Host "   Note: this script starts containers via Docker CLI only and never opens Docker Desktop."
+    exit 1
   }
+  Write-Host "✅ Docker daemon is running." -ForegroundColor Green
 }
 
 # ─── Start dev ──────────────────────────────────────────────────────────

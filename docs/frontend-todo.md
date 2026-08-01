@@ -129,7 +129,7 @@
 
 ## Tema e Interface
 
-- [x] 3 temas: Normal (escuro), Dark Mega (ultra escuro), Clean (claro)
+- [x] 2 temas: Normal/Sistema (escuro) e Dark Mega (ultra escuro) — tema claro removido
 - [x] Troca de tema via dropdown no header
 - [x] Sidebar colapsável com navegação
 - [x] Responsividade básica (grid adaptável)

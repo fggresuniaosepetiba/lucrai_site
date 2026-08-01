@@ -2,7 +2,7 @@
 
 ## 1. Visão Geral
 
-A **Central Inteligente de Documentos** permite que usuários dos planos Pro e Enterprise do Lucraí enviem documentos financeiros (notas fiscais, comprovantes, boletos, recibos) e tenham seus dados extraídos automaticamente por IA, com criação automática de lançamentos no sistema.
+A **Central Inteligente de Documentos** permite que usuários do Lucraí enviem documentos financeiros (notas fiscais, comprovantes, boletos, recibos), tenham os dados conferidos e gerem lançamentos automáticos no sistema (Financeiro ou Previsão de Caixa).
 
 **Filosofia central:** "O melhor lançamento financeiro é aquele que o usuário não precisou digitar."
 
@@ -12,120 +12,98 @@ A **Central Inteligente de Documentos** permite que usuários dos planos Pro e E
 - **Frontend:** Next.js 15 (App Router) + React 19 + TypeScript
 - **UI:** Tailwind CSS + shadcn/ui (Radix UI primitives)
 - **Estado:** Zustand
-- **Database:** Dexie.js (IndexedDB) — aplicação **100% client-side**
-- **Multi-tenancy:** Filtragem por campo `company`/`empresa_id`
+- **Backend:** ASP.NET Core 10 (Web API REST) + EF Core
+- **Database:** PostgreSQL (Neon em produção, Docker local)
+- **Autenticação:** JWT Bearer + refresh token
+- **Multi-tenancy:** Isolamento por `Company` + `CreatedBy` via Global Query Filters
 
-### Decisões Técnicas para o Módulo
+> **Nota:** O módulo foi **100% migrado do Dexie/IndexedDB para a API REST** (sprints 9-11). Não existe mais persistência client-side de documentos.
 
-1. **Banco de dados client-side**: Por ser uma aplicação IndexedDB (Dexie), não há backend para armazenar arquivos ou processar documentos. As 4 novas tabelas foram adicionadas ao Dexie.
+### Fluxo de dados
 
-2. **Armazenamento de arquivos**: Arquivos são armazenados como `ArrayBuffer` diretamente no IndexedDB dentro do campo `arquivo_data` da tabela `documentos`. URLs de visualização são geradas via `URL.createObjectURL()`.
-
-3. **Processamento assíncrono**: Simulado via `setTimeout` com retry automático (3 tentativas). Em produção, recomenda-se substituir por Web Workers ou Service Workers.
-
-4. **Extração de XML NF-e**: Parsing nativo feito no frontend com `DOMParser`. Campos extraídos diretamente do XML estruturado sem dependência de IA.
-
-5. **Extração de PDF/Imagens**: Serviço simulado (mock) por padrão. Arquitetura preparada para OpenAI Vision API via `NEXT_PUBLIC_DOCUMENT_AI_PROVIDER` e `NEXT_PUBLIC_DOCUMENT_AI_API_KEY`.
-
-6. **Segurança de tenant**: Isolamento por `empresa_id` em todas as queries. Teste básico de segurança implementado para validar que empresa A não acessa dados da empresa B.
-
-7. **LGPD**: Soft-delete com `excluido_em`, política de retenção configurável por empresa (padrão 365 dias).
+```
+Usuário → Next.js (DocumentoService / DocumentoRepositoryApi)
+                    ↕ HTTPS / JSON + JWT
+         ASP.NET Core (DocumentosController + repositórios)
+                    ↕ EF Core / Npgsql
+         PostgreSQL
+```
 
 ## 3. Variáveis de Ambiente
 
-| Variável | Obrigatória | Padrão | Descrição |
-|---|---|---|---|
-| `NEXT_PUBLIC_DOCUMENT_AI_PROVIDER` | Não | `mock` | Provider de IA: `mock`, `openai`, `anthropic`, `google` |
-| `NEXT_PUBLIC_DOCUMENT_AI_API_KEY` | Não | — | Chave da API de IA |
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Sim | URL base da API (ex.: `https://lucrai-api.up.railway.app`) |
+
+Não existem mais variáveis `NEXT_PUBLIC_DOCUMENT_AI_*` — a extração/processamento acontece no backend ou no parser local do frontend.
 
 ## 4. Migrations
 
-Nenhuma migration tradicional — o Dexie schema é versionado no código. A versão 10 foi adicionada com as novas tabelas:
+As tabelas do módulo são gerenciadas pelo EF Core no backend:
 
-```typescript
-this.version(10).stores({
-  // ... tabelas existentes ...
-  documentos: "id, empresa_id, status, tipo_arquivo, hash_arquivo, criado_em, excluido_em, lancamento_id, *tipo_documento_detectado",
-  documentoAprendizado: "id, empresa_id, chave_reconhecimento, categoria_id, frequencia",
-  documentoLogs: "id, documento_id, empresa_id, usuario_id, acao, criado_em",
-  documentoConfiguracoes: "id, empresa_id",
-});
-```
+- `DocumentoFinanceiro` — `Documentos`
+- `DocumentoTrashItem` — lixeira com TTL de 30 dias (snapshot + metadata)
+- `DocumentoLog` — auditoria de ações nos documentos
+- `DocumentoAprendizado` — aprendizado (chave → categoria + tipo)
+- `DocumentoConfiguracao` — configurações por empresa
 
-O Dexie atualiza automaticamente o schema do IndexedDB. Não é necessário rodar comandos.
+Migrations aplicadas automaticamente no startup da API (`db.Database.Migrate()`).
 
-## 5. Worker / Fila
+## 5. Endpoints (Backend)
 
-Não há sistema de filas real no frontend. O processamento é iniciado com `setTimeout` e inclui retry automático:
-
-- Ao fazer upload, cada documento é processado sequencialmente
-- Em caso de erro, tenta novamente após 5s (máx. 3 tentativas)
-- Status é atualizado em tempo real no IndexedDB
-
-**Para produção:** Recomenda-se substituir por Web Workers ou Background Sync API.
-
-## 6. Provider de IA
-
-### Configuração no frontend
-
-```env
-NEXT_PUBLIC_DOCUMENT_AI_PROVIDER=mock
-NEXT_PUBLIC_DOCUMENT_AI_API_KEY=sua-chave-aqui
-```
-
-### Providers suportados
-
-| Provider | Status | Arquivos suportados |
+| Método | Rota | Descrição |
 |---|---|---|
-| `mock` | ✅ Funcional (dados simulados) | PDF, XML, JPG, JPEG, PNG |
-| `openai` | ✅ Estrutura pronta | PDF, JPG, JPEG, PNG (via Vision API) |
-| `anthropic` | ⚠️ Pendente implementação | — |
-| `google` | ⚠️ Pendente implementação | — |
+| `GET` | `/api/documentos` | Listar documentos (query: `status`) |
+| `GET` | `/api/documentos/{id}` | Obter documento |
+| `GET` | `/api/documentos/{id}/download` | Baixar arquivo original |
+| `GET` | `/api/documentos/stats` | Estatísticas (`mes`, `ano`) |
+| `POST` | `/api/documentos/upload` | Upload de até 10 arquivos (PDF/XML/JPG/PNG) |
+| `GET` | `/api/documentos/trash` | Listar itens na lixeira |
+| `POST` | `/api/documentos/{id}/excluir` | Mover para lixeira com motivo |
+| `POST` | `/api/documentos/{id}/restaurar` | Restaurar da lixeira |
+| `DELETE` | `/api/documentos/{id}/permanente` | Excluir permanentemente |
+| `POST` | `/api/documentos/trash/cleanup` | Limpar itens expirados |
+| `POST` | `/api/documentos/{id}/confirmar` | Confirmar e converter em lançamento |
+| `POST` | `/api/documentos/{id}/rejeitar` | Rejeitar com motivo |
+| `POST` | `/api/documentos/{id}/reprocessar` | Reprocessar documento |
+| `GET` | `/api/documentos/{id}/logs` | Logs de auditoria do documento |
+| `GET/POST` | `/api/documentos/aprendizado` | Listar / upsert aprendizado |
+| `DELETE` | `/api/documentos/aprendizado/{id}` | Remover aprendizado |
+| `GET/PUT` | `/api/documentos/config` | Obter / atualizar configurações |
 
-### XML de NF-e
+**Isolamento:** todos os endpoints filtram por `Company` (tenant) e por `CreatedBy` (usuário). Restauração e exclusão permanente da lixeira usam `.IgnoreQueryFilters()` para acessar itens do snapshot.
 
-O parsing de XML é **sempre nativo** (sem usar IA), pois o formato é estruturado e padronizado pela SEFAZ. Campos extraídos:
-- Número da NF (`nNF`)
-- Data de emissão (`dhEmi`)
-- Valor total (`vNF`)
-- Emitente (`emit xNome`, `emit CNPJ`)
-- Destinatário (`dest xNome`, `dest CNPJ`)
-- Itens (`det > prod > xProd`)
-- Confiança: 1.0 (máxima)
-
-## 7. Estrutura de Arquivos
+## 6. Estrutura de Arquivos (Frontend)
 
 ```
 src/
-├── types/index.ts                          # Tipos: DocumentoFinanceiro, etc.
-├── database/
-│   ├── dexie.ts                            # Schema v10 com novas tabelas
-│   └── repositories/
-│       └── documentos.ts                   # Repository + aprendizado + logs + config
 ├── services/
+│   ├── api-repositories/documents.ts        # DocumentoRepositoryApi (todos os endpoints)
 │   └── documentos/
-│       ├── documentos.service.ts           # Orquestração principal
-│       ├── documentos-storage.service.ts   # Upload, validação, checksum
-│       ├── documentos-extracao.service.ts  # XML parser + AI integration
-│       └── documentos-aprendizado.service.ts # Learning system
+│       ├── documentos.service.ts            # Orquestração principal (upload, confirmar, rejeitar...)
+│       ├── documentos-aprendizado.service.ts# Sistema de aprendizado
+│       ├── documentos-extracao.service.ts   # Extração (parser + metadados)
+│       ├── documentos-storage.service.ts    # Validação de arquivos
+│       ├── parser/                          # Parser local (XML NF-e, texto)
+│       │   ├── danfe-parser.ts
+│       │   ├── index.ts
+│       │   └── types.ts
+│       └── __tests__/                       # Testes (documentos-api, documentos-service, parser)
 ├── hooks/
-│   ├── useDocumentos.ts                    # Hook para listagem + stats
-│   └── useConferencia.ts                   # Hook para confirmar/rejeitar
-├── components/
-│   └── layout/
-│       └── sidebar.tsx                     # Menu + badge atualizado
+│   ├── useDocumentos.ts                     # Listagem + stats + config
+│   └── useConferencia.ts                    # Confirmar / rejeitar
 └── app/
     └── documentos/
-        ├── page.tsx                        # Caixa de Entrada
+        ├── page.tsx                         # Caixa de Entrada
         ├── [id]/
-        │   ├── page.tsx                    # Detalhe do documento
+        │   ├── page.tsx                     # Detalhe do documento
         │   └── conferencia/
-        │       └── page.tsx                # Tela de Conferência
+        │       └── page.tsx                 # Tela de Conferência
         └── configuracoes/
-            └── page.tsx                    # Configurações do módulo
+            └── page.tsx                     # Configurações do módulo
 ```
 
-## 8. Rotas
+## 7. Rotas (Frontend)
 
 | Rota | Descrição |
 |---|---|
@@ -134,71 +112,55 @@ src/
 | `/documentos/[id]/conferencia` | Tela de conferência (revisão + confirmação) |
 | `/documentos/configuracoes` | Configurações do módulo |
 
+## 8. Fluxo de Conferência
+
+Ao confirmar um documento, o `DocumentoService.confirmar()` decide o destino:
+
+- **Data ≤ hoje** → cria `Transaction` no Financeiro e, se houver favorecido/emitente, registra **aprendizado** (chave de reconhecimento → categoria + tipo).
+- **Data futura** → cria `CashForecast` na Previsão de Caixa.
+
+Depois chama `POST /api/documentos/{id}/confirmar` para marcar como `CONVERTIDO`. Rejeição usa `POST /api/documentos/{id}/rejeitar` com motivo obrigatório.
+
 ## 9. Funcionalidades Implementadas
 
-- [x] Upload com drag-and-drop e validação de tipo/tamanho
-- [x] Parsing nativo de XML NF-e
-- [x] Extração via IA (mock + estrutura para OpenAI Vision)
-- [x] Sistema de aprendizado por empresa (chave de reconhecimento)
+- [x] Upload com drag-and-drop e validação de tipo/tamanho (máx. 10 arquivos, 100MB)
+- [x] Parsing local de XML NF-e / DANFE (`parseDocumento`)
+- [x] Criação automática de lançamento no Financeiro ou Previsão de Caixa
 - [x] Tela de conferência com visualizador de documento + formulário
-- [x] Criação automática de lançamento no Financeiro
-- [x] Soft-delete com rastreabilidade (LGPD)
-- [x] Reprocessamento com retry automático
-- [x] Badge de contador no menu lateral
-- [x] Widget de impacto (tempo economizado)
+- [x] Sistema de aprendizado por empresa (chave de reconhecimento → categoria)
+- [x] Soft-delete com lixeira (TTL 30 dias) e auditoria (LGPD)
+- [x] Reprocessamento de documentos
 - [x] Logs de auditoria em todas as ações
-- [x] Política de retenção configurável por empresa
-- [x] Verificação de plano (Pro/Enterprise)
+- [x] Configurações por empresa (retenção em dias, sugestão automática de categoria, notificações, limite de tamanho)
 - [x] Paginação, busca, filtros
 - [x] Navegação entre documentos na conferência
+- [x] Isolamento por empresa **e** por usuário
 
 ## 10. Como Testar Localmente
 
-1. Inicie o servidor de desenvolvimento:
 ```bash
-npm run dev
+npm run dev:all          # Postgres (Docker) + API (dotnet watch) + Next.js
 ```
 
-2. Faça login com uma conta que tenha empresa configurada.
+1. Faça login com uma conta que tenha empresa configurada.
+2. Acesse `/documentos` — a Caixa de Entrada será exibida.
+3. Clique em "Enviar Documento(s)" e selecione um XML de NF-e (parser local) ou PDF/imagem.
+4. Após o upload, o documento aparece com status `NOVO`.
+5. Clique em "Conferir" para revisar os dados extraídos.
+6. Confirme para criar o lançamento (Financeiro ou Previsão de Caixa) ou rejeite.
 
-3. Acesse `/documentos` — a Caixa de Entrada será exibida.
+## 11. Testes Automatizados
 
-4. Clique em "Enviar Documento(s)" e selecione:
-   - Um XML de NF-e para testar o parser nativo
-   - Um PDF ou imagem para testar a extração simulada
+Testes do frontend (Vitest) em `src/services/documentos/__tests__/`:
 
-5. Após o upload, aguarde o processamento (status "Processando" → "Aguardando Conferência").
+- `documentos-api.test.ts` — `DocumentoRepositoryApi`: upload, listagem, download, stats, lixeira, conferência, aprendizado, config
+- `documentos-service.test.ts` — orquestração do `DocumentoService` (confirmar cria transaction/forecast, rejeitar, excluir)
+- `documentos.test.ts` — parser e geração de chave de aprendizado
 
-6. Clique em "Conferir" para revisar os dados extraídos.
+Backend: testes de isolamento por usuário/empresa em `backend/tests/Lucrai.API.Tests/`.
 
-7. Confirme para criar o lançamento ou rejeite.
+## 12. Limitações Conhecidas
 
-## 11. Testes Obrigatórios
-
-Ver arquivos de teste em:
-```
-src/services/documentos/__tests__/
-```
-
-### Testes implementados:
-1. **Geração de chave de aprendizado**: verifica normalização de variações do mesmo emitente
-2. **Parser XML NF-e**: valida extração correta de campos obrigatórios
-3. **Segurança (tenant isolation)**: verifica que empresa A não acessa dados da empresa B
-4. **Worker/retry**: verifica comportamento em caso de falha
-
-## 12. Decisões Técnicas
-
-1. **Por que mock de IA?** O projeto Lucraí é 100% client-side (IndexedDB). Sem um backend, não é possível chamar APIs de IA de forma segura sem expor a chave de API no frontend. A solução atual usa variáveis `NEXT_PUBLIC_*` (acessíveis no frontend), o que é aceitável para desenvolvimento/demo mas **não seguro para produção**. Em produção, recomenda-se criar um backend Next.js API route ou um serviço separado.
-
-2. **Por que ArrayBuffer no IndexedDB?** Sem backend para storage, a única opção viável para persistir arquivos no navegador é o IndexedDB. Arquivos acima de 50MB podem causar problemas de performance.
-
-3. **Por que não usar Web Workers?** O processamento simulado com `setTimeout` é suficiente para o fluxo de demonstração. Web Workers adicionariam complexidade de build e não trariam benefício real com o mock.
-
-4. **Controle de plano**: A verificação de plano utiliza os dados da sessão do usuário (`localStorage.getItem("lucrai_sessao")`). Para maior segurança, a validação deve ser feita também no backend em produção.
-
-## 13. Limitações Conhecidas
-
-- A extração de PDFs e imagens atualmente usa dados mockados. Configure `NEXT_PUBLIC_DOCUMENT_AI_API_KEY` para usar extração real com OpenAI.
-- Visualização de PDFs depende do suporte do navegador. Alguns PDFs complexos podem não renderizar corretamente no iframe.
-- O limite prático de armazenamento no IndexedDB varia por navegador (tipicamente 50MB–500MB por domínio).
-- O badge do menu lateral atualiza a cada 15 segundos. Pode haver pequena latência entre o processamento e a atualização do contador.
+- A extração de PDFs/imagens depende do parser local; XML de NF-e tem extração estruturada mais confiável.
+- O armazenamento do arquivo é feito no próprio banco (`ArquivoData`, coluna BYTEA), com limite de 100MB por arquivo no upload.
+- O badge do menu lateral atualiza por polling (15s), pode haver pequena latência entre o processamento e a atualização do contador.
