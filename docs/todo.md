@@ -253,9 +253,11 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] Scripts `dev.ps1`/`dev.sh` sem auto-start do Docker Desktop (CLI-only) — daemon parado exibe erro e sai
 - [x] `dev:reset-db` agora aguarda o banco ficar pronto (`dev:wait-db`)
 - [x] `frontend.Dockerfile` (Next.js standalone) + serviço `web` no docker-compose (profile `full`)
+- [x] `frontend.Dockerfile` endurecido: base image pinada por digest, usuário não-root, HEALTHCHECK, `NEXT_PUBLIC_API_URL` como build arg, `npm ci --frozen-lockfile`
 - [x] Job `docker` no CI (GitHub Actions) que valida o build das Dockerfiles (backend + frontend)
 - [x] Scripts de deploy via Railway CLI (`scripts/deploy-railway.ps1` / `.sh`)
 - [x] `DOCUMENTOS_MODULO.md` reescrito para a arquitetura backend (remoção de referências Dexie)
+- [x] Relatório `docs/reports/024-docker-cli-automation.md`
 
 ## Pendentes
 
