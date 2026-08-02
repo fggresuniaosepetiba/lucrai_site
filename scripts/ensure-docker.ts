@@ -76,19 +76,11 @@ function manualHint(): void {
 
 function startForPlatform(): string {
   if (isWindows()) {
-    const backend = findExe(
-      path.join(process.env.ProgramFiles || "C:\\Program Files", "Docker", "Docker", "resources", "com.docker.backend.exe"),
-      path.join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "Docker", "Docker", "resources", "com.docker.backend.exe"),
-    );
     const desktop = findExe(
       path.join(process.env.ProgramFiles || "C:\\Program Files", "Docker", "Docker", "Docker Desktop.exe"),
       path.join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "Docker", "Docker", "Docker Desktop.exe"),
     );
 
-    if (backend) {
-      runDetached(backend, ["-unattended", "-with-frontend=false"]);
-      return `com.docker.backend.exe (-unattended) [${backend}]`;
-    }
     if (desktop) {
       runDetached(desktop, ["-Autostart"]);
       return `Docker Desktop.exe (-Autostart) [${desktop}]`;
