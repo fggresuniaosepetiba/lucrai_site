@@ -259,6 +259,17 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] `DOCUMENTOS_MODULO.md` reescrito para a arquitetura backend (remoção de referências Dexie)
 - [x] Relatório `docs/reports/024-docker-cli-automation.md`
 
+## Sprint 25 — Docker guard tipado + TS scripts
+
+- [x] Scripts Node migrados para TypeScript (`ensure-docker.ts`, `wait-for-db.ts`) com `tsx` + `@types/pg`
+- [x] `scripts/ensure-docker.ts` (Docker guard) cross-platform em 6 passos: detecta SO → `docker info` → ok? segue | não → estratégia do SO → aguarda pronto → segue
+- [x] Guard configurável via `LUCRAI_DOCKER_MODE`: `check` (padrão, não invasivo — orienta manualmente), `auto` (inicia Docker em 2º plano/headless), `skip` (pula)
+- [x] Start "auto" headless por SO: Windows `com.docker.backend.exe -unattended -with-frontend=false` (fallback `-Autostart`), macOS idem + fallback `open -a Docker`, Linux `sudo systemctl/service start docker`
+- [x] Polling de `docker info` com timeout configurável (`DOCKER_WAIT_TIMEOUT`, padrão 120s)
+- [x] `.env.example` documenta `LUCRAI_DOCKER_MODE` (opcional)
+- [x] `docs/dev-guide.md` atualizado: seções "Docker guard", modos, "Containers na prática", compose, manutenção manual
+- [x] Checagem de creditos: mantidos usuários/containers/variáveis intactos (sem alteração de registry no Windows)
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários
