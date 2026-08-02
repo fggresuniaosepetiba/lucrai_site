@@ -270,6 +270,13 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] `docs/dev-guide.md` atualizado: seções "Docker guard", modos, "Containers na prática", compose, manutenção manual
 - [x] Checagem de creditos: mantidos usuários/containers/variáveis intactos (sem alteração de registry no Windows)
 
+## Sprint 26 — Login: nova logo + título destacado
+
+- [x] Alias `@images` (tsconfig + webpack) para a pasta `images/` da raiz
+- [x] `login/page.tsx`: logo trocada para `logo-lucrai-login.png` (import via `@images`)
+- [x] "Sistema de Gestão Financeira" estilizado como o título "Acessar plataforma" (`text-xl font-semibold`)
+- [x] Relatório `docs/reports/026-login-logo-alias.md`
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários

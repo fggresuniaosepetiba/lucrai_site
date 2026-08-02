@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import logoLogin from "@images/logo-lucrai-login.png";
 import { useAuthStore } from "@/store/auth-store";
 
 import { Button } from "@/components/ui/button";
@@ -45,14 +46,14 @@ export default function LoginPage() {
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="relative h-20 w-80">
             <Image
-              src="/images/lucrai/logo-lucrai-sem-fundo.png"
+              src={logoLogin}
               alt="LUCRAÍ"
               fill
               className="object-contain"
               priority
             />
           </div>
-          <p className="text-sm text-muted-foreground">Sistema de Gestão Financeira</p>
+          <p className="text-xl font-semibold">Sistema de Gestão Financeira</p>
         </div>
 
         <div className="w-full rounded-2xl border border-border/50 bg-card/50 backdrop-blur-xl p-8 shadow-2xl">

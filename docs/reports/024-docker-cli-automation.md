@@ -92,7 +92,7 @@ Refinamento do Sprint 24. Os scripts Node foram migrados para TypeScript e o "CL
 2. **`wait-for-db.ts`:** fix real — `npm run` não carrega `.env`, então o script agora lê o `.env` manualmente (senha do PostgreSQL).
 3. **`ensure-docker.ts` (guard):** fluxo de 6 passos, cross-platform: detecta SO → `docker info` → ok? segue | não → estratégia do SO → aguarda pronto (polling 120s) → segue.
 4. **Configurável por env var `LUCRAI_DOCKER_MODE`:** padrão `check` (não invasivo — verifica e orienta manualmente, sem tocar no ambiente do dev); `auto` (inicia o Docker em 2º plano headless); `skip` (equivale a `LUCRAI_SKIP_DOCKER_CHECK=1`).
-5. **Start headless por SO:** Windows `com.docker.backend.exe -unattended -with-frontend=false` (fallback `-Autostart`); macOS idem binário (fallback `open -a Docker`); Linux `sudo systemctl start docker` / `sudo service docker start`.
+5. **Start por SO (modo `auto`):** Windows `Docker Desktop.exe -Autostart` (abre a GUI; falha back para erro claro se não instalado); macOS `com.docker.backend` headless ou fallback `open -a Docker`; Linux `sudo systemctl start docker` / `sudo service docker start`.
 
 ## Decisão de projeto
 
