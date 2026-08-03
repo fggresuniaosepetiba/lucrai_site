@@ -277,6 +277,14 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] "Sistema de Gestão Financeira" estilizado como o título "Acessar plataforma" (`text-xl font-semibold`)
 - [x] Relatório `docs/reports/026-login-logo-alias.md`
 
+## Sprint 27 — Modais: bloqueio de fechamento por clique fora
+
+- [x] `dialog.tsx` (`DialogContent`): `onPointerDownOutside` + `onInteractOutside` com `preventDefault` — clique/tap fora não fecha mais o modal
+- [x] Aplicado centralmente a todos os modais do app (lançamentos, previsão, lixeira, recibos, documentos, usuários, categorias, precificação etc.)
+- [x] Fechamento mantido por: botão X, botão Cancelar e tecla Esc
+- [x] Teste visual via Playwright (Edge): clique fora não fecha; Esc/Cancelar/X fecham
+- [x] Relatório `docs/reports/027-modal-close-outside-block.md`
+
 ## Pendentes
 
 - [ ] Onboarding interativo para novos usuários
