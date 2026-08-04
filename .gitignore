@@ -76,3 +76,9 @@ obj/
 
 # prompts
 prompts/
+
+# career assets (local only, not versioned)
+.career/
+
+# test results
+test-results/
