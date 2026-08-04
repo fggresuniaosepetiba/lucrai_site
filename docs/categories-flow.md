@@ -33,8 +33,6 @@ A página de categorias foi migrada para usar a API REST do backend. O `Category
 | `findDuplicates()` | Detecta duplicatas (mesmo nome + tipo) |
 | `removeDuplicates()` | Remove duplicatas e reassocia transações |
 
-O repositório Dexie (`src/database/repositories/categories.ts`) existe apenas como fallback offline.
-
 ### Regras de negócio (no backend):
 - Nome da categoria: máximo 120 caracteres
 - Exclusão bloqueada se houver transações vinculadas à categoria
@@ -43,12 +41,7 @@ O repositório Dexie (`src/database/repositories/categories.ts`) existe apenas c
 
 ## 3. Database
 
-**Backend** — PostgreSQL, tabela `Categories` via EF Core.
-
-**Frontend (fallback)** — IndexedDB, tabela `categories` — schema v14:
-```
-categories: "id, type, name, company"
-```
+**Backend** — PostgreSQL, tabela `Categories` via EF Core. A fonte única de dados é a API REST (Dexie/IndexedDB removido na sprint 11).
 
 ## 4. Seed (Dados Iniciais)
 
@@ -157,12 +150,9 @@ CategoryRepositoryApi (fonte principal — API REST)
   ├── Página Categorias (CRUD + duplicatas)
   ├── Página Financeiro (leitura + criação inline)
   └── Página Previsão de Caixa (leitura + criação inline)
-
-CategoryRepository (fallback — IndexedDB/Dexie)
-  └── Usado apenas quando API está indisponível
 ```
 
-**Regra:** A fonte única de dados é a API REST (PostgreSQL). O repositório Dexie opera apenas como fallback offline.
+**Regra:** A fonte única de dados é a API REST (PostgreSQL). Não há fallback local — o Dexie/IndexedDB foi removido.
 
 ## 11. Correções Aplicadas
 

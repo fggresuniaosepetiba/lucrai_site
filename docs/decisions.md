@@ -13,20 +13,18 @@
 - Ecosistema maduro com boa DX
 - Possibilidade futura de migrar para SSR/API routes se necessário
 
-**Trade-off:** A aplicação é 100% client-side, então o SSR/SSG do Next.js não é totalmente aproveitado. Porém, a estrutura de pastas e o roteamento valem o custo.
+**Trade-off:** A aplicação é client-side (CSR), então o SSR/SSG do Next.js não é totalmente aproveitado. Porém, a estrutura de pastas, o roteamento App Router e o build `output: standalone` (para Docker) valem o custo.
 
-### Dexie.js (IndexedDB)
+### Dexie.js (IndexedDB) — ✅ Removido
 
-**Decisão:** Usar IndexedDB via Dexie.js em vez de SQLite (via sql.js), LocalStorage ou uma API remota.
+**Decisão original (MVP):** Usar IndexedDB via Dexie.js para persistência local 100% offline.
 
-**Motivo:**
-- **100% offline** — sem dependência de servidor
-- **Dados persistentes** — ao contrário de LocalStorage (limite de 5-10MB)
-- **Consultas indexadas** — Dexie permite índices, filtros e ordenação eficientes
-- **API simples** — similar a um ORM, com suporte a Promises
-- **Sem backend** — elimina custos de infraestrutura e manutenção
+**Status atual:** ⚠️ **Decisão superada.** O Dexie foi **completamente removido** nas sprints 9–11. Todo o armazenamento foi migrado para o backend `.NET 10 + PostgreSQL` via API REST, com a camada de `api-repositories` no frontend. Não há nenhuma dependência de `dexie` no `package.json` nem código IndexedDB em `src/`.
 
-**Trade-off:** Dados ficam presos no navegador. Não há sincronização entre dispositivos. Perda de dados do navegador = perda total. Futuramente será necessário implementar backup/restore e sincronização.
+**Motivo da remoção:**
+- Dados ficavam presos no navegador e sem sincronização entre dispositivos
+- Perda de dados do navegador = perda total
+- A necessidade de multi-tenant e colaboração exigiu persistência centralizada
 
 ### Zustand 5
 
@@ -36,7 +34,7 @@
 - API minimalista (menos boilerplate que Redux)
 - Sem providers (ao contrário de Context API)
 - Performance superior a Context para atualizações frequentes
-- Persistência integrada com `persist` middleware
+- Persistência manual (auth em `sessionStorage`, tema/sidebar em `localStorage`) — sem `persist` middleware
 - Bundle pequeno (~1KB)
 
 ### shadcn/ui + Radix UI
@@ -62,17 +60,16 @@
 
 ## Decisões de Arquitetura
 
-### Aplicação 100% Client-side
+### Aplicação Full-Stack
 
-**Decisão:** Não implementar backend no MVP.
+**Decisão:** Evoluir de MVP 100% client-side para **aplicação full-stack** com backend .NET 10 + PostgreSQL.
 
 **Motivo:**
-- MVP focado em validação do produto e usabilidade
-- Elimina custos de servidor, banco remoto e DevOps
-- Desenvolvimento mais rápido sem integração API
-- Usuário tem controle total dos dados
-
-**Consequência futura:** Será necessário implementar sincronização e backup. A arquitetura atual (repositories) facilita a adição de uma camada remota no futuro.
+- Persistência centralizada (multi-tenant por empresa, dados não ficam presos no navegador)
+- Autenticação segura (ASP.NET Identity + JWT com refresh token rotativo)
+- Colaboração multi-usuário na mesma empresa
+- Inteligência financeira computada no servidor (projeções, health score, alertas)
+- A camada de `api-repositories` abstrai o backend, mantendo o frontend desacoplado
 
 ### Display ID (#001, #002)
 
@@ -106,13 +103,13 @@
 
 ### Validação em Duas Camadas
 
-**Decisão:** Validar dados tanto no frontend (formulário) quanto no repositório (backend).
+**Decisão:** Validar dados tanto no frontend (formulário — react-hook-form + zod) quanto no backend (FluentValidation — 35 validators).
 
 **Motivo:**
-- Impedir dados inválidos mesmo que o usuário manipule o DOM
-- Proteção contra chamadas diretas ao Dexie via console
-- Consistência dos dados na fonte (repositório)
-- Mensagens de erro amigáveis no frontend + lançamento de erro no backend
+- Impedir dados inválidos mesmo que o usuário manipule o DOM ou chame a API diretamente
+- Proteção contra requisições malformadas/forjadas
+- Consistência dos dados na fonte (backend)
+- Mensagens de erro amigáveis no frontend + erro de validação no backend
 
 ### Abreviação Inteligente (Mi/Bi)
 
@@ -124,16 +121,43 @@
 - Tooltip com valor completo mantém a precisão quando necessário
 - Padrão de mercado (Mi = Milhões, Bi = Bilhões) seguindo finanças brasileiras
 
+### Multi-tenancy por Filtros Globais
+
+**Decisão:** Isolar dados por `Company` (tenant) e por `CreatedBy`/`UserId` (usuário) via `HasQueryFilter` do EF Core em 23 entidades, com `TenantContextMiddleware` extraindo o tenant do JWT.
+
+**Motivo:**
+- Isolamento garantido no nível do banco (toda query é filtrada)
+- Sem risco de vazamento entre empresas/usuários por esquecimento em um controller
+- Testado por `ReciboIsolationTests` (4 testes de isolamento)
+
+### Autenticação JWT + Refresh Token Rotativo
+
+**Decisão:** Usar ASP.NET Identity (PBKDF2) + JWT Bearer com refresh token opaco rotativo armazenado no banco (7 dias).
+
+**Motivo:**
+- Rotação revoga o token anterior a cada uso (mitiga vazamento)
+- Sessão stateless para a API + controle de revogação server-side
+- `sessionStorage` no frontend garante logout ao fechar a aba
+
+### OCR e IA no Frontend
+
+**Decisão:** Executar extração de dados de documentos (PDF, imagem, NF-e XML) no **frontend** com pdfjs-dist, tesseract.js (pt-BR) e provedores de IA (OpenAI Vision, Gemini). O backend armazena os campos extraídos e orquestra o fluxo de conferência.
+
+**Motivo:**
+- Provedores de IA de visão via chamada direta (sem custo/processamento no servidor)
+- Parser NF-e XML local com DOMParser (sem dependência server-side)
+- Backend recebe apenas o resultado validado pelo usuário na conferência
+
 ## Decisões Pendentes
 
-### Backup e Sincronização
-Ainda não definido: implementar sincronização via WebDAV, arquivo JSON de exportação, ou API remota. A decisão depende da demanda dos usuários após o MVP.
+### Backup e Restauração
+Ainda não implementado (server-side). Os dados agora vivem no PostgreSQL (Neon/Railway), que possui backups gerenciados.
 
-### Testes
-Sem testes automatizados no MVP. O plano é adicionar testes unitários (Vitest) e de integração (Playwright) na fase Pós-MVP.
+### Testes — ✅ Concluído
+87 testes xUnit (backend), 7 suítes Vitest + 6 specs Playwright (frontend), com CI em GitHub Actions (3 jobs).
 
-### Hash de Senhas
-Atualmente as senhas são armazenadas em texto plano no IndexedDB. Isso é aceitável porque o banco é local (não há ataque remoto), mas será necessário implementar hash (bcrypt ou similar) se houver sincronização remota.
+### Hash de Senhas — ✅ Concluído
+Senhas com hash PBKDF2 via `PasswordHasher` do ASP.NET Identity (nunca armazenadas em texto plano).
 
 ### PWA
 O aplicativo poderia se beneficiar de Service Workers para instalação como PWA e melhor experiência offline. Decisão adiada para fase Pós-MVP.

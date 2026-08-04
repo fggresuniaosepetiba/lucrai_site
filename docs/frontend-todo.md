@@ -10,10 +10,9 @@
 ## Infraestrutura e Projeto
 
 - [x] Projeto Next.js 15 configurado com App Router
-- [x] TypeScript configurado com strict mode
+- [x] TypeScript configurado com strict mode (5.8)
 - [x] Tailwind CSS com sistema de temas próprio
-- [x] shadcn/ui configurado com componentes base
-- [x] Dexie.js configurado com 7 tabelas e schema version 6 (removido na sprint 11)
+- [x] shadcn/ui configurado (23 componentes) — Dexie.js removido na sprint 11
 - [x] Variáveis de ambiente (.env.local)
 
 ## Autenticação e Sessão
@@ -124,7 +123,7 @@
 - [x] Log de criação, edição de previsões
 - [x] Log de recebimento, pagamento, cancelamento
 - [x] Log de restauração e exclusão permanente
-- [x] Tabela dedicada no IndexedDB (auditLogs)
+- [x] Tabela de auditoria via API REST (`AuditRepositoryApi`)
 - [x] Registro do usuário responsável em cada ação
 
 ## Tema e Interface
@@ -157,9 +156,9 @@
 - [x] `useDadosFiltrados.ts` — chama API (`TransactionRepositoryApi`, `CashForecastRepositoryApi`) ao invés de Dexie
 - [x] api.ts — refresh token automático (interceptor 401 → refresh → retry)
 - [x] api.ts — tratamento de erro da API (classe `ApiError`, redirect 401)
-- [x] `api-repositories/` — repositórios API para transactions, cash-forecast, dashboard
+- [x] `api-repositories/` — repositórios API (transactions, cash-forecast, dashboard, categories, users, settings, trash, audit, indicadores, documentos, pricing, fixed-costs, insumos, recibos, signature, contas)
 - [x] Substituir chamadas Dexie restantes nos pages (pricing, financial, cash-forecast, dashboard, reports, resumo-cfo, cadastro)
-- [x] `useDocumentos.ts` — migrar de Dexie para API (listagem + stats + upload; conferência/lixeira continua em Dexie)
+- [x] `useDocumentos.ts` — migrar de Dexie para API (listagem + stats + upload + conferência + lixeira)
 
 ### Documentos (Financeiros) — Fase 10
 
@@ -223,9 +222,9 @@
 - [ ] Exportação para PDF
 - [ ] Modo escuro programável (agendado)
 
-## Grupo A: Migrar páginas Dexie → API (já têm API repository)
+## Grupo A: Migrar páginas Dexie → API (concluído)
 
-**Problema:** Essas páginas ainda leem/escrevem no Dexie (IndexedDB). Dados ficam presos no navegador.
+**Problema original:** Essas páginas ainda liam/escreviam no Dexie (IndexedDB). Dados ficavam presos no navegador.
 
 **Solução:** Trocar `import` do repositório Dexie pelo `ApiRepository` correspondente.
 
@@ -271,6 +270,40 @@ Todas as 8 migrações do Grupo A foram realizadas:
 
 ---
 
+## Inteligência Financeira (Dashboard)
+
+- [x] Central com 10 sub-abas de indicadores (DRE, DFC, balancete, razão, balanço, etc.)
+- [x] Resumo CFO (`/dashboard/resumo-cfo`) com nota em linguagem natural
+- [x] Projeções (`/dashboard/projecoes`) — projeção 12 meses via API
+- [x] Alertas (`/dashboard/alertas`) — 6 tipos + insights + dismiss/restore
+- [x] Health score (0-100) com subindicadores
+- [x] Sparkline de saldo
+
+## Recibos
+
+- [x] Listagem com filtros (status, tipo, busca)
+- [x] Criação com validação CPF/CNPJ (checksum), numeração `REC-{ano}-######` e valor por extenso
+- [x] Geração de PDF (jsPDF + html2canvas, A4)
+- [x] Assinatura digital (imagem base64 + responsável) via `SignatureRepositoryApi`
+- [x] Cancelamento com motivo
+- [x] Lixeira própria com TTL 30 dias (soft delete)
+
+## Documentos (Fase 10 — concluído)
+
+- [x] Páginas `/documentos`, `/documentos/[id]`, `/documentos/[id]/conferencia`, `/documentos/configuracoes`
+- [x] Upload com validação de tipo/tamanho (100MB, 10 arquivos) e checksum SHA-256
+- [x] Extração: PDF (pdfjs-dist), OCR imagem (tesseract.js pt), NF-e XML (DOMParser), DANFE (parser local)
+- [x] Provedores de IA: OpenAI Vision (gpt-4o) e Google Gemini — com fallback sem IA
+- [x] Fluxo de conferência (confirmar/rejeitar/reprocessar) com criação de transação/previsão
+- [x] Aprendizado (chave → categoria/tipo) e configuração por empresa
+- [x] Lixeira de documentos com TTL
+
+## Landing Page & Cadastro
+
+- [x] Landing page (`/`) com 13 seções (hero, features, comparação, resultados, depoimentos, pricing, consultoria, segurança, FAQ, CTA)
+- [x] Onboarding multi-etapa (`/cadastro`): StepDadosPessoais (senha com força) + StepDadosEmpresa
+- [x] Tela pós-cadastro (`/bem-vindo`) com trial de 14 dias
+
 ## Resumo
 
 | Área | Concluídos | Pendentes |
@@ -288,9 +321,13 @@ Todas as 8 migrações do Grupo A foram realizadas:
 | Auditoria | 6 | 0 |
 | Tema e Interface | 6 | 0 |
 | Integração com API | 30 | 0 |
+| Inteligência Financeira | 6 | 0 |
+| Recibos | 6 | 0 |
+| Documentos (Fase 10) | 6 | 0 |
+| Landing Page & Cadastro | 3 | 0 |
 | Testes Unitários | 3 | 0 |
 | Testes E2E | 5 | 0 |
 | Migração Grupo A | 8 | 0 |
 | Migração Grupo B (backend + frontend) | 5 | 0 |
 | Pendências Gerais | 0 | 4 |
-| **Total** | **147** | **4** |
+| **Total** | **164** | **4** |

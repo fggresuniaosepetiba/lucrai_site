@@ -285,9 +285,21 @@ Todos os repositórios Dexie foram removidos. O frontend agora se comunica exclu
 - [x] Teste visual via Playwright (Edge): clique fora não fecha; Esc/Cancelar/X fecham
 - [x] Relatório `docs/reports/027-modal-close-outside-block.md`
 
+## Sprint 28 — Sync da documentação com o codebase
+
+- [x] `docs/architecture.md` — removida camada Dexie/IndexedDB (diagrama + estrutura de pastas), atualizados 24 controllers/138 endpoints, 14 API repositories, 5 stores Zustand, multi-tenancy (23 entidades com `HasQueryFilter`), rotas novas (landing, cadastro, indicadores, recibos, documentos)
+- [x] `docs/project-context.md` — removido modo híbrido/fallback, stack atualizada, módulos novos e financeiro avançado
+- [x] `docs/backend-architecture.md` — 24 controllers, 23 migrations, 87 testes, 25 entidades, 22 repositórios, 35 validators; endpoints novos (documentos, recibos, pricing/insumos, financeiro avançado, health); Dockerfile/CI/compose reais; ressalvas de segurança (sem rate limiting/HTTPS no código)
+- [x] `docs/backend-todo.md` — testes 83→87 com distribuição por arquivo; Grupo C (financeiro avançado); totais ~200/0
+- [x] `docs/frontend-todo.md` — referências Dexie ativas removidas; seções Inteligência Financeira, Recibos, Documentos, Landing & Cadastro; total 164
+- [x] `docs/categories-flow.md` — removido fallback Dexie/IndexedDB
+- [x] `docs/roadmap.md` — marcados concluídos (testes, landing, onboarding, inteligência financeira, ciclo financeiro, IA em documentos); ajustado pendentes
+- [x] `docs/decisions.md` — Dexie marcado como removido, "100% client-side" → full-stack, ADRs novos (multi-tenancy, JWT rotativo, OCR/IA no frontend); pendentes atualizados (testes e hash concluídos)
+- [x] Relatório `docs/reports/028-docs-sync.md`
+
 ## Pendentes
 
-- [ ] Onboarding interativo para novos usuários
-- [ ] Backup e restauração dos dados
-- [ ] Exportação para PDF
+- [ ] Backup e restauração dos dados (server-side)
+- [ ] Exportação para PDF de relatórios/extratos (recibo PDF já implementado)
 - [ ] Modo escuro programável (agendado)
+- [ ] Páginas de frontend para Dívidas, Investimentos e Plano de Contas (backend pronto)

@@ -66,7 +66,7 @@ backend/
 ├── Lucrai.slnx
 ├── src/
 │   ├── Lucrai.API/
-│   │   ├── Controllers/
+│   │   ├── Controllers/          # 24 controllers / 138 endpoints
 │   │   │   ├── AuthController.cs
 │   │   │   ├── TransactionsController.cs
 │   │   │   ├── CategoriesController.cs
@@ -77,90 +77,51 @@ backend/
 │   │   │   ├── SettingsController.cs
 │   │   │   ├── PricingController.cs
 │   │   │   ├── DashboardController.cs
-│   │   │   └── ContasController.cs
+│   │   │   ├── ContasController.cs
+│   │   │   ├── HealthController.cs
+│   │   │   ├── DocumentosController.cs
+│   │   │   ├── DocumentoAprendizadoController.cs
+│   │   │   ├── DocumentoConfigController.cs
+│   │   │   ├── RecibosController.cs
+│   │   │   ├── SignatureController.cs
+│   │   │   ├── InsumosController.cs
+│   │   │   ├── FixedCostsController.cs
+│   │   │   ├── AccountsPayableController.cs
+│   │   │   ├── AccountsReceivableController.cs
+│   │   │   ├── DebtsController.cs
+│   │   │   ├── InvestmentsController.cs
+│   │   │   └── BalanceAccountsController.cs
 │   │   ├── Middleware/
 │   │   │   ├── ExceptionHandlingMiddleware.cs
 │   │   │   └── TenantContextMiddleware.cs
+│   │   ├── Validators/           # FluentValidation (35 validators)
 │   │   ├── Program.cs
 │   │   ├── appsettings.json
 │   │   └── Dockerfile
 │   │
 │   ├── Lucrai.Core/
-│   │   ├── Entities/
-│   │   │   ├── Transaction.cs
-│   │   │   ├── Category.cs
-│   │   │   ├── User.cs
-│   │   │   ├── CashForecast.cs
-│   │   │   ├── PricingProduct.cs
-│   │   │   ├── DeletedItem.cs
-│   │   │   ├── AuditLog.cs
-│   │   │   ├── CompanySettings.cs
-│   │   │   ├── CompanyRegistration.cs
-│   │   │   └── RefreshToken.cs
+│   │   ├── Entities/             # 25 entidades
 │   │   ├── Enums/
-│   │   │   ├── TransactionType.cs
-│   │   │   ├── ForecastStatus.cs
-│   │   │   ├── UserRole.cs
-│   │   │   ├── AuditAction.cs
-│   │   │   ├── EntryType.cs
-│   │   │   ├── RecurrenceType.cs
-│   │   │   └── PorteEmpresa.cs
 │   │   ├── DTOs/
-│   │   │   ├── Auth/
-│   │   │   ├── Transactions/
-│   │   │   ├── Categories/
-│   │   │   ├── Forecasts/
-│   │   │   ├── Users/
-│   │   │   ├── Trash/
-│   │   │   ├── Audit/
-│   │   │   ├── Settings/
-│   │   │   ├── Pricing/
-│   │   │   ├── Dashboard/
-│   │   │   └── Contas/
-│   │   ├── Interfaces/
-│   │   │   ├── ITransactionRepository.cs
-│   │   │   ├── ICategoryRepository.cs
-│   │   │   ├── ICashForecastRepository.cs
-│   │   │   ├── IUserRepository.cs
-│   │   │   ├── ITrashRepository.cs
-│   │   │   ├── IAuditRepository.cs
-│   │   │   ├── ISettingsRepository.cs
-│   │   │   └── IPricingRepository.cs
-│   │   └── Services/           (📁 a criar — lógica no DashboardController por enquanto)
-│   │       ├── IDashboardIntelligenceService.cs
-│   │       ├── DashboardIntelligenceService.cs
-│   │       ├── IAlertasService.cs
-│   │       └── AlertasService.cs
+│   │   ├── Interfaces/           # 22 repositórios + 2 serviços + ITenantContext
+│   │   └── Services/             # DashboardIntelligenceService, AlertasService
 │   │
 │   └── Lucrai.Infrastructure/
 │       ├── Data/
-│       │   └── LucraiDbContext.cs  (Fluent API inline)
-│       ├── Repositories/
-│       │   ├── TransactionRepository.cs
-│       │   ├── CategoryRepository.cs
-│       │   ├── CashForecastRepository.cs
-│       │   ├── UserRepository.cs
-│       │   ├── TrashRepository.cs
-│       │   ├── AuditRepository.cs
-│       │   ├── SettingsRepository.cs
-│       │   └── PricingRepository.cs
-│       ├── Migrations/
+│       │   └── LucraiDbContext.cs  # Fluent API + ApplyTenantFilters (23 entidades)
+│       ├── Repositories/          # 22 implementações
+│       ├── Migrations/            # 23 migrations EF Core
 │       └── Seed/
 │           └── DataSeeder.cs
 │
 ├── tests/
-│   └── Lucrai.API.Tests/
-│       ├── Controllers/
-│       │   ├── AuthControllerTests.cs
-│       │   ├── TransactionsControllerTests.cs
-│       │   ├── CategoriesControllerTests.cs
-│       │   ├── DashboardControllerTests.cs
-│       │   └── PricingControllerTests.cs
-│       ├── CustomWebApplicationFactory.cs
-│       └── Services/           (📁 a criar)
+│   └── Lucrai.API.Tests/          # 87 testes xUnit
+│       ├── Controllers/           # 13 arquivos (incl. ReciboIsolationTests)
+│       ├── Services/
+│       └── CustomWebApplicationFactory.cs
 │
 ├── .dockerignore
-└── Dockerfile
+└── src/Lucrai.API/Dockerfile
 ```
 
 ---
@@ -220,7 +181,13 @@ backend/
 
 ### Esquema de Multi-tenancy
 
-Todas as tabelas possuem um campo `Company` (string). Toda query é filtrada por ele automaticamente via **tenant interceptor**. O `Company` é extraído do JWT do usuário autenticado — nunca confiado em parâmetros de requisição.
+O isolamento é feito via **filtros globais do EF Core** (`HasQueryFilter`), aplicados em **23 das 25 entidades** no `ApplyTenantFilters()` do `LucraiDbContext`. O `Company` e o `UserId` são extraídos do JWT pelo `TenantContextMiddleware` (scoped `ITenantContext`) — nunca confiados em parâmetros de requisição.
+
+Dois níveis de isolamento:
+- **Empresa (tenant):** `Company == CurrentCompany` em todas as tabelas
+- **Usuário:** `CreatedBy == null || CreatedBy == CurrentUserId` (migração `AddUserLevelIsolation`, 20260728142726) — cada usuário vê apenas os próprios registros
+
+Testes de isolamento específicos existem em `ReciboIsolationTests` (4 testes).
 
 ### Índices-Chave
 
@@ -393,8 +360,66 @@ Todas as tabelas possuem um campo `Company` (string). Toda query é filtrada por
 | POST | /api/dashboard/projection | Projeção financeira (12 meses, cenários) |
 | GET | /api/dashboard/runway | Cálculo de runway (meses de caixa) |
 | GET | /api/dashboard/breakeven | Ponto de equilíbrio |
-| GET | /api/dashboard/health | Saúde financeira (score 0-100) |
+| GET | /api/dashboard/health | Saúde financeira (score 0-100 + subindicadores) |
 | GET | /api/dashboard/alerts | Alertas inteligentes |
+| GET | /api/dashboard/sparkline | Dados para sparkline |
+| GET | /api/dashboard/nota-cfo | Resumo executivo em linguagem natural |
+| GET | /api/dashboard/recommended-actions | Ações recomendadas priorizadas |
+| POST | /api/dashboard/alerts/{id}/dismiss | Dispensar alerta |
+| POST | /api/dashboard/alerts/{id}/restore | Restaurar alerta dispensado |
+
+### Documentos Financeiros
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | /api/documentos | Listar documentos (status/query) |
+| GET | /api/documentos/{id} | Obter documento |
+| GET | /api/documentos/{id}/download | URL de download |
+| POST | /api/documentos/upload | Upload (arquivos + metadados extraídos) |
+| GET | /api/documentos/stats | Estatísticas |
+| GET | /api/documentos/trash | Lixeira de documentos |
+| POST | /api/documentos/{id}/excluir | Mover para lixeira |
+| POST | /api/documentos/{id}/restaurar | Restaurar da lixeira |
+| DELETE | /api/documentos/{id}/permanente | Excluir permanentemente |
+| POST | /api/documentos/trash/cleanup | Limpar expirados |
+| POST | /api/documentos/{id}/confirmar | Confirmar (+ cria transação/previsão) |
+| POST | /api/documentos/{id}/rejeitar | Rejeitar com motivo |
+| POST | /api/documentos/{id}/reprocessar | Reprocessar documento |
+| GET | /api/documentos/{id}/logs | Logs de um documento |
+| GET/POST/DELETE | /api/documentos/aprendizado | Aprendizado (chave → categoria/tipo) |
+| GET/PUT | /api/documentos/config | Configuração do módulo |
+
+### Recibos
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | /api/recibos | Listar recibos (filtros status/tipo/busca) |
+| GET | /api/recibos/{id} | Obter recibo |
+| POST | /api/recibos | Criar recibo (numeração REC-{ano}-######) |
+| PUT | /api/recibos/{id} | Atualizar recibo |
+| DELETE | /api/recibos/{id} | Excluir (soft delete) |
+| POST | /api/recibos/{id}/cancelar | Cancelar com motivo |
+| POST | /api/recibos/audit | Log de evento de recibo |
+| GET | /api/signature | Obter assinatura digital |
+| PUT | /api/signature | Atualizar assinatura (imagem base64 + responsável) |
+
+### Precificação (Insumos / Custos Fixos)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET/POST/PUT/DELETE | /api/pricing | CRUD de produtos (cálculo automático de preços) |
+| GET/POST/PUT/DELETE | /api/insumos | CRUD de insumos (conversão automática de unidades) |
+| GET/POST | /api/fixed-costs | Custos fixos mensais |
+
+### Financeiro Avançado
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET/POST/PUT/DELETE | /api/accounts-payable | Contas a pagar (aging buckets) |
+| GET/POST/PUT/DELETE | /api/accounts-receivable | Contas a receber (aging buckets) |
+| GET/POST/PUT/DELETE | /api/debts | Dívidas (net debt / alavancagem) |
+| GET/POST/PUT/DELETE | /api/investments | Investimentos (ROI, IRR, NPV, payback) |
+| GET/POST/PUT/DELETE | /api/balance-accounts | Plano de contas (Ativo/Passivo/PL) |
 
 ### Contas (Company Registration)
 
@@ -451,42 +476,52 @@ Todas as tabelas possuem um campo `Company` (string). Toda query é filtrada por
 ## Segurança
 
 - **Senhas:** Hash via `PasswordHasher` do ASP.NET Identity (PBKDF2).
-- **JWT:** Chave assimétrica ou simétrica (configurada via `appsettings.json` / environment secrets).
-- **Refresh Token:** Opaco, armazenado em tabela `RefreshTokens` no banco, com rotação a cada uso.
-- **HTTPS:** Exigido em produção. Redirecionamento automático.
-- **CORS:** Restrito às origens do front-end (Vercel, domínio customizado).
-- **Rate Limiting:** Recomendado nos endpoints de autenticação.
-- **Validação:** FluentValidation ou `System.ComponentModel.DataAnnotations` em todos os DTOs.
+- **JWT:** Chave simétrica configurada via `appsettings.json` / environment secrets.
+- **Refresh Token:** Opaco, armazenado em tabela `RefreshTokens` no banco, com **rotação** a cada uso (revoga o anterior).
+- **Sessão (FE):** Token armazenado em `sessionStorage` (fechar aba = logout) + timeout de inatividade de 15 min.
+- **Multi-tenancy:** Filtros globais por `Company` + isolamento por `CreatedBy`/`UserId` em 23 entidades (migrações `AddTenantQueryFilters` e `AddUserLevelIsolation`).
+- **Validação:** FluentValidation em todos os request DTOs (35 validators) + validação no frontend (duas camadas).
 - **SQL Injection:** Prevenido nativamente pelo EF Core (parameterized queries).
+- **CORS:** Middleware próprio restrito às origens do front-end.
+- **Rate Limiting:** ⚠️ **NÃO implementado** (recomendado para endpoints de autenticação).
+- **HTTPS/HSTS:** ⚠️ **Não há redirecionamento HTTP→HTTPS nem HSTS no código** (HTTPS garantido no nível da plataforma — Railway/Vercel).
 
 ---
 
 ## Estratégia de Testes
 
-### Back-end (xUnit + WebApplicationFactory)
+### Back-end (xUnit + WebApplicationFactory) — 87 testes `[Fact]`
 
 ```
 tests/Lucrai.API.Tests/
-├── Services/
-│   ├── DashboardIntelligenceServiceTests.cs
-│   └── AlertasServiceTests.cs
 ├── Controllers/
-│   ├── TransactionsControllerTests.cs
-│   ├── AuthControllerTests.cs
+│   ├── ReciboIsolationTests.cs        # 4 testes de isolamento multi-tenant/user
+│   ├── AuthControllerTests.cs         # 8 testes
+│   ├── CashForecastsControllerTests.cs # 11 testes
+│   ├── DashboardControllerTests.cs    # 10 testes
+│   ├── UsersControllerTests.cs        # 9 testes
+│   ├── ContasControllerTests.cs       # 4 testes
+│   ├── AuditControllerTests.cs        # 4 testes
+│   ├── SettingsControllerTests.cs     # 4 testes
+│   ├── TransactionsControllerTests.cs # 4 testes
+│   ├── TrashControllerTests.cs        # 4 testes
+│   ├── CategoriesControllerTests.cs   # 3 testes
+│   ├── PricingControllerTests.cs      # 2 testes
 │   └── ...
-└── Integration/
-    └── ApiFixture.cs           # WebApplicationFactory<Program>
+├── Services/
+│   ├── DashboardIntelligenceServiceTests.cs  # 12 testes
+│   └── AlertasServiceTests.cs               # 8 testes
+└── CustomWebApplicationFactory.cs           # InMemory DB + test JWT
 ```
 
 - **Testes de unidade:** Serviços de domínio puros (Dashboard, Alertas), sem dependência externa.
-- **Testes de integração:** Controllers com banco PostgreSQL real via Testcontainers ou banco in-memory + WebApplicationFactory.
-- **Cobertura:** Mínimo 70% nas regras de negócio.
+- **Testes de integração:** Controllers com `WebApplicationFactory<Program>` + EF Core InMemory (`DatabaseProvider=InMemory`), autenticação via test JWT.
+- **Isolamento:** `ReciboIsolationTests` valida que um usuário/empresa não acessa dados de outro.
 
-### Front-end (Vitest + React Testing Library + Playwright)
+### Front-end (Vitest + Playwright)
 
-- **Unitários:** Hooks, utils, componentes isolados (já existentes).
-- **Integração:** Fluxos completos mockando a API.
-- **E2E (Playwright):** Fluxos críticos — login → criar transação → ver dashboard → marcar forecast como pago.
+- **Unitários (Vitest, 7 suítes):** utils (formatação, valor por extenso, CPF/CNPJ), hooks (`useDadosFiltrados`, `useAlertsCount`), serviços de documentos (API, service, parse NF-e XML), recibos.
+- **E2E (Playwright, 6 specs):** login→dashboard, criar transação, criar previsão, lixeira/restauração, categorias — com API mockada (`e2e/helpers.ts`).
 
 ---
 
@@ -498,12 +533,8 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: lucrai-db
-    environment:
-      POSTGRES_DB: lucrai
-      POSTGRES_USER: lucrai
-      POSTGRES_PASSWORD: devpass
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -516,43 +547,59 @@ services:
     build:
       context: ./backend
       dockerfile: src/Lucrai.API/Dockerfile
-    container_name: lucrai-api
+    profiles: ["full"]
     ports:
       - "5000:8080"
     environment:
-      ConnectionStrings__Default: Host=postgres;Port=5432;Database=lucrai;Username=lucrai;Password=devpass
-      Jwt__Key: dev-secret-key-lucrai-at-least-32-chars!!
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=lucrai;Username=lucrai;Password=...
+      Jwt__Key: ...
       Cors__Origins: http://localhost:3000
     depends_on:
       postgres:
         condition: service_healthy
 
+  web:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    profiles: ["full"]
+    ports:
+      - "3000:3000"
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5000
+    depends_on:
+      - api
+
 volumes:
   pgdata:
 ```
 
+> **Profiles:** `docker compose up -d` sobe apenas `postgres`. `docker compose --profile full up -d` sobe `postgres + api + web`.
+
 ### Dockerfile (API) — `backend/src/Lucrai.API/Dockerfile`
 
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-
 COPY ["src/Lucrai.API/Lucrai.API.csproj", "src/Lucrai.API/"]
 COPY ["src/Lucrai.Core/Lucrai.Core.csproj", "src/Lucrai.Core/"]
 COPY ["src/Lucrai.Infrastructure/Lucrai.Infrastructure.csproj", "src/Lucrai.Infrastructure/"]
 RUN dotnet restore "src/Lucrai.API/Lucrai.API.csproj"
-
 COPY . .
 WORKDIR "/src/src/Lucrai.API"
 RUN dotnet publish "Lucrai.API.csproj" -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends libgssapi-krb5-2 curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Lucrai.API.dll"]
 ```
+
+> **Nota:** porta dinâmica `${PORT:-8080}` (Railway-compatible). `curl` instalado para o healthcheck do compose.
 
 ---
 
@@ -581,7 +628,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
-          dotnet-quality: preview
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
@@ -605,9 +651,30 @@ jobs:
         run: npm run lint
       - name: Build
         run: npm run build
+
+  docker:
+    name: Docker - Validate Images
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/src/Lucrai.API/Dockerfile
+          push: false
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./
+          file: ./frontend.Dockerfile
+          push: false
 ```
 
-> **Nota:** Os testes usam `DatabaseProvider=InMemory`, portanto não precisam de PostgreSQL no CI. O workflow de deploy (com Docker build + push + deploy) está pendente.
+> **Nota:** Os testes usam `DatabaseProvider=InMemory`, portanto não precisam de PostgreSQL no CI. O deploy é feito via Railway (auto-deploy ao push em `main`).
 
 ---
 
@@ -623,8 +690,8 @@ jobs:
 ### Setup
 
 ```bash
-# 1. Subir PostgreSQL
-docker compose up -d db
+# 1. Subir PostgreSQL (serviço postgres — profile default)
+docker compose up -d postgres
 
 # 2. Rodar API (migrations + seed automáticos)
 cd backend
@@ -634,6 +701,8 @@ dotnet run --project src/Lucrai.API
 cd ..
 npm run dev
 ```
+
+> **Alternativa:** `npm run dev:all` (verifica Docker via `scripts/ensure-docker.ts`, sobe `postgres`, aguarda DB via `scripts/wait-for-db.ts`, sobe API + frontend). `npm run dev:full` adiciona o profile `full` (api + web em containers).
 
 ### Configuração de Ambiente
 

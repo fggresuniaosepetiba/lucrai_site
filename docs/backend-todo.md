@@ -268,20 +268,21 @@
 
 ## Fase 8: Testes
 
-### 8.1 Back-end (xUnit) — 83 testes passando
-- [x] `AuthControllerTests.cs` — register, login, refresh, logout, me, duplicate email
-- [x] `TransactionsControllerTests.cs` — CRUD, list, balance, summary
-- [x] `CategoriesControllerTests.cs` — CRUD, list, get by type
-- [x] `DashboardControllerTests.cs` — projection, runway, breakeven, health, alerts
-- [x] `PricingControllerTests.cs` — create (com cálculo de preços), list
-- [x] `Services/DashboardIntelligenceServiceTests.cs` — projeção, runway, break-even, saúde
-- [x] `Services/AlertasServiceTests.cs` — geração de alertas, dispensar/restaurar
-- [x] `CashForecastsControllerTests.cs` — CRUD, markAs*
-- [x] `UsersControllerTests.cs` — CRUD, soft delete
-- [x] `TrashControllerTests.cs` — restore, cleanup
-- [x] `AuditControllerTests.cs` — list, filter
-- [x] `SettingsControllerTests.cs` — CRUD
-- [x] `ContasControllerTests.cs` — create registration
+### 8.1 Back-end (xUnit) — 87 testes passando
+- [x] `AuthControllerTests.cs` — register, login, refresh, logout, me, duplicate email (8)
+- [x] `CashForecastsControllerTests.cs` — CRUD, markAs*, getByStatus, totals (11)
+- [x] `DashboardControllerTests.cs` — projection, runway, breakeven, health, alerts, nota-cfo, recommended-actions, sparkline, dismiss/restore (10)
+- [x] `UsersControllerTests.cs` — CRUD, soft delete, duplicate email (9)
+- [x] `AlertasServiceTests.cs` — geração de alertas, dispensar/restaurar (8)
+- [x] `DashboardIntelligenceServiceTests.cs` — projeção, runway, break-even, saúde, nota-cfo (12)
+- [x] `ReciboIsolationTests.cs` — isolamento multi-tenant + isolamento por usuário (4)
+- [x] `TransactionsControllerTests.cs` — CRUD, list, balance, summary (4)
+- [x] `TrashControllerTests.cs` — restore, cleanup, permanente (4)
+- [x] `ContasControllerTests.cs` — create registration, auth (4)
+- [x] `AuditControllerTests.cs` — list, filter (4)
+- [x] `SettingsControllerTests.cs` — CRUD (4)
+- [x] `CategoriesControllerTests.cs` — CRUD, list, get by type (3)
+- [x] `PricingControllerTests.cs` — create (com cálculo de preços), list (2)
 
 ---
 
@@ -354,6 +355,21 @@ Os 5 módulos do Grupo B já possuem backend completo (controllers, entities, re
 
 ---
 
+## Grupo C: Financeiro Avançado (backend completo) ✅
+
+Módulos de gestão financeira avançada com controllers, entidades, repositórios, validators e DI registrados:
+
+- [x] **Contas a Pagar** (`AccountsPayableController`) — aging buckets (30/60/90 dias), inadimplência, prazo médio
+- [x] **Contas a Receber** (`AccountsReceivableController`) — aging buckets, prazo médio de recebimento
+- [x] **Dívidas** (`DebtsController`) — net debt, alavancagem
+- [x] **Investimentos** (`InvestmentsController`) — ROI, IRR, NPV, payback
+- [x] **Plano de Contas** (`BalanceAccountsController`) — balanço agrupado por código/natureza (Ativo/Passivo/PL)
+- [x] **Healthcheck** (`HealthController`) — `GET /api/health` (probe do banco)
+
+> **Nota:** Dívidas, Investimentos e Plano de Contas têm backend completo, mas ainda **não possuem páginas dedicadas no frontend** (são consumidos parcialmente via `/api/dashboard/indicators`).
+
+---
+
 ## Resumo
 
 | Fase | Itens | Concluídos | Pendentes |
@@ -365,9 +381,11 @@ Os 5 módulos do Grupo B já possuem backend completo (controllers, entities, re
 | 5 — Serviços | ~2 serviços | 2 | 0 |
 | 6 — Docker | ~3 itens | 3 | 0 |
 | 7 — CI/CD | ~4 itens | 4 | 0 |
-| 8 — Testes (Back-end) | ~13 itens | 13 | 0 |
+| 8 — Testes (Back-end) | 87 testes / 14 arquivos | 87 | 0 |
 | 9 — Documentos Financeiros | ~30 itens | 30 | 0 |
 | Grupo B (backend) | 5 | 5 | 0 |
-| **Total** | **~165 itens** | **141** | **24** |
+| Grupo C (financeiro avançado) | 6 | 6 | 0 |
+| **Total** | **~200 itens** | **~200** | **0** |
 
 > **Nota:** Itens de frontend (testes unitários, E2E, integração de API) foram movidos para `docs/frontend-todo.md`.
+> **Nota (2026-08):** Backend do módulo de Documentos conta com 24 controllers no total (138 endpoints) e 23 migrations EF Core.
