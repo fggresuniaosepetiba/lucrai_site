@@ -1,7 +1,7 @@
 <a name="top"></a>
 
 <p align="center">
-  <img src="public/images/lucrai/logo-lucrai-sem-fundo-otimizada.png" alt="LUCRAÍ" width="220" />
+  <img src="public/images/lucrai/icon-dark.png" alt="LUCRAÍ" width="220" />
 </p>
 
 <h1 align="center">🚀 LUCRAÍ — Intelligent Digital CFO</h1>
