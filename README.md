@@ -44,6 +44,8 @@ It positions itself as the financial intelligence layer **between spreadsheets**
 
 Built by a two-person team, with the lead author responsible for **140 of 195 commits (~72%)** — most of the backend, financial intelligence, documents/receipts modules, tests, and DevOps.
 
+> Built with AI-assisted development — **OpenCode** + **DeepSeek V4 Flash** for fast, high-quality iteration.
+
 ## ✨ Features
 
 | Module | Description |
@@ -191,6 +193,8 @@ O **LUCRAÍ** é um SaaS full-stack de gestão financeira para **pequenas e méd
 Posiciona-se como a camada de inteligência financeira **entre as planilhas** (Excel/Google Sheets) e os **ERPs corporativos pesados** (SAP, Oracle, TOTVS): leve, visual e opinativo sobre boas práticas de gestão financeira.
 
 Desenvolvido em dupla, com o autor principal responsável por **140 de 195 commits (~72%)** — a maior parte do backend, da inteligência financeira, dos módulos de documentos/recibos, dos testes e do DevOps.
+
+> Desenvolvido com desenvolvimento assistido por IA — **OpenCode** + **DeepSeek V4 Flash** para iteração rápida e de alta qualidade.
 
 ## ✨ Funcionalidades
 
