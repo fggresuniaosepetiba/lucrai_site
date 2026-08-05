@@ -169,7 +169,7 @@ A **3-job CI pipeline** (GitHub Actions) runs the backend build + tests, fronten
 
 ## 🗺️ Roadmap
 
-1. **MVP** — Essential financial management _(done)_
+1. **MVP** — Essential financial management _(in progress)_
 2. **Post-MVP** — Export, customization, enhanced UX _(in progress)_
 3. **Financial Intelligence** — Advanced metrics, alerts, projections _(done)_
 4. **Digital CFO** — Automated recommendations, scenarios, executive reports _(in progress)_
@@ -319,7 +319,7 @@ Um **pipeline de CI em 3 jobs** (GitHub Actions) roda build + testes do backend,
 
 ## 🗺️ Roadmap
 
-1. **MVP** — Gestão financeira essencial _(concluído)_
+1. **MVP** — Gestão financeira essencial _(em andamento)_
 2. **Pós-MVP** — Exportação, personalização e UX aprimorada _(em andamento)_
 3. **Inteligência Financeira** — Métricas avançadas, alertas, projeções _(concluído)_
 4. **CFO Digital** — Recomendações automatizadas, cenários, relatórios executivos _(em andamento)_

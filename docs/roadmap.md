@@ -1,6 +1,6 @@
 # LUCRAÍ Core — Roadmap
 
-## Fase 1: MVP ✅ (Atual)
+## Fase 1: MVP (Atual)
 
 ### Funcionalidades Concluídas
 

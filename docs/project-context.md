@@ -106,7 +106,7 @@ Aplicação **full-stack** com frontend Next.js 15 e backend .NET 10 + PostgreSQ
 
 O LUCRAÍ evolui em 5 fases:
 
-1. **MVP** — Gestão financeira essencial (concluído)
+1. **MVP** — Gestão financeira essencial (em andamento)
 2. **Pós-MVP** — Exportação, personalização, experiência aprimorada (em andamento)
 3. **Inteligência Financeira** — Métricas avançadas, alertas, projeções (concluído)
 4. **CFO Digital** — Recomendações automatizadas, cenários, relatórios executivos (em andamento)
