@@ -82,3 +82,6 @@ prompts/
 
 # test results
 test-results/
+
+# playwright mcp
+.playwright-mcp/
