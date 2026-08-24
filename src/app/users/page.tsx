@@ -159,7 +159,10 @@ export default function UsersPage() {
 
         <div className="grid gap-4">
           {users.map((u) => {
-            const RoleIcon = roleIcons[u.role];
+            const key = (u.role as string)?.toLowerCase() ?? "viewer";
+            const RoleIcon = (roleIcons[key] ?? Eye) as React.ElementType;
+            const label = roleNames[key] ?? u.role;
+            const color = roleColors[key] ?? "text-muted-foreground";
             const isActive = u.active !== false;
             return (
               <Card key={u.id} className={`group hover:shadow-md transition-all ${!isActive ? "opacity-60" : ""}`}>
@@ -167,15 +170,15 @@ export default function UsersPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-sm font-bold text-white">
-                        {u.name.charAt(0).toUpperCase()}
+                        {(u.name ?? "").charAt(0).toUpperCase() || "?"}
                       </div>
                       <div>
                         <p className="font-medium">{u.name}</p>
                         <p className="text-sm text-muted-foreground">{u.email}</p>
                       </div>
-                      <Badge variant="outline" className={`gap-1.5 ${roleColors[u.role]}`}>
+                      <Badge variant="outline" className={`gap-1.5 ${color}`}>
                         <RoleIcon className="h-3 w-3" />
-                        {roleNames[u.role]}
+                        {label}
                       </Badge>
                       <Badge variant="secondary" className="gap-1.5">
                         <Building2 className="h-3 w-3" />
