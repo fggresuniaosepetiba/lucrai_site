@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: lucrai-api
+    name: lucrai-site
     runtime: docker
     dockerfilePath: ./backend/src/Lucrai.API/Dockerfile
     dockerContext: ./backend
@@ -18,6 +18,8 @@ services:
         sync: false
       - key: Jwt__Key
         sync: false
+      - key: DOTNET_USE_POLLING_FILE_WATCHER
+        value: true
       - key: Jwt__Issuer
         value: lucrai-api
       - key: Jwt__Audience

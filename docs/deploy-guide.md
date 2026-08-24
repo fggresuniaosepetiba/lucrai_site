@@ -5,7 +5,7 @@
 ```
 Usuário → https://lucrai-site.vercel.app (Next.js)
                     ↕ HTTPS / JSON
-         https://lucrai-api.onrender.com (ASP.NET Core 10 — Render Docker)
+         https://lucrai-site.onrender.com (ASP.NET Core 10 — Render Docker, Free)
                     ↕ Npgsql
          PostgreSQL (Neon — 2 DBs: lucrai + quintoset)
 ```
@@ -46,9 +46,10 @@ CREATE DATABASE lucrai;
 1. Acessar [render.com](https://render.com) → **New → Web Service** → conectar `fggresuniaosepetiba/lucrai_site`
 2. Render detecta `render.yaml` automaticamente (ou configure manual):
    - **Root Directory:** `backend`
-   - **Dockerfile:** `src/Lucrai.API/Dockerfile`
-   - **Plan:** `Starter` (~7 USD, sem sleep — Free dorme e quebra DB)
+   - **Dockerfile:** `backend/src/Lucrai.API/Dockerfile` (relativo ao repo; `Root Directory: backend` → `src/Lucrai.API/Dockerfile`)
+   - **Plan:** `Free` (live atual — dorme após 15min, cold start 30-60s; Starter ~7 USD sem sleep)
    - **Health Check:** `/api/health`
+   - **Env extra (Free):** `DOTNET_USE_POLLING_FILE_WATCHER=true` (evita `inotify instances` no Render Free)
 
 ### 2.2 Configurar variáveis de ambiente
 
@@ -75,7 +76,7 @@ Host=ep-xxxx.us-east-2.aws.neon.tech;Port=5432;Database=lucrai;Username=lucrai_o
 
 ### 2.4 Obter URL da API
 
-- Render gera `https://lucrai-api.onrender.com` (ou custom domain)
+- Render gera `https://lucrai-site.onrender.com` (live atual, Free) — ou `lucrai-api.onrender.com` se renomear
 - **Copiar** — vai usar no Passo 3
 
 ---
@@ -90,7 +91,7 @@ O frontend já está em produção em `https://lucrai-site.vercel.app`.
 2. Ir em **Projects → lucrai-site → Settings → Environment Variables**
 3. Adicionar:
    - **Name**: `NEXT_PUBLIC_API_URL`
-   - **Value**: `https://lucrai-api.onrender.com` (URL do Passo 2.4)
+   - **Value**: `https://lucrai-site.onrender.com` (live Free)
    - **Environments**: Production, Preview, Development
 4. Salvar
 
@@ -106,17 +107,17 @@ Ir em **Deployments**, clicar nos três pontos do último deploy e selecionar **
 
 Após o deploy:
 
-1. **API**: Acessar `https://lucrai-api.onrender.com/api/health` (200) ou `/api/auth/me` (401 = no ar)
+1. **API**: Acessar `https://lucrai-site.onrender.com/api/health` (200) ou `/api/auth/me` (401 = no ar)
 2. **Frontend**: Acessar `https://lucrai-site.vercel.app` e tentar login
 3. **Logs Render**: confirmar `Applied migrations` / `Now listening on`
 
 ### Testes de smoke
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" https://lucrai-api.onrender.com/api/health
+curl -s -o /dev/null -w "%{http_code}" https://lucrai-site.onrender.com/api/health
 # 200
 
-curl -s -X POST https://lucrai-api.onrender.com/api/auth/login \
+curl -s -X POST https://lucrai-site.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@lucrai.com","password":"sua-senha"}'
 ```
@@ -131,7 +132,7 @@ Push no `main` — Render auto-deploy (via `render.yaml`) e Vercel auto-deploy.
 
 ### Logs
 
-- **API LUCRAÍ**: Render → `lucrai-api` → Logs
+- **API LUCRAÍ**: Render → `lucrai-site` (live) → Logs
 - **API Quinto Set**: Render → `quinto-set-api` → Logs (`docs/quinto-set-render.md`)
 - **Frontend**: Vercel → Deployments → Logs
 
@@ -154,5 +155,5 @@ Push no `main` — Render auto-deploy (via `render.yaml`) e Vercel auto-deploy.
 
 ### Custo estimado (2 APIs + Neon)
 
-- `lucrai-api` Starter 7 USD + `quinto-set-api` Starter 7 USD + Neon free/5 USD = **14–19 USD/mês** (2 serviços Free estouram 750h e dormem)
+- `lucrai-site` Free (live) + `quinto-set-api` Free/Starter + Neon free/5 USD = **0–12 USD/mês** (2 Free 24/7 estouram 750h e dormem; Starter ~7 USD cada sem sleep)
 
