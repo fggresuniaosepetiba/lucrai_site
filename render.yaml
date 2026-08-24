@@ -5,7 +5,7 @@ services:
     rootDir: backend
     dockerfilePath: ./src/Lucrai.API/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     region: oregon
     branch: main
     healthCheckPath: /api/health
