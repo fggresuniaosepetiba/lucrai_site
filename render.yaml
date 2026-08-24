@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: lucrai-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./src/Lucrai.API/Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    branch: main
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: ConnectionStrings__Default
+        sync: false
+      - key: Jwt__Key
+        sync: false
+      - key: Jwt__Issuer
+        value: lucrai-api
+      - key: Jwt__Audience
+        value: lucrai-frontend
+      - key: Cors__Origins
+        value: https://lucrai-site.vercel.app
