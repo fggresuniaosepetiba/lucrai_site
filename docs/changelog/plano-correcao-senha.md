@@ -43,9 +43,15 @@ Adicionar `docs/changelog/seed-credentials.md` para não versionar credenciais.
 
 ---
 
+## Verificação 2026-09-07
+
+- `DataSeeder.cs:118-122` atual **não** reseta `MustChangePassword` cegamente — só quando `VerifyHashedPassword(..., "123") == Success`, portanto correção do item 1 já aplicada.
+- `CompanyRegistration.Senha` + `CompanyRegistrations.Senha` + `seed.ts password` já removidos (migrations `RemoveSenhaFromCompanyRegistrations`, `FixUserPlanAndMustChangePasswordDefaults`).
+- Estado prod: `lucrai.adm false`, `joao.ribeiro false`, `fellype false`, `eduardo/vitoria/laura true` (ver `docs/fix-isolamento-usuario.md` 2026-09-07).
+
 ## Ordem de Execução
 
-1. Editar `DataSeeder.cs` — remover `existing.MustChangePassword = true;` (linha 95)
+1. ~~Editar `DataSeeder.cs` — remover `existing.MustChangePassword = true;` (linha 95)~~ — já corrigido para verificação condicional de `123`
 2. Editar `CompanyRegistration.cs` — remover propriedade `Senha`
 3. Editar `ContasController.cs` — remover `Senha = request.Senha;` (linha 60)
 4. Editar `LucraiDbContext.cs` — remover `.Property(r => r.Senha).HasMaxLength(500).IsRequired();`

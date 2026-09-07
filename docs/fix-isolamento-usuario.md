@@ -167,3 +167,16 @@ dotnet ef database update \
 5. Adiciona `UserId` (nullable) em: `AuditLogs`
 
 Registros existentes ficam com `CreatedBy = NULL`, tornando-se visíveis a todos (fallback) até serem editados.
+
+---
+
+## Verificação senha/troca (2026-09-07 — sem alteração)
+
+Leitura direta Neon `neondb` `ep-proud-base-aci4mfda` (Opção A — read-only, sem `UPDATE`):
+
+- `SELECT DISTINCT Company` → `Grão Natural | Lucraí | Trinary` — **`Quinto Set` = 0 rows** (não existe company `Quinto Set`; deploy-guide menciona app externo `quintoset.vercel.app`, não tenant do banco lucrai_site)
+- `AspNetUsers` total 8: `Lucraí` 6 (screenshot) + 1 `Grão Natural` + 1 `Trinary`
+- `Lucraí`: `lucrai.adm 7671c516… false` (`@Lucrai2026` via `AuthController:57 MustChangePassword false` → login `200` sem redirect), `joao.ribeiro bb112dcd… false` (`123` dá `401 Credenciais inválidas` → já trocou), `fellype.gabriel false` (`@86493056Fg`), `eduardo.contador true` / `vitoria.justo true` / `laura.peixoto true` (`123` → `POST /api/auth/login 200 {mustChangePassword:true}` → redirect para `POST /api/auth/change-password` que seta `MustChangePassword=false`)
+- `DataSeeder.cs:118-122` só reativa `MustChangePassword` quando hash ainda é `123` (proteção contra reset pós-reboot); `AuthController.cs:57,75` expõe flag e limpa após troca
+
+Teste prod `https://lucrai-site.onrender.com/api/auth/login` 2026-09-07 17:17 UTC (sem UPDATE): `lucrai.adm/123 401`, `joao/123 401`, `eduardo/123 200 true`, `vitoria/123 200 true`, `laura/123 200 true` — confirma que `lucrai` e `joão` **não vão** para endpoint de troca até serem zerados novamente (opção A com `UPDATE PasswordHash=hash(123) + MustChangePassword=true + DELETE RefreshTokens` permanece disponível, mas não executada a pedido)

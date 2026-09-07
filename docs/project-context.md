@@ -91,7 +91,7 @@ Aplicação **full-stack** com frontend Next.js 15 e backend .NET 10 + PostgreSQ
 ## Diferenciais Competitivos
 
 - **Arquitetura full-stack**: Next.js + .NET + PostgreSQL — escalável e profissional
-- **Multiempresa + isolamento por usuário**: filtros globais EF Core em 23 entidades (migrações de segurança)
+- **Multiempresa + isolamento por usuário**: filtros globais EF Core em 23 entidades (migrações de segurança) — tenants em prod 2026-09-07: `Lucraí` (6 users), `Grão Natural`, `Trinary`; `Quinto Set` é app externo, não tenant do `neondb`
 - **Inteligência Financeira**: nota CFO em linguagem natural, projeção 12m, runway, breakeven, health score, alertas inteligentes
 - **Documentos com OCR/IA**: Tesseract.js (PT-BR), OpenAI Vision, Gemini e parser de NF-e XML/DANFE
 - **Previsão de Caixa**: separação clara entre realizado e previsto

@@ -64,9 +64,9 @@
 - [x] Índices: compostos por Company + campo de busca em todas as tabelas
 
 ### 1.8 Seed (`Lucrai.Infrastructure/Seed/`)
-- [x] `DataSeeder.cs` — 6 usuários SuperAdmin (Lucraí): lucrai.adm, joao.ribeiro, vitoria.justo, fellype.gabriel, eduardo.contador, laura.peixoto
-- [x] Senhas condicionais: `lucrai.adm → Lucrai@1`, demais → `123` (forçam troca de senha no 1º login)
-- [x] Todos os seed users com `MustChangePassword = true`, `Plan = SuperAdmin`, `Company = "Lucraí"`
+- [x] `DataSeeder.cs` — 6 usuários SuperAdmin (Lucraí): lucrai.adm, joao.ribeiro, vitoria.justo, fellype.gabriel, eduardo.contador, laura.peixoto (+ 2 tenants: Grão Natural, Trinary — total 8 users; `Quinto Set` não existe no banco 2026-09-07)
+- [x] Senhas: todos criados com `123` (`PasswordHasher` + `MustChangePassword=true`); `AuthController:48` exige troca via `POST /api/auth/change-password` (flag vem em `LoginResponse.user.mustChangePassword`); `DataSeeder:118-122` só reativa `MustChangePassword=true` quando hash ainda é `123` — após troca (`ChangePassword`) fica `false` e não reseta no reboot (verificado 2026-09-07: `lucrai.adm@Lucrai2026` false, `fellype.gabriel@86493056Fg` false, `joao.ribeiro` false (já trocou), `eduardo.contador/vitoria.justo/laura.peixoto` ainda `123` true)
+- [x] Todos os seed users criados com `MustChangePassword = true`, `Plan = SuperAdmin`, `Company = "Lucraí"`
 - [x] 12 categorias padrão (4 de receita + 8 de despesa) por empresa
 - [x] Executa migrations automaticamente (com fallback EnsureCreated para InMemory)
 
