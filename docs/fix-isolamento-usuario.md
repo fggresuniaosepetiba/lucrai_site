@@ -129,6 +129,11 @@ Após QA encontrar 3 bugs de isolamento/restore, foram aplicados:
 - **Sino de notificação removido** — botão com `Bell` icon no header
 - **Tema light ("Clean") removido** — `ThemeMode` agora só `"normal" | "dark-mega"`; opções: "Sistema" (Monitor) e "Dark Mega" (Moon)
 
+### FixedCost per-user strict (2026-09-07 — B escolhido)
+- **Antes:** `FixedCost` `Company` único (`IX_FixedCosts_Company`), `CreatedBy nullable`, `HasQueryFilter (CreatedBy==null||CreatedBy==CurrentUserId)` → singleton compartilhado `43c6c99b...` visível a todos (`lucrai PUT 7777 → fellype via`)
+- **Depois:** `CreatedBy` `IsRequired` (`string.Empty`), `HasIndex Company+CreatedBy unique`, `HasQueryFilter Company==CurrentCompany && CreatedBy==CurrentUserId` (sem fallback null) + `DELETE WHERE CreatedBy IS NULL` na migration `20260907201024_FixFixedCostPerUserIsolation` → cada usuário cria seu próprio `FixedCosts` (`lucrai POST → fellype 404` igual `Insumo 4771b3...`)
+- **Repo:** `FixedCostRepository.GetAsync/SaveAsync` agora respeita filtro por usuário; `FixedCostsController PUT` seta `CreatedBy=UserId`
+
 ---
 
 ## Testes

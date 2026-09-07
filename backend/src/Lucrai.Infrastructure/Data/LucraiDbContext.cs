@@ -371,9 +371,9 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
             entity.Property(f => f.Limpeza).HasColumnType("decimal(18,2)");
             entity.Property(f => f.Outros).HasColumnType("decimal(18,2)");
             entity.Property(f => f.Total).HasColumnType("decimal(18,2)");
-            entity.Property(f => f.CreatedBy).HasMaxLength(200);
+            entity.Property(f => f.CreatedBy).HasMaxLength(200).IsRequired();
 
-            entity.HasIndex(f => f.Company).IsUnique();
+            entity.HasIndex(f => new { f.Company, f.CreatedBy }).IsUnique();
         });
 
         builder.Entity<Insumo>(entity =>
@@ -548,7 +548,7 @@ public class LucraiDbContext : IdentityDbContext<User, IdentityRole, string>
         builder.Entity<DocumentoAprendizado>().HasQueryFilter(a => a.Company == CurrentCompany && (a.CreatedBy == null || a.CreatedBy == CurrentUserId));
         builder.Entity<DocumentoConfiguracao>().HasQueryFilter(c => c.Company == CurrentCompany && (c.CreatedBy == null || c.CreatedBy == CurrentUserId));
         builder.Entity<SignatureConfig>().HasQueryFilter(s => s.Company == CurrentCompany && (s.CreatedBy == null || s.CreatedBy == CurrentUserId));
-        builder.Entity<FixedCost>().HasQueryFilter(f => f.Company == CurrentCompany && (f.CreatedBy == null || f.CreatedBy == CurrentUserId));
+        builder.Entity<FixedCost>().HasQueryFilter(f => f.Company == CurrentCompany && f.CreatedBy == CurrentUserId);
         builder.Entity<Insumo>().HasQueryFilter(i => i.Company == CurrentCompany && (i.CreatedBy == null || i.CreatedBy == CurrentUserId));
         builder.Entity<Recibo>().HasQueryFilter(r => r.Company == CurrentCompany && (r.CreatedBy == null || r.CreatedBy == CurrentUserId));
         builder.Entity<AccountReceivable>().HasQueryFilter(a => a.Company == CurrentCompany && (a.CreatedBy == null || a.CreatedBy == CurrentUserId));
