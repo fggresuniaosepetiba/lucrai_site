@@ -35,7 +35,7 @@
 
 ### Funcionalidades Pendentes (MVP)
 
-- [ ] Backup e restauração dos dados (server-side)
+- [ ] Backup e restauração dos dados (server-side) — ver `docs/estudo-docker-postgres-hibrido.md` Nível 5 (pg_dump local vs Neon branches/pitr)
 
 ## Fase 2: Pós-MVP 🚀
 
