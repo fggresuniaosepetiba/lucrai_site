@@ -118,8 +118,8 @@ export default function LoginPage() {
             </Button>
 
             <div className="flex justify-between">
-              <Link href={''}>Esqueceu a senha?</Link>
-              <Link href={''}>Criar conta</Link>
+              <Link href={''} className="text-sm sm:font-medium hover:underline hover:text-primary">Esqueceu a senha?</Link>
+              <Link href={''} className="text-sm sm:font-medium hover:underline hover:text-primary">Criar conta</Link>
             </div>
           </form>
 
