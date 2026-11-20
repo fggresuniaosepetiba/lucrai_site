@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, Eye, EyeOff, AlertCircle } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -115,6 +116,11 @@ export default function LoginPage() {
               )}
               {loading ? "Entrando..." : "Entrar"}
             </Button>
+
+            <div className="flex justify-between">
+              <Link href={''}>Esqueceu a senha?</Link>
+              <Link href={''}>Criar conta</Link>
+            </div>
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
