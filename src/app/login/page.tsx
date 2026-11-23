@@ -118,8 +118,8 @@ export default function LoginPage() {
               {loading ? "Entrando..." : "Entrar"}
             </Button>
 
-            <div className="flex justify-between">
-              <Link href={''} className="text-sm sm:font-medium hover:underline hover:text-primary">Criar conta</Link>
+            <div className="flex justify-center">
+              <Link href={''} className="text-sm sm:font-medium hover:underline hover:text-primary">Não tem uma conta? Criar conta</Link>
             </div>
           </form>
 
