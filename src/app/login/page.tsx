@@ -99,6 +99,7 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <Link href={''} className="text-sm sm:font-normal hover:underline hover:text-primary">Esqueceu a senha?</Link>
             </div>
 
             {error && (
@@ -118,7 +119,6 @@ export default function LoginPage() {
             </Button>
 
             <div className="flex justify-between">
-              <Link href={''} className="text-sm sm:font-medium hover:underline hover:text-primary">Esqueceu a senha?</Link>
               <Link href={''} className="text-sm sm:font-medium hover:underline hover:text-primary">Criar conta</Link>
             </div>
           </form>
